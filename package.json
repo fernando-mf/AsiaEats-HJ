@@ -1,0 +1,15 @@
+{
+  "name": "asiaeats-hj",
+  "version": "0.0.0",
+  "private": true,
+  "description": "SOEN 343 food-delivery simulator that is focused on specifically chinese food.",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "engines": {
+    "node": ">=24.0.0 <25.0.0",
+    "npm": ">=11.0.0 <12.0.0"
+  },
+  "packageManager": "npm@11.12.1"
+}
