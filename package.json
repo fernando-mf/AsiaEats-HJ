@@ -1,8 +1,8 @@
 {
-  "name": "asiaeats-hj",
+  "name": "eatchinese",
   "version": "0.0.0",
   "private": true,
-  "description": "SOEN 343 food-delivery simulator that is focused on specifically chinese food.",
+  "description": "SOEN 343 food-delivery simulator focused specifically on Chinese food.",
   "workspaces": [
     "frontend",
     "backend"
