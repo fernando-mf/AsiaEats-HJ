@@ -207,3 +207,7 @@ Setup, build, test, and deployment instructions will be added when the frontend 
 - Keep secrets in untracked environment files.
 - Use one root `package-lock.json` after dependencies are introduced.
 - See [AGENTS.md](./AGENTS.md) for detailed repository conventions.
+
+---
+
+hello world
