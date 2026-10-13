@@ -2,11 +2,8 @@
 
 EatChinese is a SOEN 343 food-delivery simulator focused specifically on Chinese food. It models authenticated customers, restaurant staff, couriers, and platform operators while emphasizing clear architecture, enforceable business rules, and repeatable demonstrations.
 
-## Current status
 
-The repository is in the project-foundation stage. The frontend and backend have not been scaffolded, and there are no application dependencies or runnable services yet.
-
-## Planned technology stack
+## Technology stack
 
 - Frontend: React, TypeScript, and Vite
 - Backend: Node.js, NestJS, and TypeScript
@@ -14,91 +11,110 @@ The repository is in the project-foundation stage. The frontend and backend have
 - ORM: Prisma
 - Package manager: npm workspaces
 
-## Planned repository layout
+
+## Prerequisites
+
+- Node.js 24 (the repository currently pins `24.15.0`)
+- npm 11
+- Git
+
+
+## Project setup
+
+1. Clone this repository
+
+2. Install [nvm](https://github.com/nvm-sh/nvm)
+    ```sh
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
+    ```
+
+3. Use `nvm` to install and select this project's Node.js version
+    ```sh
+    # Install node
+    nvm install # skip if already installed
+
+    # Select correct node version
+    nvm use
+    ```
+
+---
+
+## Development workflow
+
+Follow the following steps to work on new features or bug fixes:
+
+1. First of all, make sure there's an existing issue for the feature or bug you're working on. If not, create one. Make sure to assign it to yourself.
+
+2. Start from the latest `main` branch.
+    ```sh
+    git checkout main
+    git fetch
+    git pull
+    ```
+
+3. Create a new branch for your feature or fix. Use the followig format: `<type>/<issue-number>-<short-description>`, for example:
+    ```sh
+    # new feature
+    git checkout -b feat/123-implement-account-creation
+
+    # big fix
+    git checkout -b fix/123-fix-account-creation
+
+    # other type of work
+    git checkout -b chore/123-update-readme
+    ```
+    Don't forget to use `feat` or `fix` or `chore` prefixes.
+
+4. Implement your changes i.e. write code, tests, etc.
+
+5. Once you're ready, commit your changes and push them to GitHub
+
+    ```sh
+    git add .
+    git commit -m "implemented account creation"
+    git push
+    ```
+
+6. Open a pull request. Other teammates will review your changes and provide feedback. Once you get an approval, you can merge your changes into `main`.
+
+7. You can pick up another issue and repeat the process.
+
+See [AGENTS.md](./AGENTS.md) for detailed repository conventions.
+
+---
+
+
+## Repository layout
+
+TODO: update this
 
 ```text
-EatChinese/
-  frontend/                 # React application (not scaffolded yet)
-  backend/                  # NestJS application (not scaffolded yet)
+/
+  ui/                       # UI layer: React app
+  backend/                  # Backend: NestJS REST API
+  backend/application/      # Application layer: HTTP controllers, middlewares, session verifiers
+  backend/domain/           # Domain layer: business rules, models, invariants and provider ports
+  backend/infrastructure/   # Infrastructure layer: Prisma implementation, PostgresSQL integration
   AGENTS.md                 # Repository conventions for contributors and agents
   package.json              # Root npm workspace configuration
 ```
 
 The finalized planned backend layout is:
 
-```text
-backend/
-  prisma/
-    schema.prisma
+TODO: update this
 
-  config/
-    seed.json
 
-  src/
-    modules/
-      reg.module.ts
-      ord.module.ts
-
-    presentation/
-      reg/
-        controllers/
-        dto/
-      ord/
-        controllers/
-        dto/
-      shared/
-        guards/
-
-    application/
-      reg/
-        commands/
-        services/
-      ord/
-        commands/
-        services/
-        observers/
-      shared/
-        command-runner/
-
-    domain/
-      shared/
-        identity/
-      reg/
-        user/
-        repositories/
-      ord/
-        order/
-          states/
-        restaurant/
-        menu-item/
-        events/
-        repositories/
-
-    infrastructure/
-      prisma/
-        repositories/
-          reg/
-          ord/
-      seed/
-```
-
-This is a documented plan only; these paths have not been created yet.
-
-## Module mapping
+## Modules covered
 
 - `DASH` = the React frontend/dashboard surface
 - `REG` = registration, authentication, profiles, sessions, and roles across the backend layers
 - `ORD` = restaurant, menu, order lifecycle, state rules, and preparation queue across the backend layers
 
-REG and ORD are separated inside each relevant backend layer. The responsibilities are:
 
-- `presentation` handles controllers, DTOs, guards, and transport-facing concerns.
-- `application` coordinates commands and use cases, permissions, command logging, application services, and observers.
-- `domain` owns business rules and must not depend on NestJS, Prisma, HTTP types, React, or generated database types.
-- `infrastructure` owns Prisma persistence, configuration loading, and seed loading.
-- `src/modules/reg.module.ts` and `src/modules/ord.module.ts` are NestJS composition and wiring files, not business-logic layers.
-
-Controllers must not access Prisma directly. Business rules must remain in the domain layer.
+<!-- 
+TODO: THIS COULD BE MOVED TO THE REPORT. SOME SECTIONS ARE OUTDATED, UPDATE AS WE MAKE PROGRESS.
+TODO: THIS COULD BE MOVED TO THE REPORT. SOME SECTIONS ARE OUTDATED, UPDATE AS WE MAKE PROGRESS.
+TODO: THIS COULD BE MOVED TO THE REPORT. SOME SECTIONS ARE OUTDATED, UPDATE AS WE MAKE PROGRESS.
 
 ## Shared identity boundary
 
@@ -190,24 +206,4 @@ Seeded accounts and initial ORD data must be loaded from `backend/config/seed.js
 
 ## Observer intent
 
-Observer supports post-domain-change side effects such as updating the DASH output console or read model. Required transition-event persistence must remain reliable and must not depend solely on an Observer. SSE and WebSockets remain outside Phase II scope.
-
-## Prerequisites
-
-- Node.js 24 (the repository currently pins `24.15.0`)
-- npm 11
-- Git
-
-Setup, build, test, and deployment instructions will be added when the frontend and backend scaffolds exist.
-
-## Development workflow
-
-- Do not work directly on `main`.
-- Use small, focused commits on descriptive branches.
-- Keep secrets in untracked environment files.
-- Use one root `package-lock.json` after dependencies are introduced.
-- See [AGENTS.md](./AGENTS.md) for detailed repository conventions.
-
----
-
-hello world
+Observer supports post-domain-change side effects such as updating the DASH output console or read model. Required transition-event persistence must remain reliable and must not depend solely on an Observer. SSE and WebSockets remain outside Phase II scope. -->
