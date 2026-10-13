@@ -4,10 +4,14 @@ import { Account, AccountRepository } from '#domain/reg/index.js';
 
 @Injectable()
 export class LocalAccountRepository extends AccountRepository {
-  create(_request: Account): Promise<Account> {
-    console.log('account created');
-    const account = new Account();
-    account.id = randomUUID();
-    return Promise.resolve(account);
+  private readonly accounts = new Map<string, Account>();
+
+  create(request: Account): Promise<Account> {
+    request.id = randomUUID();
+    this.accounts.set(request.id, request);
+
+    console.log('account created', request.toJSON());
+
+    return Promise.resolve(request);
   }
 }

@@ -1,9 +1,16 @@
 import { plainToInstance } from 'class-transformer';
-import { IsIn, IsString, MinLength } from 'class-validator';
+import { IsEnum, IsString, MinLength } from 'class-validator';
+
+export enum AccountRole {
+  Customer = 'customer',
+  Restaurant = 'restaurant',
+  Courier = 'courier',
+  Operator = 'operator',
+}
 
 export class AccountCreationRequest {
-  @IsIn(['customer', 'restaurant', 'courier', 'operator'])
-  role: string;
+  @IsEnum(AccountRole)
+  role: AccountRole;
 
   @IsString()
   username: string;
@@ -12,6 +19,10 @@ export class AccountCreationRequest {
   @MinLength(8)
   password: string;
 
+  @IsString()
+  @MinLength(3)
+  name: string;
+
   static initialize(raw: AccountCreationRequest): AccountCreationRequest {
     return plainToInstance(AccountCreationRequest, raw);
   }
@@ -19,4 +30,17 @@ export class AccountCreationRequest {
 
 export class Account {
   id: string;
+  name: string;
+  username: string;
+  role: AccountRole;
+  passwordHash: string;
+
+  toJSON() {
+    return {
+      id: this.id,
+      name: this.name,
+      username: this.username,
+      role: this.role,
+    };
+  }
 }
