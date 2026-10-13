@@ -4,8 +4,8 @@
   "private": true,
   "description": "SOEN 343 food-delivery simulator focused specifically on Chinese food.",
   "workspaces": [
-    "frontend",
-    "backend"
+    "ui",
+    "api"
   ],
   "engines": {
     "node": ">=24.0.0 <25.0.0",
