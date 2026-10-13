@@ -4,9 +4,14 @@
   "private": true,
   "description": "SOEN 343 food-delivery simulator focused specifically on Chinese food.",
   "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "engines": {
     "node": ">=24.0.0 <25.0.0",
     "pnpm": ">=12.0.0 <13.0.0"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10"
   }
 }

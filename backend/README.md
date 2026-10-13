@@ -26,6 +26,7 @@ curl http://localhost:3000/api/status
 ```
 
 Should return:
+
 ```json
 {
   "status": "ok",
