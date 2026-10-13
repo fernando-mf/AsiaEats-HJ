@@ -9,13 +9,13 @@ EatChinese is a SOEN 343 food-delivery simulator focused specifically on Chinese
 - Backend: Node.js, NestJS, and TypeScript
 - Database: PostgreSQL hosted on Neon
 - ORM: Prisma
-- Package manager: npm workspaces
+- Package manager: pnpm
 
 
 ## Prerequisites
 
 - Node.js 24 (the repository currently pins `24.15.0`)
-- npm 11
+- pnpm 12
 - Git
 
 
@@ -37,6 +37,17 @@ EatChinese is a SOEN 343 food-delivery simulator focused specifically on Chinese
     nvm use
     ```
 
+4. Install [pnpm](https://pnpm.io/)
+    ```sh
+    curl -fsSL https://get.pnpm.io/install.sh | sh -
+    ```
+
+5. Then install dependencies from the repository root
+    ```sh
+    pnpm install
+    ```
+
+6. Project setup is complete. To run each component, navigate to the `ui` or `backend` directories and follow the instructions in their README files.
 ---
 
 ## Development workflow
