@@ -1,10 +1,11 @@
 import { Global, Module } from '@nestjs/common';
 import { AccountRepository } from '#domain/reg/index.js';
-import { LocalAccountRepository } from './reg/accounts.localrepository.js';
+import { PrismaService } from './prisma.service.js';
+import { PrismaAccountRepository } from './reg/accounts.prismarepository.js';
 
 @Global()
 @Module({
-  providers: [{ provide: AccountRepository, useClass: LocalAccountRepository }],
+  providers: [PrismaService, { provide: AccountRepository, useClass: PrismaAccountRepository }],
   exports: [AccountRepository],
 })
 export class InfrastructureModule {}
