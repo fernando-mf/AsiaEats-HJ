@@ -18,11 +18,13 @@ cp .env.example .env
 
 That should create a `.env` ready to use for local development.
 
-2. Install the dependencies:
+1. Install the dependencies:
 
 ```sh
 pnpm install
 ```
+
+
 
 ## Running the API
 
@@ -32,13 +34,13 @@ pnpm install
 docker compose up
 ```
 
-2. Start the API: in a separate terminal,from `backend/`, run:
+1. Start the API: in a separate terminal,from `backend/`, run:
 
 ```sh
 pnpm start:dev
 ```
 
---- 
+---
 
 The API listens on port 3000. Once the server is running, you can open your browser and navigate to `http://localhost:3000/api/status` to confirm it works as expected.
 
@@ -56,3 +58,9 @@ Should return:
   "datetime": "2026-10-13T03:09:00.000Z"
 }
 ```
+
+
+
+## Project documentation
+
+See the [project documentation](./docs/) for more information on the backend architecture and design decisions.
