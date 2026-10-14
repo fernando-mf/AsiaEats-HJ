@@ -19,24 +19,34 @@
     }
   },
   "scripts": {
-    "build": "nest build",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:prod": "node dist/application/main.js"
+    "build": "pnpm db:generate && nest build",
+    "dev": "nest start --watch --env-file .env",
+    "start": "node dist/application/main.js",
+    "deps:up": "docker compose -f integration/docker-compose.yml up",
+    "deps:down": "docker compose -f integration/docker-compose.yml down",
+    "db:generate": "prisma generate --config integration/prisma/prisma.config.ts",
+    "db:migrate": "prisma migrate dev --config integration/prisma/prisma.config.ts",
+    "db:deploy": "prisma migrate deploy --config integration/prisma/prisma.config.ts",
+    "postinstall": "pnpm db:generate"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
+    "@nestjs/config": "^12.0.1",
     "@nestjs/core": "^12.0.1",
     "@nestjs/platform-express": "^12.0.1",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@nestjs/cli": "^12.0.0",
     "@nestjs/schematics": "^12.0.0",
     "@types/node": "^24.0.0",
+    "prisma": "7.10.0",
     "typescript": "^6.0.2"
   }
 }

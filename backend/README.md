@@ -18,26 +18,27 @@ cp .env.example .env
 
 That should create a `.env` ready to use for local development.
 
-1. Install the dependencies:
-
-```sh
-pnpm install
-```
-
-
 
 ## Running the API
 
-1. Run the dependencies: in a new terminal, from `backend/integration`, run:
+1. Run the dependencies: open a new terminal at `backend/` and run the following command, keep this terminal open and running.
 
 ```sh
-docker compose up
+pnpm deps:up
 ```
 
-1. Start the API: in a separate terminal,from `backend/`, run:
+1. Run the migrations: open a separate terminal at `backend/` and apply the migrations. You can skip this step if the data model hasn't changed.
 
 ```sh
-pnpm start:dev
+pnpm db:migrate
+```
+
+**Note:** after changing `integration/prisma/schema.prisma`, run `pnpm db:migrate` again to create a new migration, then `pnpm db:generate` to regenerate the Prisma client.
+
+1. Start the API: run the following command:
+
+```sh
+pnpm dev
 ```
 
 ---

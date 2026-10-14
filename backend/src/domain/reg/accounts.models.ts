@@ -34,6 +34,8 @@ export class Account {
   username: string;
   role: AccountRole;
   passwordHash: string;
+  createdAt: Date;
+  updatedAt: Date;
 
   toJSON() {
     return {
@@ -41,6 +43,8 @@ export class Account {
       name: this.name,
       username: this.username,
       role: this.role,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
     };
   }
 }

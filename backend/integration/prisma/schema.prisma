@@ -1,0 +1,31 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../../src/infrastructure/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccountRole {
+  customer
+  restaurant
+  courier
+  operator
+
+  @@map("account_role")
+}
+
+model Account {
+  id           String      @id @default(uuid(7)) @db.Uuid
+  name         String
+  username     String      @unique
+  role         AccountRole
+  passwordHash String      @map("password_hash")
+  createdAt    DateTime    @map("created_at")
+  updatedAt    DateTime    @map("updated_at")
+
+  @@map("accounts")
+}

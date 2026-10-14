@@ -18,11 +18,15 @@ export class AccountsService {
       throw InvalidParamsError.fromClassValidator(errors);
     }
 
+    const now = new Date();
+
     const account = new Account();
     account.name = request.name;
     account.username = request.username;
     account.role = request.role;
     account.passwordHash = await hashPassword(request.password);
+    account.createdAt = now;
+    account.updatedAt = now;
 
     return this.accounts.create(account);
   }

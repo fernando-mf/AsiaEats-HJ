@@ -15,6 +15,7 @@ EatChinese is a SOEN 343 food-delivery simulator focused specifically on Chinese
 - Node.js 24 (the repository currently pins `24.15.0`)
 - pnpm 12
 - Git
+- Docker (with Docker Compose), used to run PostgreSQL locally
 
 ## Project setup
 
@@ -42,13 +43,20 @@ EatChinese is a SOEN 343 food-delivery simulator focused specifically on Chinese
    curl -fsSL https://get.pnpm.io/install.sh | sh -
    ```
 
-5. Then install dependencies from the repository root
+5. Install [Docker](https://docs.docker.com/get-started/get-docker/). Then verify the installation (make sure Docker is running):
+
+   ```sh
+   docker --version
+   docker compose version
+   ```
+
+6. Then install dependencies from the repository root
 
    ```sh
    pnpm install
    ```
 
-6. Project setup is complete. To run each component, navigate to the `ui` or `backend` directories and follow the instructions in their README files.
+7. Project setup is complete. To run each component, navigate to the `ui` or `backend` directories and follow the instructions in their README files.
 
 ---
 
