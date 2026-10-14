@@ -8,10 +8,12 @@ CREATE TABLE "accounts" (
     "username" TEXT NOT NULL,
     "role" "account_role" NOT NULL,
     "password_hash" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "created_at" TIMESTAMP(3) NOT NULL,
+    "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "accounts_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "accounts_username_key" ON "accounts"("username");
+

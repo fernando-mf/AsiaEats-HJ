@@ -21,16 +21,14 @@ export class PrismaAccountRepository extends AccountRepository {
           username: account.username,
           role: account.role,
           passwordHash: account.passwordHash,
+          createdAt: account.createdAt,
+          updatedAt: account.updatedAt,
         },
       });
 
-      const created = new Account();
-      created.id = row.id;
-      created.name = row.name;
-      created.username = row.username;
-      created.role = row.role as AccountRole;
-      created.passwordHash = row.passwordHash;
-      return created;
+      account.id = row.id;
+
+      return account;
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === UNIQUE_VIOLATION) {
         throw new DuplicateEntityError('account');
