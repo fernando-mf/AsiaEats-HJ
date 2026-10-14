@@ -1,7 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { AccountCreationRequest, Account } from './accounts.models.js';
 import { hashPassword } from './accounts.helpers.js';
+import { InvalidParamsError } from '#domain/errors.js';
 
 export abstract class AccountRepository {
   abstract create(request: Account): Promise<Account>;
@@ -14,7 +15,7 @@ export class AccountsService {
   async create(request: AccountCreationRequest): Promise<Account> {
     const errors = await validate(request);
     if (errors.length > 0) {
-      throw new BadRequestException(errors);
+      throw InvalidParamsError.fromClassValidator(errors);
     }
 
     const account = new Account();
