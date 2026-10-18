@@ -48,3 +48,5 @@ export class Account {
     };
   }
 }
+
+export type Actor = Pick<Account, 'id' | 'role'>;
