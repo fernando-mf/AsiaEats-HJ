@@ -29,3 +29,17 @@ model Account {
 
   @@map("accounts")
 }
+
+// EventLog is append-only: rows are inserted by the event publisher and never updated or deleted.
+model EventLog {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  eventType  String   @map("event_type")
+  payload    Json     @db.JsonB
+  actorId    String?  @map("actor_id") @db.Uuid
+  occurredAt DateTime @map("occurred_at")
+
+  @@index([entityType, entityId])
+  @@map("event_log")
+}
