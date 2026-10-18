@@ -30,9 +30,9 @@ model Account {
   @@map("accounts")
 }
 
-// EventLog is append-only: rows are inserted by the event publisher and never updated or deleted.
+// EventLog is append-only. Rows are inserted by the event publisher and never updated or deleted.
 model EventLog {
-  id         String   @id @default(uuid(7)) @db.Uuid
+  id         String   @id @db.Uuid
   entityType String   @map("entity_type")
   entityId   String   @map("entity_id")
   eventType  String   @map("event_type")

@@ -12,8 +12,9 @@ export class PrismaEventRepository extends EventRepository {
 
   async append(event: Event): Promise<void> {
     try {
-      const row = await this.db.eventLog.create({
+      await this.db.eventLog.create({
         data: {
+          id: event.id,
           entityType: event.entityType,
           entityId: event.entityId,
           eventType: event.eventType,
@@ -22,8 +23,6 @@ export class PrismaEventRepository extends EventRepository {
           occurredAt: event.occurredAt,
         },
       });
-
-      event.id = row.id;
     } catch (err) {
       throw new InternalError(err as Error);
     }
