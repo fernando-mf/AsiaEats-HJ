@@ -1,3 +1,5 @@
+import { plainToInstance } from 'class-transformer';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { v7 as uuidv7 } from 'uuid';
 
 type EventParams<TPayload extends object> = {
@@ -22,5 +24,30 @@ export abstract class Event<TPayload extends object = Record<string, unknown>> {
     this.entityId = params.entityId;
     this.payload = params.payload;
     this.actorId = params.actorId ?? null;
+  }
+}
+
+// StoredEvent is the same as Event. Useful when a class is not needed.
+export type StoredEvent = {
+  id: string;
+  entityType: string;
+  entityId: string;
+  eventType: string;
+  payload: Record<string, unknown>;
+  actorId: string | null;
+  occurredAt: Date;
+};
+
+export class GetByEntityQuery {
+  @IsString()
+  @IsNotEmpty()
+  entityType: string;
+
+  @IsString()
+  @IsNotEmpty()
+  entityId: string;
+
+  static initialize(raw: GetByEntityQuery): GetByEntityQuery {
+    return plainToInstance(GetByEntityQuery, raw);
   }
 }

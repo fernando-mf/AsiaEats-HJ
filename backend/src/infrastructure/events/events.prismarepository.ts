@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Event, EventRepository } from '#domain/events/index.js';
+import { Event, EventRepository, StoredEvent } from '#domain/events/index.js';
 import { InternalError } from '#domain/errors.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma.service.js';
@@ -23,6 +23,27 @@ export class PrismaEventRepository extends EventRepository {
           occurredAt: event.occurredAt,
         },
       });
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
+
+  async findByEntity(entityType: string, entityId: string): Promise<StoredEvent[]> {
+    try {
+      const rows = await this.db.eventLog.findMany({
+        where: { entityType, entityId },
+        orderBy: [{ occurredAt: 'asc' }],
+      });
+
+      return rows.map(row => ({
+        id: row.id,
+        entityType: row.entityType,
+        entityId: row.entityId,
+        eventType: row.eventType,
+        payload: row.payload as Record<string, unknown>,
+        actorId: row.actorId,
+        occurredAt: row.occurredAt,
+      }));
     } catch (err) {
       throw new InternalError(err as Error);
     }
