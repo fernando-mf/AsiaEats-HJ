@@ -3,7 +3,7 @@ import { Event } from './events.models.js';
 
 type OrderPlacedPayload = { total: number };
 
-class OrderPlaced extends Event<OrderPlacedPayload> {
+class OrderPlacedEvent extends Event<OrderPlacedPayload> {
   readonly entityType = 'order';
   readonly eventType = 'order.placed';
 }
@@ -21,7 +21,7 @@ describe('Event', () => {
   });
 
   it('assigns the entity, payload, actor, and event names from the constructor', () => {
-    const event = new OrderPlaced({
+    const event = new OrderPlacedEvent({
       entityId: 'order-1',
       payload: { total: 42 },
       actorId: 'user-1',
@@ -38,7 +38,7 @@ describe('Event', () => {
   });
 
   it('defaults a missing actor to null', () => {
-    const event = new OrderPlaced({
+    const event = new OrderPlacedEvent({
       entityId: 'order-1',
       payload: { total: 42 },
     });
@@ -49,8 +49,8 @@ describe('Event', () => {
   it('generates a distinct id for each event', () => {
     const params = { entityId: 'order-1', payload: { total: 42 } };
 
-    const event1 = new OrderPlaced(params);
-    const event2 = new OrderPlaced(params);
+    const event1 = new OrderPlacedEvent(params);
+    const event2 = new OrderPlacedEvent(params);
 
     expect(event1.id).not.toBe(event2.id);
   });
