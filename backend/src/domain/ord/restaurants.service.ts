@@ -6,6 +6,7 @@ import { Restaurant, RestaurantCreationRequest } from './restaurants.models.js';
 
 export abstract class RestaurantRepository {
   abstract create(restaurant: Restaurant): Promise<Restaurant>;
+  abstract getByOwnerId(ownerId: string): Promise<Restaurant>;
 }
 
 @Injectable()
