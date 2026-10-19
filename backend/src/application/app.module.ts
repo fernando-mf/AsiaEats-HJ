@@ -7,6 +7,7 @@ import { StatusController } from './controllers/status.controller.js';
 import { AuthController } from './controllers/reg/auth.controller.js';
 import { ApplicationErrorFilter } from './filters/application-error.filter.js';
 import { validateConfig } from './application.config.js';
+import { CommandRunner } from './commands/command-runner.js';
 
 @Module({
   imports: [
@@ -15,6 +16,6 @@ import { validateConfig } from './application.config.js';
     DomainModule,
   ],
   controllers: [StatusController, AuthController],
-  providers: [{ provide: APP_FILTER, useClass: ApplicationErrorFilter }],
+  providers: [CommandRunner, { provide: APP_FILTER, useClass: ApplicationErrorFilter }],
 })
 export class AppModule {}
