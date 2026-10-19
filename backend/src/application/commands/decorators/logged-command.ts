@@ -1,6 +1,6 @@
 import { ApplicationError } from '#domain/errors.js';
+import type { Actor } from '#domain/reg/index.js';
 import type { Command } from '../command.js';
-import type { ExecutionActor } from '../execution-actor.js';
 import { CommandDecorator } from './command-decorator.js';
 
 export interface CommandLogger {
@@ -12,7 +12,7 @@ export class LoggedCommand<TResult> extends CommandDecorator<TResult> {
   constructor(
     wrapped: Command<TResult>,
     private readonly logger: CommandLogger,
-    private readonly actor?: ExecutionActor | null,
+    private readonly actor?: Actor | null,
   ) {
     super(wrapped);
   }

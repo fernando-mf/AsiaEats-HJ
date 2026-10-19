@@ -52,7 +52,7 @@ model Restaurant {
 
   owner Account @relation(fields: [ownerId], references: [id])
 
-  @@index([ownerId])
+  @@unique([ownerId])
   @@map("restaurants")
 }
 

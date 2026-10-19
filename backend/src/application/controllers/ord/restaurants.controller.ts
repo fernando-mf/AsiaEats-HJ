@@ -1,10 +1,20 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Logger, Post } from '@nestjs/common';
 import { AccountRole, type Actor } from '#domain/reg/index.js';
-import { RestaurantCreationRequest, RestaurantsService } from '#domain/ord/index.js';
+import { Restaurant, RestaurantCreationRequest, RestaurantsService } from '#domain/ord/index.js';
+import { CommandRunner } from '../../commands/command-runner.js';
+import { AuthorizedCommand } from '../../commands/decorators/authorized-command.js';
+import { LoggedCommand } from '../../commands/decorators/logged-command.js';
+import { CreateRestaurantCommand } from '../../commands/ord/create-restaurant.command.js';
+import { Command } from '../../commands/command.js';
 
 @Controller('restaurants')
 export class RestaurantsController {
-  constructor(private readonly service: RestaurantsService) {}
+  private readonly logger = new Logger(RestaurantsController.name);
+
+  constructor(
+    private readonly service: RestaurantsService,
+    private readonly commandRunner: CommandRunner,
+  ) {}
 
   @Post()
   create(@Body() body: RestaurantCreationRequest) {
@@ -12,6 +22,11 @@ export class RestaurantsController {
     const actor: Actor = { id: '', role: AccountRole.Restaurant };
 
     const request = RestaurantCreationRequest.initialize(body);
-    return this.service.create(actor, request);
+
+    let command: Command<Restaurant> = new CreateRestaurantCommand(this.service, actor, request);
+    command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
   }
 }

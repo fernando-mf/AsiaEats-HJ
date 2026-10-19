@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InternalError, NotFoundError } from '#domain/errors.js';
+import { DuplicateEntityError, InternalError, NotFoundError } from '#domain/errors.js';
 import { Restaurant, RestaurantRepository, RestaurantStatus } from '#domain/ord/index.js';
 import { PrismaService } from '../prisma.service.js';
 
@@ -27,6 +27,9 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
 
       return restaurant;
     } catch (err) {
+      if (this.db.isUniqueViolation(err)) {
+        throw new DuplicateEntityError('restaurant');
+      }
       throw new InternalError(err as Error);
     }
   }

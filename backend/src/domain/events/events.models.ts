@@ -10,7 +10,7 @@ type EventParams<TPayload extends object> = {
 };
 
 // Event represents a domain event. Other modules' events inherit from this one
-export abstract class Event<TPayload extends object = Record<string, unknown>> {
+export abstract class Event<TPayload extends object = object> {
   readonly id = uuidv7();
 
   abstract readonly entityType: string;
