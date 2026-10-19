@@ -27,18 +27,45 @@ model Account {
   createdAt    DateTime    @map("created_at")
   updatedAt    DateTime    @map("updated_at")
 
+  restaurants Restaurant[]
+
   @@map("accounts")
+}
+
+enum RestaurantStatus {
+  open
+  paused
+  closed
+
+  @@map("restaurant_status")
+}
+
+model Restaurant {
+  id        String           @id @default(uuid(7)) @db.Uuid
+  ownerId   String           @map("owner_id") @db.Uuid
+  name      String
+  status    RestaurantStatus
+  latitude  Float
+  longitude Float
+  createdAt DateTime         @map("created_at")
+  updatedAt DateTime         @map("updated_at")
+
+  owner Account @relation(fields: [ownerId], references: [id])
+
+  @@unique([ownerId])
+  @@map("restaurants")
 }
 
 // EventLog is append-only. Rows are inserted by the event publisher and never updated or deleted.
 model EventLog {
-  id         String   @id @db.Uuid
-  entityType String   @map("entity_type")
-  entityId   String   @map("entity_id")
-  eventType  String   @map("event_type")
-  payload    Json     @db.JsonB
-  actorId    String?  @map("actor_id") @db.Uuid
-  occurredAt DateTime @map("occurred_at")
+  id         String       @id @db.Uuid
+  entityType String       @map("entity_type")
+  entityId   String       @map("entity_id")
+  eventType  String       @map("event_type")
+  payload    Json         @db.JsonB
+  actorId    String?      @map("actor_id") @db.Uuid
+  actorRole  AccountRole? @map("actor_role")
+  occurredAt DateTime     @map("occurred_at")
 
   @@index([entityType, entityId])
   @@map("event_log")

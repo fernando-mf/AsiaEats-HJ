@@ -1,15 +1,16 @@
 import { plainToInstance } from 'class-transformer';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { v7 as uuidv7 } from 'uuid';
+import type { Actor } from '#domain/reg/index.js';
 
 type EventParams<TPayload extends object> = {
   entityId: string;
   payload: TPayload;
-  actorId?: string | null;
+  actor?: Actor | null;
 };
 
 // Event represents a domain event. Other modules' events inherit from this one
-export abstract class Event<TPayload extends object = Record<string, unknown>> {
+export abstract class Event<TPayload extends object = object> {
   readonly id = uuidv7();
 
   abstract readonly entityType: string;
@@ -18,12 +19,12 @@ export abstract class Event<TPayload extends object = Record<string, unknown>> {
 
   readonly entityId: string;
   readonly payload: TPayload;
-  readonly actorId: string | null;
+  readonly actor: Actor | null;
 
   constructor(params: EventParams<TPayload>) {
     this.entityId = params.entityId;
     this.payload = params.payload;
-    this.actorId = params.actorId ?? null;
+    this.actor = params.actor ?? null;
   }
 }
 
@@ -34,7 +35,7 @@ export type StoredEvent = {
   entityId: string;
   eventType: string;
   payload: Record<string, unknown>;
-  actorId: string | null;
+  actor: Actor | null;
   occurredAt: Date;
 };
 

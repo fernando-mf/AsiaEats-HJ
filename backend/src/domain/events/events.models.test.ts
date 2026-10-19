@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Event } from './events.models.js';
+import { AccountRole } from '#domain/reg/index.js';
 
 type OrderPlacedPayload = { total: number };
 
@@ -24,12 +25,12 @@ describe('Event', () => {
     const event = new OrderPlacedEvent({
       entityId: 'order-1',
       payload: { total: 42 },
-      actorId: 'user-1',
+      actor: { id: 'user-1', role: AccountRole.Customer },
     });
 
     expect(event.entityId).toBe('order-1');
     expect(event.payload).toEqual({ total: 42 });
-    expect(event.actorId).toBe('user-1');
+    expect(event.actor).toEqual({ id: 'user-1', role: AccountRole.Customer });
     expect(event.entityType).toBe('order');
     expect(event.eventType).toBe('order.placed');
 
@@ -43,7 +44,7 @@ describe('Event', () => {
       payload: { total: 42 },
     });
 
-    expect(event.actorId).toBeNull();
+    expect(event.actor).toBeNull();
   });
 
   it('generates a distinct id for each event', () => {

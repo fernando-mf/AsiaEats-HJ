@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Event, EventRepository, StoredEvent } from '#domain/events/index.js';
 import { InternalError } from '#domain/errors.js';
+import type { AccountRole } from '#domain/reg/index.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma.service.js';
 
@@ -19,7 +20,8 @@ export class PrismaEventRepository extends EventRepository {
           entityId: event.entityId,
           eventType: event.eventType,
           payload: event.payload as Prisma.InputJsonValue,
-          actorId: event.actorId,
+          actorId: event.actor?.id ?? null,
+          actorRole: event.actor?.role ?? null,
           occurredAt: event.occurredAt,
         },
       });
@@ -41,7 +43,7 @@ export class PrismaEventRepository extends EventRepository {
         entityId: row.entityId,
         eventType: row.eventType,
         payload: row.payload as Record<string, unknown>,
-        actorId: row.actorId,
+        actor: row.actorId && row.actorRole ? { id: row.actorId, role: row.actorRole as AccountRole } : null,
         occurredAt: row.occurredAt,
       }));
     } catch (err) {
