@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Account, AccountRepository, AccountRole } from '#domain/reg/index.js';
 import { DuplicateEntityError, InternalError, NotFoundError } from '#domain/errors.js';
-import { PrismaService } from '../prisma.service.js';
+import { PrismaService } from '#infrastructure/prisma.service.js';
 
 @Injectable()
 export class PrismaAccountRepository extends AccountRepository {

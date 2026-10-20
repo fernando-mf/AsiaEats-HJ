@@ -1,6 +1,6 @@
 import type { Restaurant, RestaurantsService, RestaurantStatusUpdateRequest } from '#domain/ord/index.js';
 import type { Actor } from '#domain/reg/index.js';
-import type { Command } from '../command.js';
+import type { Command } from '#application/commands/command.js';
 
 export class UpdateRestaurantStatusCommand implements Command<Restaurant> {
   readonly name = 'UpdateRestaurantStatusCommand';

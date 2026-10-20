@@ -1,6 +1,6 @@
 import { ForbiddenError } from '#domain/errors.js';
 import type { AccountRole, Actor } from '#domain/reg/index.js';
-import type { Command } from '../command.js';
+import type { Command } from '#application/commands/command.js';
 import { CommandDecorator } from './command-decorator.js';
 
 export class AuthorizedCommand<TResult> extends CommandDecorator<TResult> {

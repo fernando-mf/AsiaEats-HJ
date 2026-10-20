@@ -1,6 +1,6 @@
 import type { JwtService } from '@nestjs/jwt';
 import type { Account, AccountsService, LoginRequest } from '#domain/reg/index.js';
-import type { Command } from '../command.js';
+import type { Command } from '#application/commands/command.js';
 
 export type LoginResult = { accessToken: string; account: Account };
 

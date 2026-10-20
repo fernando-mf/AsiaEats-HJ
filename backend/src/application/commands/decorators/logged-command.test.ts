@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ForbiddenError } from '#domain/errors.js';
 import { AccountRole } from '#domain/reg/index.js';
-import type { Command } from '../command.js';
+import type { Command } from '#application/commands/command.js';
 import { AuthorizedCommand } from './authorized-command.js';
 import { LoggedCommand, type CommandLogger } from './logged-command.js';
 

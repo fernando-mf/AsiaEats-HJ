@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Event, EventRepository, StoredEvent } from '#domain/events/index.js';
 import { InternalError } from '#domain/errors.js';
 import type { AccountRole } from '#domain/reg/index.js';
-import type { Prisma } from '../generated/prisma/client.js';
-import { PrismaService } from '../prisma.service.js';
+import type { Prisma } from '#infrastructure/generated/prisma/client.js';
+import { PrismaService } from '#infrastructure/prisma.service.js';
 
 @Injectable()
 export class PrismaEventRepository extends EventRepository {
