@@ -1,5 +1,14 @@
 import { plainToInstance, Type } from 'class-transformer';
-import { IsEnum, IsLatitude, IsLongitude, IsOptional, IsString, MinLength, ValidateNested } from 'class-validator';
+import {
+  IsDefined,
+  IsEnum,
+  IsLatitude,
+  IsLongitude,
+  IsOptional,
+  IsString,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
 import { Event } from '#domain/events/index.js';
 
 export enum RestaurantStatus {
@@ -25,12 +34,28 @@ export class RestaurantCreationRequest {
   @IsEnum(RestaurantStatus)
   status?: RestaurantStatus;
 
+  @IsDefined()
   @ValidateNested()
   @Type(() => Position)
   position: Position;
 
   static initialize(raw: RestaurantCreationRequest): RestaurantCreationRequest {
     return plainToInstance(RestaurantCreationRequest, raw);
+  }
+}
+
+export class RestaurantUpdateRequest {
+  @IsString()
+  @MinLength(3)
+  name: string;
+
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => Position)
+  position: Position;
+
+  static initialize(raw: RestaurantUpdateRequest): RestaurantUpdateRequest {
+    return plainToInstance(RestaurantUpdateRequest, raw);
   }
 }
 
@@ -47,4 +72,9 @@ export class Restaurant {
 export class RestaurantCreatedEvent extends Event<Restaurant> {
   readonly entityType = 'restaurant';
   readonly eventType = 'restaurant.created';
+}
+
+export class RestaurantUpdatedEvent extends Event<Restaurant> {
+  readonly entityType = 'restaurant';
+  readonly eventType = 'restaurant.updated';
 }
