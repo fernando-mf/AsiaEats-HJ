@@ -158,3 +158,8 @@ export class MenuItemUpdatedEvent extends Event<MenuItem> {
   readonly entityType = 'menu_item';
   readonly eventType = 'menu_item.updated';
 }
+
+export class MenuItemDeletedEvent extends Event<{}> {
+  readonly entityType = 'menu_item';
+  readonly eventType = 'menu_item.deleted';
+}

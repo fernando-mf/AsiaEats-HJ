@@ -7,6 +7,7 @@ import {
   MenuItem,
   MenuItemCreatedEvent,
   MenuItemCreationRequest,
+  MenuItemDeletedEvent,
   MenuItemStatus,
   MenuItemUpdatedEvent,
   MenuItemUpdateRequest,
@@ -30,6 +31,7 @@ export abstract class RestaurantRepository {
   abstract createMenuItem(menuItem: MenuItem): Promise<MenuItem>;
   abstract getMenuItem(restaurantId: string, itemId: string): Promise<MenuItem>;
   abstract updateMenuItem(menuItem: MenuItem): Promise<MenuItem>;
+  abstract deleteMenuItem(restaurantId: string, itemId: string): Promise<void>;
 }
 
 @Injectable()
@@ -191,6 +193,19 @@ export class RestaurantsService {
     );
 
     return updated;
+  }
+
+  async deleteMenuItem(actor: Actor, restaurantId: string, itemId: string): Promise<void> {
+    const restaurant = await this.getRestaurantEnsuringPermissions(actor, restaurantId);
+
+    await this.repository.deleteMenuItem(restaurant.id, itemId);
+
+    await this.events.publish(
+      new MenuItemDeletedEvent({
+        entityId: itemId,
+        actor,
+      }),
+    );
   }
 
   // getRestaurantEnsuringPermissions returns a restaurant ensuring access permissions.

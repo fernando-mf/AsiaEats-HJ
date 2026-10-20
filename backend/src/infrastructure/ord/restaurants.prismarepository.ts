@@ -81,6 +81,13 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
     }
   }
 
+  async deleteMenuItem(restaurantId: string, itemId: string): Promise<void> {
+    const result = await this.db.menuItem.deleteMany({ where: { id: itemId, restaurantId } });
+    if (result.count === 0) {
+      throw new NotFoundError('menu item');
+    }
+  }
+
   async getById(id: string): Promise<Restaurant> {
     const row = await this.db.restaurant.findUnique({ where: { id } });
     if (!row) {

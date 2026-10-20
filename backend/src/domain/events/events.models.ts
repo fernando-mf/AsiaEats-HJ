@@ -5,7 +5,7 @@ import type { Actor } from '#domain/reg/index.js';
 
 type EventParams<TPayload extends object> = {
   entityId: string;
-  payload: TPayload;
+  payload?: TPayload;
   actor?: Actor | null;
 };
 
@@ -18,12 +18,12 @@ export abstract class Event<TPayload extends object = object> {
   readonly occurredAt = new Date();
 
   readonly entityId: string;
-  readonly payload: TPayload;
+  readonly payload: TPayload | null;
   readonly actor: Actor | null;
 
   constructor(params: EventParams<TPayload>) {
     this.entityId = params.entityId;
-    this.payload = params.payload;
+    this.payload = params.payload ?? null;
     this.actor = params.actor ?? null;
   }
 }
