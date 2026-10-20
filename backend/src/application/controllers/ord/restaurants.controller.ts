@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, HttpCode, Logger, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Logger, Param, Post, Put } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -28,6 +28,7 @@ import { LoggedCommand } from '#application/commands/decorators/logged-command.j
 import { CreateMenuItemCommand } from '#application/commands/ord/create-menu-item.command.js';
 import { CreateRestaurantCommand } from '#application/commands/ord/create-restaurant.command.js';
 import { DeleteMenuItemCommand } from '#application/commands/ord/delete-menu-item.command.js';
+import { GetMenuCommand } from '#application/commands/ord/get-menu.command.js';
 import { UpdateMenuItemCommand } from '#application/commands/ord/update-menu-item.command.js';
 import { UpdateRestaurantStatusCommand } from '#application/commands/ord/update-restaurant-status.command.js';
 import { UpdateRestaurantCommand } from '#application/commands/ord/update-restaurant.command.js';
@@ -89,6 +90,17 @@ export class RestaurantsController {
 
     let command: Command<Restaurant> = new UpdateRestaurantStatusCommand(this.service, actor, id, request);
     command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant, AccountRole.Operator]);
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Get(':id/menu')
+  @ApiOkResponse({ type: [MenuItem] })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse })
+  getMenu(@CurrentActor() actor: Actor, @Param('id') id: string) {
+    let command: Command<MenuItem[]> = new GetMenuCommand(this.service, id);
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);

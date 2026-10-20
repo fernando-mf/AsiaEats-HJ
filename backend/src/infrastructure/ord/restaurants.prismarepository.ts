@@ -63,6 +63,19 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
     return toMenuItemModel(row);
   }
 
+  async listMenuItems(restaurantId: string): Promise<MenuItem[]> {
+    try {
+      const rows = await this.db.menuItem.findMany({
+        where: { restaurantId },
+        orderBy: [{ createdAt: 'asc' }],
+      });
+
+      return rows.map(toMenuItemModel);
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
+
   async updateMenuItem(menuItem: MenuItem): Promise<MenuItem> {
     try {
       const row = await this.db.menuItem.update({

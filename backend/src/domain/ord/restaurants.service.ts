@@ -30,6 +30,7 @@ export abstract class RestaurantRepository {
 
   abstract createMenuItem(menuItem: MenuItem): Promise<MenuItem>;
   abstract getMenuItem(restaurantId: string, itemId: string): Promise<MenuItem>;
+  abstract listMenuItems(restaurantId: string): Promise<MenuItem[]>;
   abstract updateMenuItem(menuItem: MenuItem): Promise<MenuItem>;
   abstract deleteMenuItem(restaurantId: string, itemId: string): Promise<void>;
 }
@@ -130,6 +131,11 @@ export class RestaurantsService {
     );
 
     return updated;
+  }
+
+  async getMenu(restaurantId: string): Promise<MenuItem[]> {
+    const restaurant = await this.repository.getById(restaurantId);
+    return this.repository.listMenuItems(restaurant.id);
   }
 
   async createMenuItem(actor: Actor, restaurantId: string, request: MenuItemCreationRequest): Promise<MenuItem> {
