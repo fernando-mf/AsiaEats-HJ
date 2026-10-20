@@ -61,6 +61,22 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
     }
   }
 
+  async updateStatus(restaurant: Restaurant): Promise<Restaurant> {
+    try {
+      const row = await this.db.restaurant.update({
+        where: { id: restaurant.id },
+        data: {
+          status: restaurant.status,
+          updatedAt: restaurant.updatedAt,
+        },
+      });
+
+      return this.toModel(row);
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
+
   private toModel(row: {
     id: string;
     ownerId: string;

@@ -3,6 +3,7 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiConflictResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -14,12 +15,14 @@ import {
   Restaurant,
   RestaurantCreationRequest,
   RestaurantsService,
+  RestaurantStatusUpdateRequest,
   RestaurantUpdateRequest,
 } from '#domain/ord/index.js';
 import { CommandRunner } from '../../commands/command-runner.js';
 import { AuthorizedCommand } from '../../commands/decorators/authorized-command.js';
 import { LoggedCommand } from '../../commands/decorators/logged-command.js';
 import { CreateRestaurantCommand } from '../../commands/ord/create-restaurant.command.js';
+import { UpdateRestaurantStatusCommand } from '../../commands/ord/update-restaurant-status.command.js';
 import { UpdateRestaurantCommand } from '../../commands/ord/update-restaurant.command.js';
 import { Command } from '../../commands/command.js';
 import { CurrentActor } from '../../auth/current-actor.decorator.js';
@@ -61,6 +64,23 @@ export class RestaurantsController {
     const request = RestaurantUpdateRequest.initialize(body);
 
     let command: Command<Restaurant> = new UpdateRestaurantCommand(this.service, actor, id, request);
+    command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant, AccountRole.Operator]);
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Put(':id/status')
+  @ApiOkResponse({ type: Restaurant })
+  @ApiBadRequestResponse({ type: ErrorResponse })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiForbiddenResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse })
+  @ApiConflictResponse({ type: ErrorResponse })
+  updateStatus(@CurrentActor() actor: Actor, @Param('id') id: string, @Body() body: RestaurantStatusUpdateRequest) {
+    const request = RestaurantStatusUpdateRequest.initialize(body);
+
+    let command: Command<Restaurant> = new UpdateRestaurantStatusCommand(this.service, actor, id, request);
     command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant, AccountRole.Operator]);
     command = new LoggedCommand(command, this.logger, actor);
 

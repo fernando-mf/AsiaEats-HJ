@@ -68,6 +68,15 @@ export class DuplicateEntityError extends ApplicationError {
   }
 }
 
+export class ConflictError extends ApplicationError {
+  statusCode = 409;
+  code = 'conflict';
+
+  constructor(readonly reason?: string) {
+    super(`conflict: ${reason}`);
+  }
+}
+
 type FieldError = { field: string; messages: string[] };
 
 export class InvalidParamsError extends ApplicationError {
