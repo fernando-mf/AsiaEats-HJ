@@ -6,7 +6,8 @@ import { InvalidParamsError, UnauthenticatedError } from '#domain/errors.js';
 
 export abstract class AccountRepository {
   abstract create(request: Account): Promise<Account>;
-  abstract findByUsername(username: string): Promise<Account>;
+  abstract getByUsername(username: string): Promise<Account>;
+  abstract getById(id: string): Promise<Account>;
 }
 
 @Injectable()
@@ -38,7 +39,7 @@ export class AccountsService {
       throw InvalidParamsError.fromClassValidator(errors);
     }
 
-    const account = await this.accounts.findByUsername(request.username);
+    const account = await this.accounts.getByUsername(request.username);
 
     const valid = await verifyPassword(request.password, account.passwordHash);
     if (!valid) {
@@ -46,5 +47,9 @@ export class AccountsService {
     }
 
     return account;
+  }
+
+  getById(id: string): Promise<Account> {
+    return this.accounts.getById(id);
   }
 }

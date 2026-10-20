@@ -33,12 +33,31 @@ export class PrismaAccountRepository extends AccountRepository {
     }
   }
 
-  async findByUsername(username: string): Promise<Account> {
+  async getByUsername(username: string): Promise<Account> {
     const row = await this.db.account.findUnique({ where: { username } });
     if (!row) {
       throw new NotFoundError('account');
     }
+    return this.toAccount(row);
+  }
 
+  async getById(id: string): Promise<Account> {
+    const row = await this.db.account.findUnique({ where: { id } });
+    if (!row) {
+      throw new NotFoundError('account');
+    }
+    return this.toAccount(row);
+  }
+
+  private toAccount(row: {
+    id: string;
+    name: string;
+    username: string;
+    role: string;
+    passwordHash: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Account {
     const account = new Account();
     account.id = row.id;
     account.name = row.name;
