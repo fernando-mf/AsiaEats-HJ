@@ -185,6 +185,62 @@ paths:
         - bearer: []
       tags:
         - restaurants
+  /api/restaurants/{id}/status:
+    put:
+      operationId: RestaurantsController_updateStatus
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RestaurantStatusUpdateRequest"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Restaurant"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      tags:
+        - restaurants
 info:
   title: AsiaEats API
   description: EatChinese NestJS API
@@ -374,3 +430,17 @@ components:
           minLength: 3
         position:
           $ref: "#/components/schemas/Position"
+      required:
+        - name
+        - position
+    RestaurantStatusUpdateRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - open
+            - paused
+            - closed
+      required:
+        - status

@@ -59,6 +59,15 @@ export class RestaurantUpdateRequest {
   }
 }
 
+export class RestaurantStatusUpdateRequest {
+  @IsEnum(RestaurantStatus)
+  status: RestaurantStatus;
+
+  static initialize(raw: RestaurantStatusUpdateRequest): RestaurantStatusUpdateRequest {
+    return plainToInstance(RestaurantStatusUpdateRequest, raw);
+  }
+}
+
 export class Restaurant {
   id: string;
   ownerId: string;
@@ -77,4 +86,12 @@ export class RestaurantCreatedEvent extends Event<Restaurant> {
 export class RestaurantUpdatedEvent extends Event<Restaurant> {
   readonly entityType = 'restaurant';
   readonly eventType = 'restaurant.updated';
+}
+
+export class RestaurantStatusChangedEvent extends Event<{
+  previousStatus: RestaurantStatus;
+  newStatus: RestaurantStatus;
+}> {
+  readonly entityType = 'restaurant';
+  readonly eventType = 'restaurant.status_changed';
 }

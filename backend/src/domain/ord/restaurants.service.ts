@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { EventsService } from '#domain/events/index.js';
-import { ForbiddenError, InvalidParamsError } from '#domain/errors.js';
+import { ConflictError, ForbiddenError, InvalidParamsError } from '#domain/errors.js';
 import { AccountRole, type Actor } from '#domain/reg/index.js';
 import {
   Restaurant,
   RestaurantCreatedEvent,
   RestaurantCreationRequest,
   RestaurantStatus,
+  RestaurantStatusChangedEvent,
+  RestaurantStatusUpdateRequest,
   RestaurantUpdatedEvent,
   RestaurantUpdateRequest,
 } from './restaurants.models.js';
@@ -15,14 +17,24 @@ import {
 export abstract class RestaurantRepository {
   abstract create(restaurant: Restaurant): Promise<Restaurant>;
   abstract update(restaurant: Restaurant): Promise<Restaurant>;
+  abstract updateStatus(restaurant: Restaurant): Promise<Restaurant>;
   abstract getById(id: string): Promise<Restaurant>;
   abstract getByOwnerId(ownerId: string): Promise<Restaurant>;
+}
+
+// RestaurantOrderQueue gives the restaurant module read access to the orders a restaurant
+// is still working on, without depending on the orders implementation.
+export abstract class RestaurantOrderQueue {
+  // countPending returns the orders in the arrival queue (placed) and the
+  // preparation queue (accepted, preparing).
+  abstract countPending(restaurantId: string): Promise<number>;
 }
 
 @Injectable()
 export class RestaurantsService {
   constructor(
     private readonly repository: RestaurantRepository,
+    private readonly orderQueue: RestaurantOrderQueue,
     private readonly events: EventsService,
   ) {}
 
@@ -64,11 +76,7 @@ export class RestaurantsService {
       throw InvalidParamsError.fromClassValidator(errors);
     }
 
-    const restaurant = await this.repository.getById(id);
-
-    if (actor.role !== AccountRole.Operator && actor.id !== restaurant.ownerId) {
-      throw new ForbiddenError('cannot update a restaurant you do not own');
-    }
+    const restaurant = await this.getRestaurantEnsuringPermissions(actor, id);
 
     restaurant.name = request.name;
     restaurant.position = request.position;
@@ -85,5 +93,52 @@ export class RestaurantsService {
     );
 
     return updated;
+  }
+
+  async updateStatus(actor: Actor, id: string, request: RestaurantStatusUpdateRequest): Promise<Restaurant> {
+    const errors = await validate(request, { whitelist: true, forbidNonWhitelisted: true });
+    if (errors.length > 0) {
+      throw InvalidParamsError.fromClassValidator(errors);
+    }
+
+    const restaurant = await this.getRestaurantEnsuringPermissions(actor, id);
+
+    const previousStatus = restaurant.status;
+    if (previousStatus === request.status) {
+      return restaurant;
+    }
+
+    // TODO: implement cannot close restaurant if it has orders in its preparation queue
+
+    restaurant.status = request.status;
+    restaurant.updatedAt = new Date();
+
+    const updated = await this.repository.updateStatus(restaurant);
+
+    await this.events.publish(
+      new RestaurantStatusChangedEvent({
+        entityId: updated.id,
+        payload: {
+          newStatus: request.status,
+          previousStatus,
+        },
+        actor,
+      }),
+    );
+
+    return updated;
+  }
+
+  // getRestaurantEnsuringPermissions returns a restaurant ensuring access permissions.
+  // - operators may manage any restaurant
+  // - restaurant owners may manage their own restaurant
+  private async getRestaurantEnsuringPermissions(actor: Actor, restaurantId: string): Promise<Restaurant> {
+    const restaurant = await this.repository.getById(restaurantId);
+
+    if (actor.role !== AccountRole.Operator && actor.id !== restaurant.ownerId) {
+      throw new ForbiddenError('cannot manage a restaurant you do not own');
+    }
+
+    return restaurant;
   }
 }
