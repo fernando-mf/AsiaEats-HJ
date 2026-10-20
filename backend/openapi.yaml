@@ -291,6 +291,61 @@ paths:
         - bearer: []
       tags:
         - restaurants
+  /api/restaurants/{id}/menu-items/{itemId}:
+    put:
+      operationId: RestaurantsController_updateMenuItem
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MenuItemUpdateRequest"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MenuItem"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      tags:
+        - restaurants
 info:
   title: AsiaEats API
   description: EatChinese NestJS API
@@ -511,6 +566,24 @@ components:
       required:
         - name
         - price
+    MenuItemUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        price:
+          type: number
+          minimum: 0
+        status:
+          type: string
+          enum:
+            - available
+            - sold_out
+      required:
+        - name
+        - price
+        - status
     MenuItem:
       type: object
       properties:

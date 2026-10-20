@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DuplicateEntityError, InternalError, NotFoundError } from '#domain/errors.js';
-import { MenuItem, Restaurant, RestaurantRepository, RestaurantStatus } from '#domain/ord/index.js';
+import { MenuItem, MenuItemStatus, Restaurant, RestaurantRepository, RestaurantStatus } from '#domain/ord/index.js';
 import { PrismaService } from '#infrastructure/prisma.service.js';
 
 @Injectable()
@@ -23,9 +23,7 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
         },
       });
 
-      restaurant.id = row.id;
-
-      return restaurant;
+      return toRestaurantModel(row);
     } catch (err) {
       if (this.db.isUniqueViolation(err)) {
         throw new DuplicateEntityError('restaurant');
@@ -47,13 +45,38 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
         },
       });
 
-      menuItem.id = row.id;
-
-      return menuItem;
+      return toMenuItemModel(row);
     } catch (err) {
       if (this.db.isForeignKeyViolation(err)) {
         throw new NotFoundError('restaurant');
       }
+      throw new InternalError(err as Error);
+    }
+  }
+
+  async getMenuItem(restaurantId: string, itemId: string): Promise<MenuItem> {
+    const row = await this.db.menuItem.findFirst({ where: { id: itemId, restaurantId } });
+    if (!row) {
+      throw new NotFoundError('menu item');
+    }
+
+    return toMenuItemModel(row);
+  }
+
+  async updateMenuItem(menuItem: MenuItem): Promise<MenuItem> {
+    try {
+      const row = await this.db.menuItem.update({
+        where: { id: menuItem.id },
+        data: {
+          name: menuItem.name,
+          price: menuItem.price,
+          status: menuItem.status,
+          updatedAt: menuItem.updatedAt,
+        },
+      });
+
+      return toMenuItemModel(row);
+    } catch (err) {
       throw new InternalError(err as Error);
     }
   }
@@ -64,7 +87,7 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
       throw new NotFoundError('restaurant');
     }
 
-    return this.toModel(row);
+    return toRestaurantModel(row);
   }
 
   async update(restaurant: Restaurant): Promise<Restaurant> {
@@ -79,7 +102,7 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
         },
       });
 
-      return this.toModel(row);
+      return toRestaurantModel(row);
     } catch (err) {
       throw new InternalError(err as Error);
     }
@@ -95,31 +118,10 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
         },
       });
 
-      return this.toModel(row);
+      return toRestaurantModel(row);
     } catch (err) {
       throw new InternalError(err as Error);
     }
-  }
-
-  private toModel(row: {
-    id: string;
-    ownerId: string;
-    name: string;
-    status: string;
-    latitude: number;
-    longitude: number;
-    createdAt: Date;
-    updatedAt: Date;
-  }): Restaurant {
-    return {
-      id: row.id,
-      ownerId: row.ownerId,
-      name: row.name,
-      status: row.status as RestaurantStatus,
-      position: { latitude: row.latitude, longitude: row.longitude },
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-    };
   }
 
   async getByOwnerId(ownerId: string): Promise<Restaurant> {
@@ -134,20 +136,50 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
         throw new NotFoundError('restaurant');
       }
 
-      return {
-        id: row.id,
-        ownerId: row.ownerId,
-        name: row.name,
-        status: row.status as RestaurantStatus,
-        position: {
-          latitude: row.latitude,
-          longitude: row.longitude,
-        },
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-      };
+      return toRestaurantModel(row);
     } catch (err) {
       throw new InternalError(err as Error);
     }
   }
+}
+
+function toRestaurantModel(row: {
+  id: string;
+  ownerId: string;
+  name: string;
+  status: string;
+  latitude: number;
+  longitude: number;
+  createdAt: Date;
+  updatedAt: Date;
+}): Restaurant {
+  return {
+    id: row.id,
+    ownerId: row.ownerId,
+    name: row.name,
+    status: row.status as RestaurantStatus,
+    position: { latitude: row.latitude, longitude: row.longitude },
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+function toMenuItemModel(row: {
+  id: string;
+  restaurantId: string;
+  name: string;
+  price: { toNumber(): number };
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+}): MenuItem {
+  return {
+    id: row.id,
+    restaurantId: row.restaurantId,
+    name: row.name,
+    price: row.price.toNumber(),
+    status: row.status as MenuItemStatus,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
 }

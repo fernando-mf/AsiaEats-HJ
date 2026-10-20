@@ -14,6 +14,7 @@ import { AccountRole, type Actor } from '#domain/reg/index.js';
 import {
   MenuItem,
   MenuItemCreationRequest,
+  MenuItemUpdateRequest,
   Restaurant,
   RestaurantCreationRequest,
   RestaurantsService,
@@ -25,6 +26,7 @@ import { AuthorizedCommand } from '#application/commands/decorators/authorized-c
 import { LoggedCommand } from '#application/commands/decorators/logged-command.js';
 import { CreateMenuItemCommand } from '#application/commands/ord/create-menu-item.command.js';
 import { CreateRestaurantCommand } from '#application/commands/ord/create-restaurant.command.js';
+import { UpdateMenuItemCommand } from '#application/commands/ord/update-menu-item.command.js';
 import { UpdateRestaurantStatusCommand } from '#application/commands/ord/update-restaurant-status.command.js';
 import { UpdateRestaurantCommand } from '#application/commands/ord/update-restaurant.command.js';
 import { Command } from '#application/commands/command.js';
@@ -100,6 +102,27 @@ export class RestaurantsController {
     const request = MenuItemCreationRequest.initialize(body);
 
     let command: Command<MenuItem> = new CreateMenuItemCommand(this.service, actor, id, request);
+    command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Put(':id/menu-items/:itemId')
+  @ApiOkResponse({ type: MenuItem })
+  @ApiBadRequestResponse({ type: ErrorResponse })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiForbiddenResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse })
+  updateMenuItem(
+    @CurrentActor() actor: Actor,
+    @Param('id') id: string,
+    @Param('itemId') itemId: string,
+    @Body() body: MenuItemUpdateRequest,
+  ) {
+    const request = MenuItemUpdateRequest.initialize(body);
+
+    let command: Command<MenuItem> = new UpdateMenuItemCommand(this.service, actor, id, itemId, request);
     command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
     command = new LoggedCommand(command, this.logger, actor);
 

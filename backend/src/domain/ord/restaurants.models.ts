@@ -122,6 +122,23 @@ export class MenuItemCreationRequest {
   }
 }
 
+export class MenuItemUpdateRequest {
+  @IsString()
+  @MinLength(1)
+  name: string;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  price: number;
+
+  @IsEnum(MenuItemStatus)
+  status: MenuItemStatus;
+
+  static initialize(raw: MenuItemUpdateRequest): MenuItemUpdateRequest {
+    return plainToInstance(MenuItemUpdateRequest, raw);
+  }
+}
+
 export class MenuItem {
   id: string;
   restaurantId: string;
@@ -135,4 +152,9 @@ export class MenuItem {
 export class MenuItemCreatedEvent extends Event<MenuItem> {
   readonly entityType = 'menu_item';
   readonly eventType = 'menu_item.created';
+}
+
+export class MenuItemUpdatedEvent extends Event<MenuItem> {
+  readonly entityType = 'menu_item';
+  readonly eventType = 'menu_item.updated';
 }

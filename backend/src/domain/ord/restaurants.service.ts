@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { EventsService } from '#domain/events/index.js';
-import { ConflictError, ForbiddenError, InvalidParamsError } from '#domain/errors.js';
+import { ForbiddenError, InvalidParamsError } from '#domain/errors.js';
 import { AccountRole, type Actor } from '#domain/reg/index.js';
 import {
   MenuItem,
   MenuItemCreatedEvent,
   MenuItemCreationRequest,
   MenuItemStatus,
+  MenuItemUpdatedEvent,
+  MenuItemUpdateRequest,
   Restaurant,
   RestaurantCreatedEvent,
   RestaurantCreationRequest,
@@ -24,22 +26,16 @@ export abstract class RestaurantRepository {
   abstract updateStatus(restaurant: Restaurant): Promise<Restaurant>;
   abstract getById(id: string): Promise<Restaurant>;
   abstract getByOwnerId(ownerId: string): Promise<Restaurant>;
-  abstract createMenuItem(menuItem: MenuItem): Promise<MenuItem>;
-}
 
-// RestaurantOrderQueue gives the restaurant module read access to the orders a restaurant
-// is still working on, without depending on the orders implementation.
-export abstract class RestaurantOrderQueue {
-  // countPending returns the orders in the arrival queue (placed) and the
-  // preparation queue (accepted, preparing).
-  abstract countPending(restaurantId: string): Promise<number>;
+  abstract createMenuItem(menuItem: MenuItem): Promise<MenuItem>;
+  abstract getMenuItem(restaurantId: string, itemId: string): Promise<MenuItem>;
+  abstract updateMenuItem(menuItem: MenuItem): Promise<MenuItem>;
 }
 
 @Injectable()
 export class RestaurantsService {
   constructor(
     private readonly repository: RestaurantRepository,
-    private readonly orderQueue: RestaurantOrderQueue,
     private readonly events: EventsService,
   ) {}
 
@@ -163,6 +159,38 @@ export class RestaurantsService {
     );
 
     return created;
+  }
+
+  async updateMenuItem(
+    actor: Actor,
+    restaurantId: string,
+    itemId: string,
+    request: MenuItemUpdateRequest,
+  ): Promise<MenuItem> {
+    const errors = await validate(request, { whitelist: true, forbidNonWhitelisted: true });
+    if (errors.length > 0) {
+      throw InvalidParamsError.fromClassValidator(errors);
+    }
+
+    const restaurant = await this.getRestaurantEnsuringPermissions(actor, restaurantId);
+    const menuItem = await this.repository.getMenuItem(restaurant.id, itemId);
+
+    menuItem.name = request.name;
+    menuItem.price = request.price;
+    menuItem.status = request.status;
+    menuItem.updatedAt = new Date();
+
+    const updated = await this.repository.updateMenuItem(menuItem);
+
+    await this.events.publish(
+      new MenuItemUpdatedEvent({
+        entityId: updated.id,
+        payload: updated,
+        actor,
+      }),
+    );
+
+    return updated;
   }
 
   // getRestaurantEnsuringPermissions returns a restaurant ensuring access permissions.
