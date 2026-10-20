@@ -28,6 +28,7 @@ model Account {
   updatedAt    DateTime    @map("updated_at")
 
   restaurants Restaurant[]
+  orders      Order[]
 
   @@map("accounts")
 }
@@ -52,6 +53,7 @@ model Restaurant {
 
   owner     Account    @relation(fields: [ownerId], references: [id])
   menuItems MenuItem[]
+  orders    Order[]
 
   @@unique([ownerId])
   @@map("restaurants")
@@ -77,6 +79,50 @@ model MenuItem {
 
   @@index([restaurantId])
   @@map("menu_items")
+}
+
+enum OrderStatus {
+  placed
+  accepted
+  preparing
+  ready
+  picked_up
+  delivered
+  rejected
+  cancelled
+
+  @@map("order_status")
+}
+
+model Order {
+  id           String      @id @default(uuid(7)) @db.Uuid
+  customerId   String      @map("customer_id") @db.Uuid
+  restaurantId String      @map("restaurant_id") @db.Uuid
+  status       OrderStatus
+  createdAt    DateTime    @map("created_at")
+  updatedAt    DateTime    @map("updated_at")
+
+  customer   Account     @relation(fields: [customerId], references: [id])
+  restaurant Restaurant  @relation(fields: [restaurantId], references: [id])
+  lines      OrderLine[]
+
+  @@index([customerId])
+  @@index([restaurantId])
+  @@map("orders")
+}
+
+model OrderLine {
+  id         String  @id @default(uuid(7)) @db.Uuid
+  orderId    String  @map("order_id") @db.Uuid
+  menuItemId String  @map("menu_item_id") @db.Uuid
+  name       String
+  unitPrice  Decimal @map("unit_price") @db.Decimal(10, 2)
+  quantity   Int
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@map("order_lines")
 }
 
 // EventLog is append-only. Rows are inserted by the event publisher and never updated or deleted.
