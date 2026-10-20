@@ -1,5 +1,5 @@
 import type { Account, AccountsService, Actor } from '#domain/reg/index.js';
-import type { Command } from '../command.js';
+import type { Command } from '#application/commands/command.js';
 
 export class GetMeCommand implements Command<Account> {
   readonly name = 'GetMeCommand';

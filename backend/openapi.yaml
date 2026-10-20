@@ -241,6 +241,56 @@ paths:
         - bearer: []
       tags:
         - restaurants
+  /api/restaurants/{id}/menu-items:
+    post:
+      operationId: RestaurantsController_createMenuItem
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MenuItemCreationRequest"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MenuItem"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      tags:
+        - restaurants
 info:
   title: AsiaEats API
   description: EatChinese NestJS API
@@ -444,3 +494,50 @@ components:
             - closed
       required:
         - status
+    MenuItemCreationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        price:
+          type: number
+          minimum: 0
+        status:
+          type: string
+          enum:
+            - available
+            - sold_out
+      required:
+        - name
+        - price
+    MenuItem:
+      type: object
+      properties:
+        id:
+          type: string
+        restaurantId:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        status:
+          type: string
+          enum:
+            - available
+            - sold_out
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - restaurantId
+        - name
+        - price
+        - status
+        - createdAt
+        - updatedAt

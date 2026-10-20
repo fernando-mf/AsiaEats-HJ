@@ -1,6 +1,6 @@
 import type { Restaurant, RestaurantCreationRequest, RestaurantsService } from '#domain/ord/index.js';
 import type { Actor } from '#domain/reg/index.js';
-import type { Command } from '../command.js';
+import type { Command } from '#application/commands/command.js';
 
 export class CreateRestaurantCommand implements Command<Restaurant> {
   readonly name = 'CreateRestaurantCommand';

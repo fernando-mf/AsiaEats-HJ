@@ -5,7 +5,7 @@
   "description": "EatChinese NestJS API",
   "type": "module",
   "imports": {
-    "#/application/*": {
+    "#application/*": {
       "source": "./src/application/*",
       "default": "./dist/application/*"
     },

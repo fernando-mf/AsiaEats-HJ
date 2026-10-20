@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DuplicateEntityError, InternalError, NotFoundError } from '#domain/errors.js';
-import { Restaurant, RestaurantRepository, RestaurantStatus } from '#domain/ord/index.js';
-import { PrismaService } from '../prisma.service.js';
+import { MenuItem, Restaurant, RestaurantRepository, RestaurantStatus } from '#domain/ord/index.js';
+import { PrismaService } from '#infrastructure/prisma.service.js';
 
 @Injectable()
 export class PrismaRestaurantRepository extends RestaurantRepository {
@@ -29,6 +29,30 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
     } catch (err) {
       if (this.db.isUniqueViolation(err)) {
         throw new DuplicateEntityError('restaurant');
+      }
+      throw new InternalError(err as Error);
+    }
+  }
+
+  async createMenuItem(menuItem: MenuItem): Promise<MenuItem> {
+    try {
+      const row = await this.db.menuItem.create({
+        data: {
+          restaurantId: menuItem.restaurantId,
+          name: menuItem.name,
+          price: menuItem.price,
+          status: menuItem.status,
+          createdAt: menuItem.createdAt,
+          updatedAt: menuItem.updatedAt,
+        },
+      });
+
+      menuItem.id = row.id;
+
+      return menuItem;
+    } catch (err) {
+      if (this.db.isForeignKeyViolation(err)) {
+        throw new NotFoundError('restaurant');
       }
       throw new InternalError(err as Error);
     }

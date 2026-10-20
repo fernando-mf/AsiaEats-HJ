@@ -1,6 +1,6 @@
 import { ApplicationError } from '#domain/errors.js';
 import type { Actor } from '#domain/reg/index.js';
-import type { Command } from '../command.js';
+import type { Command } from '#application/commands/command.js';
 import { CommandDecorator } from './command-decorator.js';
 
 export interface CommandLogger {

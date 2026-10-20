@@ -10,15 +10,15 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Account, AccountCreationRequest, AccountsService, LoginRequest, type Actor } from '#domain/reg/index.js';
-import { GetMeCommand } from '../../commands/reg/get-me.command.js';
-import { CurrentActor } from '../../auth/current-actor.decorator.js';
-import { LoginCommand, LoginResult } from '../../commands/reg/login.command.js';
-import { CommandRunner } from '../../commands/command-runner.js';
-import { LoggedCommand } from '../../commands/decorators/logged-command.js';
-import { CreateAccountCommand } from '../../commands/reg/create-account.command.js';
-import { Public } from '../../auth/public.decorator.js';
-import { Command } from '../../commands/command.js';
-import { AccountResponse, ErrorResponse, LoginResponse } from '../responses.dto.js';
+import { GetMeCommand } from '#application/commands/reg/get-me.command.js';
+import { CurrentActor } from '#application/auth/current-actor.decorator.js';
+import { LoginCommand, LoginResult } from '#application/commands/reg/login.command.js';
+import { CommandRunner } from '#application/commands/command-runner.js';
+import { LoggedCommand } from '#application/commands/decorators/logged-command.js';
+import { CreateAccountCommand } from '#application/commands/reg/create-account.command.js';
+import { Public } from '#application/auth/public.decorator.js';
+import { Command } from '#application/commands/command.js';
+import { AccountResponse, ErrorResponse, LoginResponse } from '#application/controllers/responses.dto.js';
 
 @ApiTags('auth')
 @Controller('auth')

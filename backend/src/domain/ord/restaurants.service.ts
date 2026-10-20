@@ -4,6 +4,10 @@ import { EventsService } from '#domain/events/index.js';
 import { ConflictError, ForbiddenError, InvalidParamsError } from '#domain/errors.js';
 import { AccountRole, type Actor } from '#domain/reg/index.js';
 import {
+  MenuItem,
+  MenuItemCreatedEvent,
+  MenuItemCreationRequest,
+  MenuItemStatus,
   Restaurant,
   RestaurantCreatedEvent,
   RestaurantCreationRequest,
@@ -20,6 +24,7 @@ export abstract class RestaurantRepository {
   abstract updateStatus(restaurant: Restaurant): Promise<Restaurant>;
   abstract getById(id: string): Promise<Restaurant>;
   abstract getByOwnerId(ownerId: string): Promise<Restaurant>;
+  abstract createMenuItem(menuItem: MenuItem): Promise<MenuItem>;
 }
 
 // RestaurantOrderQueue gives the restaurant module read access to the orders a restaurant
@@ -127,6 +132,37 @@ export class RestaurantsService {
     );
 
     return updated;
+  }
+
+  async createMenuItem(actor: Actor, restaurantId: string, request: MenuItemCreationRequest): Promise<MenuItem> {
+    const errors = await validate(request, { whitelist: true, forbidNonWhitelisted: true });
+    if (errors.length > 0) {
+      throw InvalidParamsError.fromClassValidator(errors);
+    }
+
+    const restaurant = await this.getRestaurantEnsuringPermissions(actor, restaurantId);
+
+    const now = new Date();
+
+    const menuItem = new MenuItem();
+    menuItem.restaurantId = restaurant.id;
+    menuItem.name = request.name;
+    menuItem.price = request.price;
+    menuItem.status = request.status ?? MenuItemStatus.Available;
+    menuItem.createdAt = now;
+    menuItem.updatedAt = now;
+
+    const created = await this.repository.createMenuItem(menuItem);
+
+    await this.events.publish(
+      new MenuItemCreatedEvent({
+        entityId: created.id,
+        payload: created,
+        actor,
+      }),
+    );
+
+    return created;
   }
 
   // getRestaurantEnsuringPermissions returns a restaurant ensuring access permissions.

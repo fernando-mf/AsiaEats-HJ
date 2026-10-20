@@ -4,8 +4,10 @@ import {
   IsEnum,
   IsLatitude,
   IsLongitude,
+  IsNumber,
   IsOptional,
   IsString,
+  Min,
   MinLength,
   ValidateNested,
 } from 'class-validator';
@@ -94,4 +96,43 @@ export class RestaurantStatusChangedEvent extends Event<{
 }> {
   readonly entityType = 'restaurant';
   readonly eventType = 'restaurant.status_changed';
+}
+
+export enum MenuItemStatus {
+  Available = 'available',
+  SoldOut = 'sold_out',
+}
+
+export class MenuItemCreationRequest {
+  @IsString()
+  @MinLength(1)
+  name: string;
+
+  // price is expressed in the restaurant's currency, with up to 2 decimals.
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  price: number;
+
+  @IsOptional()
+  @IsEnum(MenuItemStatus)
+  status?: MenuItemStatus;
+
+  static initialize(raw: MenuItemCreationRequest): MenuItemCreationRequest {
+    return plainToInstance(MenuItemCreationRequest, raw);
+  }
+}
+
+export class MenuItem {
+  id: string;
+  restaurantId: string;
+  name: string;
+  price: number;
+  status: MenuItemStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export class MenuItemCreatedEvent extends Event<MenuItem> {
+  readonly entityType = 'menu_item';
+  readonly eventType = 'menu_item.created';
 }

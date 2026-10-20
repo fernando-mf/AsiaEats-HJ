@@ -1,4 +1,4 @@
-import type { Command } from '../command.js';
+import type { Command } from '#application/commands/command.js';
 
 export abstract class CommandDecorator<TResult> implements Command<TResult> {
   constructor(protected readonly wrapped: Command<TResult>) {}
