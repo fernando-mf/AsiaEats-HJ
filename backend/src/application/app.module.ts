@@ -20,6 +20,10 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard.js';
       inject: [ConfigService],
       useFactory: (config: ConfigService<Config, true>) => ({
         secret: config.get('JWT_SECRET', { infer: true }),
+        signOptions: {
+          algorithm: 'HS256' as const,
+          expiresIn: config.get('JWT_EXPIRES_IN_SECONDS', { infer: true }),
+        },
       }),
     }),
     InfrastructureModule,

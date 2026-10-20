@@ -28,6 +28,18 @@ export class AccountCreationRequest {
   }
 }
 
+export class LoginRequest {
+  @IsString()
+  username: string;
+
+  @IsString()
+  password: string;
+
+  static initialize(raw: LoginRequest): LoginRequest {
+    return plainToInstance(LoginRequest, raw);
+  }
+}
+
 export class Account {
   id: string;
   name: string;
