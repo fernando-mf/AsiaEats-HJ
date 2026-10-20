@@ -3,10 +3,11 @@ import { ConfigService } from '@nestjs/config';
 
 import { AppModule } from './app.module.js';
 import type { Config } from './application.config.js';
+import { configureApp } from './app.setup.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api');
+  configureApp(app);
 
   const config = app.get<ConfigService<Config, true>>(ConfigService);
 

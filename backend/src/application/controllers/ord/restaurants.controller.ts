@@ -1,4 +1,12 @@
 import { Body, Controller, Logger, Post } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { AccountRole, type Actor } from '#domain/reg/index.js';
 import { Restaurant, RestaurantCreationRequest, RestaurantsService } from '#domain/ord/index.js';
 import { CommandRunner } from '../../commands/command-runner.js';
@@ -7,7 +15,10 @@ import { LoggedCommand } from '../../commands/decorators/logged-command.js';
 import { CreateRestaurantCommand } from '../../commands/ord/create-restaurant.command.js';
 import { Command } from '../../commands/command.js';
 import { CurrentActor } from '../../auth/current-actor.decorator.js';
+import { ErrorResponse } from '../responses.dto.js';
 
+@ApiTags('restaurants')
+@ApiBearerAuth()
 @Controller('restaurants')
 export class RestaurantsController {
   private readonly logger = new Logger(RestaurantsController.name);
@@ -18,6 +29,10 @@ export class RestaurantsController {
   ) {}
 
   @Post()
+  @ApiCreatedResponse({ type: Restaurant })
+  @ApiBadRequestResponse({ type: ErrorResponse })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiForbiddenResponse({ type: ErrorResponse })
   create(@CurrentActor() actor: Actor, @Body() body: RestaurantCreationRequest) {
     const request = RestaurantCreationRequest.initialize(body);
 

@@ -1,5 +1,14 @@
 import { Body, Controller, Get, HttpCode, Logger, Post } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { Account, AccountCreationRequest, AccountsService, LoginRequest, type Actor } from '#domain/reg/index.js';
 import { GetMeCommand } from '../../commands/reg/get-me.command.js';
 import { CurrentActor } from '../../auth/current-actor.decorator.js';
@@ -9,7 +18,9 @@ import { LoggedCommand } from '../../commands/decorators/logged-command.js';
 import { CreateAccountCommand } from '../../commands/reg/create-account.command.js';
 import { Public } from '../../auth/public.decorator.js';
 import { Command } from '../../commands/command.js';
+import { AccountResponse, ErrorResponse, LoginResponse } from '../responses.dto.js';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -22,6 +33,9 @@ export class AuthController {
 
   @Public()
   @Post('register')
+  @ApiCreatedResponse({ type: AccountResponse })
+  @ApiBadRequestResponse({ type: ErrorResponse })
+  @ApiConflictResponse({ type: ErrorResponse })
   create(@Body() body: AccountCreationRequest) {
     const request = AccountCreationRequest.initialize(body);
 
@@ -34,6 +48,9 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(200)
+  @ApiOkResponse({ type: LoginResponse })
+  @ApiBadRequestResponse({ type: ErrorResponse })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
   login(@Body() body: LoginRequest) {
     const request = LoginRequest.initialize(body);
 
@@ -44,6 +61,9 @@ export class AuthController {
   }
 
   @Get('me')
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: AccountResponse })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
   me(@CurrentActor() actor: Actor) {
     let command: Command<Account> = new GetMeCommand(this.service, actor);
     command = new LoggedCommand(command, this.logger, actor);

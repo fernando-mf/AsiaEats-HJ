@@ -1,11 +1,15 @@
 import { Controller, Get } from '@nestjs/common';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/public.decorator.js';
+import { StatusResponse } from './responses.dto.js';
 
+@ApiTags('status')
 @Public()
 @Controller('status')
 export class StatusController {
   @Get()
-  getStatus() {
+  @ApiOkResponse({ type: StatusResponse })
+  getStatus(): StatusResponse {
     return {
       status: 'ok',
       datetime: new Date().toISOString(),

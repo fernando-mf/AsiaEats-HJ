@@ -1,0 +1,318 @@
+openapi: 3.0.0
+paths:
+  /api/status:
+    get:
+      operationId: StatusController_getStatus
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+      tags:
+        - status
+  /api/auth/register:
+    post:
+      operationId: AuthController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountCreationRequest"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      tags:
+        - auth
+  /api/auth/login:
+    post:
+      operationId: AuthController_login
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      tags:
+        - auth
+  /api/auth/me:
+    get:
+      operationId: AuthController_me
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      tags:
+        - auth
+  /api/restaurants:
+    post:
+      operationId: RestaurantsController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RestaurantCreationRequest"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Restaurant"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      tags:
+        - restaurants
+info:
+  title: AsiaEats API
+  description: EatChinese NestJS API
+  version: "1.0"
+  contact: {}
+tags: []
+servers: []
+components:
+  securitySchemes:
+    bearer:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+  schemas:
+    StatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        datetime:
+          type: string
+      required:
+        - status
+        - datetime
+    AccountCreationRequest:
+      type: object
+      properties:
+        role:
+          type: string
+          enum:
+            - customer
+            - restaurant
+            - courier
+            - operator
+        username:
+          type: string
+        password:
+          type: string
+          minLength: 8
+        name:
+          type: string
+          minLength: 3
+      required:
+        - role
+        - username
+        - password
+        - name
+    AccountResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        username:
+          type: string
+        role:
+          enum:
+            - customer
+            - restaurant
+            - courier
+            - operator
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - name
+        - username
+        - role
+        - createdAt
+        - updatedAt
+    FieldErrorResponse:
+      type: object
+      properties:
+        field:
+          type: string
+        messages:
+          type: array
+          items:
+            type: string
+      required:
+        - field
+        - messages
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        entityType:
+          type: string
+        reason:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldErrorResponse"
+      required:
+        - code
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        account:
+          $ref: "#/components/schemas/AccountResponse"
+      required:
+        - accessToken
+        - account
+    Position:
+      type: object
+      properties:
+        latitude:
+          type: number
+        longitude:
+          type: number
+      required:
+        - latitude
+        - longitude
+    RestaurantCreationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+        status:
+          type: string
+          enum:
+            - open
+            - paused
+            - closed
+        position:
+          $ref: "#/components/schemas/Position"
+      required:
+        - name
+        - position
+    Restaurant:
+      type: object
+      properties:
+        id:
+          type: string
+        ownerId:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum:
+            - open
+            - paused
+            - closed
+        position:
+          $ref: "#/components/schemas/Position"
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - ownerId
+        - name
+        - status
+        - position
+        - createdAt
+        - updatedAt

@@ -22,6 +22,7 @@
     "build": "pnpm db:generate && nest build",
     "dev": "nest start --watch --env-file .env",
     "start": "node dist/application/main.js",
+    "openapi": "pnpm build && node --env-file-if-exists=.env dist/application/openapi.js",
     "deps:up": "docker compose -f integration/docker-compose.yml up",
     "deps:down": "docker compose -f integration/docker-compose.yml down",
     "db:generate": "prisma generate --config integration/prisma/prisma.config.ts",
@@ -37,6 +38,7 @@
     "@nestjs/core": "^12.0.1",
     "@nestjs/jwt": "^12.0.3",
     "@nestjs/platform-express": "^12.0.1",
+    "@nestjs/swagger": "^12.0.2",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
     "class-transformer": "^0.5.1",
@@ -44,6 +46,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "uuid": "^14.0.3",
+    "yaml": "^2.9.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
