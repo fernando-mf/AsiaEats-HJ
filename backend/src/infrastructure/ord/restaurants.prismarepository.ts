@@ -34,6 +34,54 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
     }
   }
 
+  async getById(id: string): Promise<Restaurant> {
+    const row = await this.db.restaurant.findUnique({ where: { id } });
+    if (!row) {
+      throw new NotFoundError('restaurant');
+    }
+
+    return this.toModel(row);
+  }
+
+  async update(restaurant: Restaurant): Promise<Restaurant> {
+    try {
+      const row = await this.db.restaurant.update({
+        where: { id: restaurant.id },
+        data: {
+          name: restaurant.name,
+          latitude: restaurant.position.latitude,
+          longitude: restaurant.position.longitude,
+          updatedAt: restaurant.updatedAt,
+        },
+      });
+
+      return this.toModel(row);
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
+
+  private toModel(row: {
+    id: string;
+    ownerId: string;
+    name: string;
+    status: string;
+    latitude: number;
+    longitude: number;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Restaurant {
+    return {
+      id: row.id,
+      ownerId: row.ownerId,
+      name: row.name,
+      status: row.status as RestaurantStatus,
+      position: { latitude: row.latitude, longitude: row.longitude },
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    };
+  }
+
   async getByOwnerId(ownerId: string): Promise<Restaurant> {
     try {
       const row = await this.db.restaurant.findFirst({
