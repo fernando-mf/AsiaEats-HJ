@@ -3,6 +3,7 @@ import { infrastructureConfigSchema } from '#infrastructure/infrastructure.confi
 
 export const applicationConfigSchema = z.object({
   PORT: z.coerce.number().default(3000),
+  JWT_SECRET: z.string().min(32),
 });
 
 export const configSchema = applicationConfigSchema.extend(infrastructureConfigSchema.shape);

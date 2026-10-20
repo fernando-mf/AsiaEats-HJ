@@ -6,6 +6,7 @@ import { AuthorizedCommand } from '../../commands/decorators/authorized-command.
 import { LoggedCommand } from '../../commands/decorators/logged-command.js';
 import { CreateRestaurantCommand } from '../../commands/ord/create-restaurant.command.js';
 import { Command } from '../../commands/command.js';
+import { CurrentActor } from '../../auth/current-actor.decorator.js';
 
 @Controller('restaurants')
 export class RestaurantsController {
@@ -17,10 +18,7 @@ export class RestaurantsController {
   ) {}
 
   @Post()
-  create(@Body() body: RestaurantCreationRequest) {
-    // TODO: get the actor from the JWT instead of this hack
-    const actor: Actor = { id: '', role: AccountRole.Restaurant };
-
+  create(@CurrentActor() actor: Actor, @Body() body: RestaurantCreationRequest) {
     const request = RestaurantCreationRequest.initialize(body);
 
     let command: Command<Restaurant> = new CreateRestaurantCommand(this.service, actor, request);
