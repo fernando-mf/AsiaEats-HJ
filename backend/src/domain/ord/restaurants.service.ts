@@ -133,6 +133,10 @@ export class RestaurantsService {
     return updated;
   }
 
+  async getById(id: string): Promise<Restaurant> {
+    return this.repository.getById(id);
+  }
+
   async getMenu(restaurantId: string): Promise<MenuItem[]> {
     const restaurant = await this.repository.getById(restaurantId);
     return this.repository.listMenuItems(restaurant.id);

@@ -96,6 +96,57 @@ paths:
         - bearer: []
       tags:
         - auth
+  /api/orders:
+    post:
+      operationId: OrdersController_place
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderPlacementRequest"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      tags:
+        - orders
   /api/restaurants:
     post:
       operationId: RestaurantsController_create
@@ -232,6 +283,40 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      tags:
+        - restaurants
+  /api/restaurants/{id}/menu:
+    get:
+      operationId: RestaurantsController_getMenu
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MenuItem"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: ""
           content:
             application/json:
@@ -507,6 +592,92 @@ components:
       required:
         - accessToken
         - account
+    OrderItemRequest:
+      type: object
+      properties:
+        menuItemId:
+          type: string
+          format: uuid
+        quantity:
+          type: number
+          minimum: 1
+      required:
+        - menuItemId
+        - quantity
+    OrderPlacementRequest:
+      type: object
+      properties:
+        restaurantId:
+          type: string
+          format: uuid
+        items:
+          minItems: 1
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItemRequest"
+      required:
+        - restaurantId
+        - items
+    OrderLine:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        menuItemId:
+          type: string
+        name:
+          type: string
+        unitPrice:
+          type: number
+        quantity:
+          type: number
+      required:
+        - id
+        - orderId
+        - menuItemId
+        - name
+        - unitPrice
+        - quantity
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string
+        restaurantId:
+          type: string
+        status:
+          type: string
+          enum:
+            - placed
+            - accepted
+            - preparing
+            - ready
+            - picked_up
+            - delivered
+            - rejected
+            - cancelled
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderLine"
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - customerId
+        - restaurantId
+        - status
+        - lines
+        - createdAt
+        - updatedAt
     Position:
       type: object
       properties:
@@ -587,6 +758,36 @@ components:
             - closed
       required:
         - status
+    MenuItem:
+      type: object
+      properties:
+        id:
+          type: string
+        restaurantId:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        status:
+          enum:
+            - available
+            - sold_out
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - restaurantId
+        - name
+        - price
+        - status
+        - createdAt
+        - updatedAt
     MenuItemCreationRequest:
       type: object
       properties:
@@ -622,33 +823,3 @@ components:
         - name
         - price
         - status
-    MenuItem:
-      type: object
-      properties:
-        id:
-          type: string
-        restaurantId:
-          type: string
-        name:
-          type: string
-        price:
-          type: number
-        status:
-          type: string
-          enum:
-            - available
-            - sold_out
-        createdAt:
-          format: date-time
-          type: string
-        updatedAt:
-          format: date-time
-          type: string
-      required:
-        - id
-        - restaurantId
-        - name
-        - price
-        - status
-        - createdAt
-        - updatedAt
