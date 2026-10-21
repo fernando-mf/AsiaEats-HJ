@@ -25,6 +25,7 @@ import { AcceptOrderCommand } from '#application/commands/ord/accept-order.comma
 import { CancelOrderCommand } from '#application/commands/ord/cancel-order.command.js';
 import { FindOrdersCommand } from '#application/commands/ord/find-orders.command.js';
 import { GetOrderCommand } from '#application/commands/ord/get-order.command.js';
+import { MarkOrderReadyCommand } from '#application/commands/ord/mark-order-ready.command.js';
 import { PlaceOrderCommand } from '#application/commands/ord/place-order.command.js';
 import { RejectOrderCommand } from '#application/commands/ord/reject-order.command.js';
 import { StartPreparingCommand } from '#application/commands/ord/start-preparing.command.js';
@@ -138,6 +139,21 @@ export class OrdersController {
   @ApiConflictResponse({ type: ErrorResponse })
   prepare(@CurrentActor() actor: Actor, @Param('id') id: string) {
     let command: Command<Order> = new StartPreparingCommand(this.service, actor, id);
+    command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Post(':id/ready')
+  @HttpCode(200)
+  @ApiOkResponse({ type: Order })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiForbiddenResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse })
+  @ApiConflictResponse({ type: ErrorResponse })
+  ready(@CurrentActor() actor: Actor, @Param('id') id: string) {
+    let command: Command<Order> = new MarkOrderReadyCommand(this.service, actor, id);
     command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
     command = new LoggedCommand(command, this.logger, actor);
 

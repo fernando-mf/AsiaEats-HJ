@@ -176,6 +176,18 @@ export class OrdersService {
     return updated;
   }
 
+  async ready(actor: Actor, id: string): Promise<Order> {
+    const order = await this.repository.getById(id, { restaurantOwnerId: actor.id });
+
+    const event = new OrderStateMachine(actor, order).ready();
+    order.updatedAt = new Date();
+
+    const updated = await this.repository.updateStatus(order, event.payload.previousStatus);
+    await this.events.publish(event);
+
+    return updated;
+  }
+
   async cancel(actor: Actor, id: string): Promise<Order> {
     const order = await this.getById(actor, id);
 
