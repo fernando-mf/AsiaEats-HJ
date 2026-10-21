@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { EventsService } from '#domain/events/index.js';
-import { ForbiddenError, InvalidParamsError, NotFoundError } from '#domain/errors.js';
+import { InvalidParamsError, NotFoundError } from '#domain/errors.js';
 import { AccountRole, type Actor } from '#domain/reg/index.js';
 import { MenuItemNotInMenuError, MenuItemSoldOutError, RestaurantNotOpenError } from './orders.errors.js';
 import {
@@ -10,6 +10,7 @@ import {
   OrderPlacedEvent,
   OrderPlacementRequest,
   OrderRejectionRequest,
+  OrderSearchRequest,
   OrderStatus,
 } from './orders.models.js';
 import { OrderStateMachine } from './orders.statemachine.js';
@@ -18,12 +19,14 @@ import { RestaurantsService } from './restaurants.service.js';
 
 export interface OrderFilter {
   customerId?: string;
+  restaurantId?: string;
   restaurantOwnerId?: string;
 }
 
 export abstract class OrderRepository {
   abstract create(order: Order): Promise<Order>;
   abstract getById(id: string, filter?: OrderFilter): Promise<Order>;
+  abstract list(filter?: OrderFilter): Promise<Order[]>;
   abstract updateStatus(order: Order): Promise<Order>;
 }
 
@@ -103,6 +106,24 @@ export class OrdersService {
         return this.repository.getById(id);
       default:
         throw new NotFoundError('order'); // don't reveal the existence of the order
+    }
+  }
+
+  async find(actor: Actor, request: OrderSearchRequest): Promise<Order[]> {
+    const errors = await validate(request);
+    if (errors.length > 0) {
+      throw InvalidParamsError.fromClassValidator(errors);
+    }
+
+    switch (actor.role) {
+      case AccountRole.Customer:
+        return this.repository.list({ ...request, customerId: actor.id });
+      case AccountRole.Restaurant:
+        return this.repository.list({ ...request, restaurantOwnerId: actor.id });
+      case AccountRole.Operator:
+        return this.repository.list({ ...request });
+      default:
+        return [];
     }
   }
 

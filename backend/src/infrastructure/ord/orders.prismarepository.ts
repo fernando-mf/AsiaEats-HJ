@@ -55,6 +55,24 @@ export class PrismaOrderRepository extends OrderRepository {
     return toOrderModel(row);
   }
 
+  async list(filter: OrderFilter = {}): Promise<Order[]> {
+    try {
+      const rows = await this.db.order.findMany({
+        where: {
+          customerId: filter.customerId,
+          restaurantId: filter.restaurantId,
+          restaurant: filter.restaurantOwnerId ? { ownerId: filter.restaurantOwnerId } : undefined,
+        },
+        include: { lines: { orderBy: [{ id: 'asc' }] } },
+        orderBy: [{ createdAt: 'desc' }],
+      });
+
+      return rows.map(toOrderModel);
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
+
   async updateStatus(order: Order): Promise<Order> {
     try {
       const row = await this.db.order.update({

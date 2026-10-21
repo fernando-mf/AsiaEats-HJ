@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Logger, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Logger, Param, Post, Query } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -11,11 +11,18 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { AccountRole, type Actor } from '#domain/reg/index.js';
-import { Order, OrderPlacementRequest, OrderRejectionRequest, OrdersService } from '#domain/ord/index.js';
+import {
+  Order,
+  OrderPlacementRequest,
+  OrderRejectionRequest,
+  OrderSearchRequest,
+  OrdersService,
+} from '#domain/ord/index.js';
 import { CommandRunner } from '#application/commands/command-runner.js';
 import { AuthorizedCommand } from '#application/commands/decorators/authorized-command.js';
 import { LoggedCommand } from '#application/commands/decorators/logged-command.js';
 import { AcceptOrderCommand } from '#application/commands/ord/accept-order.command.js';
+import { FindOrdersCommand } from '#application/commands/ord/find-orders.command.js';
 import { GetOrderCommand } from '#application/commands/ord/get-order.command.js';
 import { PlaceOrderCommand } from '#application/commands/ord/place-order.command.js';
 import { RejectOrderCommand } from '#application/commands/ord/reject-order.command.js';
@@ -46,6 +53,25 @@ export class OrdersController {
 
     let command: Command<Order> = new PlaceOrderCommand(this.service, actor, request);
     command = new AuthorizedCommand(command, actor, [AccountRole.Customer]);
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Get()
+  @ApiOkResponse({ type: [Order] })
+  @ApiBadRequestResponse({ type: ErrorResponse })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiForbiddenResponse({ type: ErrorResponse })
+  find(@CurrentActor() actor: Actor, @Query() query: OrderSearchRequest) {
+    const request = OrderSearchRequest.initialize(query);
+
+    let command: Command<Order[]> = new FindOrdersCommand(this.service, actor, request);
+    command = new AuthorizedCommand(command, actor, [
+      AccountRole.Customer,
+      AccountRole.Restaurant,
+      AccountRole.Operator,
+    ]);
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);

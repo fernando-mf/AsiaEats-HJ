@@ -3,6 +3,7 @@ import {
   ArrayNotEmpty,
   IsArray,
   IsInt,
+  IsOptional,
   IsString,
   IsUUID,
   MaxLength,
@@ -56,6 +57,20 @@ export class OrderRejectionRequest {
 
   static initialize(raw: OrderRejectionRequest): OrderRejectionRequest {
     return plainToInstance(OrderRejectionRequest, raw);
+  }
+}
+
+export class OrderSearchRequest {
+  @IsOptional()
+  @IsUUID()
+  restaurantId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  customerId?: string;
+
+  static initialize(raw: OrderSearchRequest): OrderSearchRequest {
+    return plainToInstance(OrderSearchRequest, raw);
   }
 }
 
