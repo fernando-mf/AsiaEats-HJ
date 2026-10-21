@@ -191,6 +191,62 @@ paths:
         - bearer: []
       tags:
         - orders
+  /api/orders/{id}/reject:
+    post:
+      operationId: OrdersController_reject
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderRejectionRequest"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      tags:
+        - orders
   /api/restaurants:
     post:
       operationId: RestaurantsController_create
@@ -748,6 +804,8 @@ components:
             - rejected
             - cancelled
           type: string
+        rejectionReason:
+          type: string
         lines:
           type: array
           items:
@@ -766,6 +824,15 @@ components:
         - lines
         - createdAt
         - updatedAt
+    OrderRejectionRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+      required:
+        - reason
     Position:
       type: object
       properties:

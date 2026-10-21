@@ -45,8 +45,10 @@ export class OrderStateMachine {
     return this.transition(OrderStatus.Accepted);
   }
 
-  reject(): OrderStatusChangedEvent {
-    return this.transition(OrderStatus.Rejected);
+  reject(reason: string): OrderStatusChangedEvent {
+    const event = this.transition(OrderStatus.Rejected, { reason });
+    this.order.rejectionReason = reason;
+    return event;
   }
 
   cancel(): OrderStatusChangedEvent {
@@ -69,7 +71,7 @@ export class OrderStateMachine {
     return this.transition(OrderStatus.Delivered);
   }
 
-  private transition(to: OrderStatus): OrderStatusChangedEvent {
+  private transition(to: OrderStatus, extra: { reason?: string } = {}): OrderStatusChangedEvent {
     const previousStatus = this.order.status;
     validateTransition(previousStatus, to);
 
@@ -77,7 +79,7 @@ export class OrderStateMachine {
 
     return new OrderStatusChangedEvent({
       entityId: this.order.id,
-      payload: { previousStatus, newStatus: to },
+      payload: { previousStatus, newStatus: to, ...extra },
       actor: this.actor,
     });
   }

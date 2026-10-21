@@ -4,7 +4,14 @@ import { EventsService } from '#domain/events/index.js';
 import { InvalidParamsError } from '#domain/errors.js';
 import type { Actor } from '#domain/reg/index.js';
 import { MenuItemNotInMenuError, MenuItemSoldOutError, RestaurantNotOpenError } from './orders.errors.js';
-import { Order, OrderLine, OrderPlacedEvent, OrderPlacementRequest, OrderStatus } from './orders.models.js';
+import {
+  Order,
+  OrderLine,
+  OrderPlacedEvent,
+  OrderPlacementRequest,
+  OrderRejectionRequest,
+  OrderStatus,
+} from './orders.models.js';
 import { OrderStateMachine } from './orders.statemachine.js';
 import { MenuItemStatus, RestaurantStatus } from './restaurants.models.js';
 import { RestaurantsService } from './restaurants.service.js';
@@ -86,6 +93,24 @@ export class OrdersService {
     await this.restaurants.ensureOwnership(actor, order.restaurantId);
 
     const event = new OrderStateMachine(actor, order).accept();
+    order.updatedAt = new Date();
+
+    const updated = await this.repository.updateStatus(order);
+    await this.events.publish(event);
+
+    return updated;
+  }
+
+  async reject(actor: Actor, id: string, request: OrderRejectionRequest): Promise<Order> {
+    const errors = await validate(request, { whitelist: true, forbidNonWhitelisted: true });
+    if (errors.length > 0) {
+      throw InvalidParamsError.fromClassValidator(errors);
+    }
+
+    const order = await this.repository.getById(id);
+    await this.restaurants.ensureOwnership(actor, order.restaurantId);
+
+    const event = new OrderStateMachine(actor, order).reject(request.reason);
     order.updatedAt = new Date();
 
     const updated = await this.repository.updateStatus(order);

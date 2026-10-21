@@ -57,6 +57,7 @@ export class PrismaOrderRepository extends OrderRepository {
         where: { id: order.id },
         data: {
           status: order.status,
+          rejectionReason: order.rejectionReason ?? null,
           updatedAt: order.updatedAt,
         },
         include: { lines: { orderBy: [{ id: 'asc' }] } },
@@ -74,6 +75,7 @@ function toOrderModel(row: {
   customerId: string;
   restaurantId: string;
   status: string;
+  rejectionReason: string | null;
   createdAt: Date;
   updatedAt: Date;
   lines: {
@@ -90,6 +92,7 @@ function toOrderModel(row: {
     customerId: row.customerId,
     restaurantId: row.restaurantId,
     status: row.status as OrderStatus,
+    rejectionReason: row.rejectionReason ?? undefined,
     lines: row.lines.map(line => ({
       id: line.id,
       orderId: line.orderId,

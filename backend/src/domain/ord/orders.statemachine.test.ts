@@ -36,7 +36,7 @@ describe('OrderStateMachine', () => {
 
   it('can reject and cancel', () => {
     const rejected = newOrder(OrderStatus.Placed);
-    new OrderStateMachine(actor, rejected).reject();
+    new OrderStateMachine(actor, rejected).reject('out of stock');
     expect(rejected.status).toBe(OrderStatus.Rejected);
 
     const cancelled = newOrder(OrderStatus.Accepted);
