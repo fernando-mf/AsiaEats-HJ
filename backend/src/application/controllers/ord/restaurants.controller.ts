@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Logger, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Logger, Param, Post, Put, Query } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -18,6 +18,8 @@ import {
   MenuItemUpdateRequest,
   Restaurant,
   RestaurantCreationRequest,
+  RestaurantSearchRequest,
+  RestaurantSearchResult,
   RestaurantsService,
   RestaurantStatusUpdateRequest,
   RestaurantUpdateRequest,
@@ -28,6 +30,7 @@ import { LoggedCommand } from '#application/commands/decorators/logged-command.j
 import { CreateMenuItemCommand } from '#application/commands/ord/create-menu-item.command.js';
 import { CreateRestaurantCommand } from '#application/commands/ord/create-restaurant.command.js';
 import { DeleteMenuItemCommand } from '#application/commands/ord/delete-menu-item.command.js';
+import { FindRestaurantsCommand } from '#application/commands/ord/find-restaurants.command.js';
 import { GetMenuCommand } from '#application/commands/ord/get-menu.command.js';
 import { UpdateMenuItemCommand } from '#application/commands/ord/update-menu-item.command.js';
 import { UpdateRestaurantStatusCommand } from '#application/commands/ord/update-restaurant-status.command.js';
@@ -57,6 +60,19 @@ export class RestaurantsController {
 
     let command: Command<Restaurant> = new CreateRestaurantCommand(this.service, actor, request);
     command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Get()
+  @ApiOkResponse({ type: [RestaurantSearchResult] })
+  @ApiBadRequestResponse({ type: ErrorResponse })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  find(@CurrentActor() actor: Actor, @Query() query: RestaurantSearchRequest) {
+    const request = RestaurantSearchRequest.initialize(query);
+
+    let command: Command<RestaurantSearchResult[]> = new FindRestaurantsCommand(this.service, request);
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);

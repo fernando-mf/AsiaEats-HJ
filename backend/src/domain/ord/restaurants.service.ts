@@ -14,6 +14,9 @@ import {
   Restaurant,
   RestaurantCreatedEvent,
   RestaurantCreationRequest,
+  type RestaurantFilter,
+  RestaurantSearchRequest,
+  type RestaurantSearchResult,
   RestaurantStatus,
   RestaurantStatusChangedEvent,
   RestaurantStatusUpdateRequest,
@@ -27,6 +30,7 @@ export abstract class RestaurantRepository {
   abstract updateStatus(restaurant: Restaurant): Promise<Restaurant>;
   abstract getById(id: string): Promise<Restaurant>;
   abstract getByOwnerId(ownerId: string): Promise<Restaurant>;
+  abstract list(filter?: RestaurantFilter): Promise<RestaurantSearchResult[]>;
 
   abstract createMenuItem(menuItem: MenuItem): Promise<MenuItem>;
   abstract getMenuItem(restaurantId: string, itemId: string): Promise<MenuItem>;
@@ -135,6 +139,21 @@ export class RestaurantsService {
 
   async getById(id: string): Promise<Restaurant> {
     return this.repository.getById(id);
+  }
+
+  async find(request: RestaurantSearchRequest): Promise<RestaurantSearchResult[]> {
+    const errors = await validate(request);
+    if (errors.length > 0) {
+      throw InvalidParamsError.fromClassValidator(errors);
+    }
+
+    const filter: RestaurantFilter = {};
+    if (request.lat !== undefined && request.lon !== undefined) {
+      filter.position = { latitude: request.lat, longitude: request.lon };
+      filter.radiusKm = request.radiusKm;
+    }
+
+    return this.repository.list(filter);
   }
 
   async getMenu(restaurantId: string): Promise<MenuItem[]> {

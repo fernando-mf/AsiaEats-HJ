@@ -6,9 +6,11 @@ import {
   IsLongitude,
   IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
   Min,
   MinLength,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { Event } from '#domain/events/index.js';
@@ -78,6 +80,40 @@ export class Restaurant {
   position: Position;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export class RestaurantSearchResult extends Restaurant {
+  distanceKm?: number;
+}
+
+export type RestaurantFilter = {
+  position?: Position;
+  radiusKm?: number;
+};
+
+// RestaurantSearchRequest describes a search request for restaurants
+// - lat and lon must be present together
+// - radiusKm requires lat and lon
+export class RestaurantSearchRequest {
+  @ValidateIf((o: RestaurantSearchRequest) => o.lat !== undefined || o.lon !== undefined || o.radiusKm !== undefined)
+  @IsLatitude()
+  @Type(() => Number)
+  lat?: number;
+
+  @ValidateIf((o: RestaurantSearchRequest) => o.lat !== undefined || o.lon !== undefined || o.radiusKm !== undefined)
+  @IsLongitude()
+  @Type(() => Number)
+  lon?: number;
+
+  @ValidateIf((o: RestaurantSearchRequest) => o.radiusKm !== undefined)
+  @IsNumber()
+  @IsPositive()
+  @Type(() => Number)
+  radiusKm?: number;
+
+  static initialize(raw: RestaurantSearchRequest): RestaurantSearchRequest {
+    return plainToInstance(RestaurantSearchRequest, raw);
+  }
 }
 
 export class RestaurantCreatedEvent extends Event<Restaurant> {
