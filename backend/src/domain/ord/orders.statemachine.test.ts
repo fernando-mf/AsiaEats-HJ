@@ -39,9 +39,48 @@ describe('OrderStateMachine', () => {
     new OrderStateMachine(actor, rejected).reject('out of stock');
     expect(rejected.status).toBe(OrderStatus.Rejected);
 
-    const cancelled = newOrder(OrderStatus.Accepted);
+    const cancelled = newOrder(OrderStatus.Placed);
     new OrderStateMachine(actor, cancelled).cancel();
     expect(cancelled.status).toBe(OrderStatus.Cancelled);
+  });
+
+  it('lets a customer cancel only from placed', () => {
+    for (const status of [OrderStatus.Accepted, OrderStatus.Preparing, OrderStatus.Ready, OrderStatus.PickedUp]) {
+      const order = newOrder(status);
+
+      expect(() => new OrderStateMachine(actor, order).cancel()).toThrow(InvalidOrderTransitionError);
+      expect(order.status).toBe(status);
+    }
+  });
+
+  it('lets an operator cancel from any non-terminal state', () => {
+    const operator = { id: 'operator-1', role: AccountRole.Operator };
+
+    for (const status of [
+      OrderStatus.Placed,
+      OrderStatus.Accepted,
+      OrderStatus.Preparing,
+      OrderStatus.Ready,
+      OrderStatus.PickedUp,
+    ]) {
+      const order = newOrder(status);
+      const event = new OrderStateMachine(operator, order).cancel();
+
+      expect(order.status).toBe(OrderStatus.Cancelled);
+      expect(event.payload).toEqual({ previousStatus: status, newStatus: OrderStatus.Cancelled });
+    }
+
+    for (const status of [OrderStatus.Delivered, OrderStatus.Rejected, OrderStatus.Cancelled]) {
+      expect(() => new OrderStateMachine(operator, newOrder(status)).cancel()).toThrow(InvalidOrderTransitionError);
+    }
+  });
+
+  it('does not let other roles cancel', () => {
+    const owner = { id: 'owner-1', role: AccountRole.Restaurant };
+
+    expect(() => new OrderStateMachine(owner, newOrder(OrderStatus.Placed)).cancel()).toThrow(
+      InvalidOrderTransitionError,
+    );
   });
 
   it('throws an error on an invalid transition', () => {

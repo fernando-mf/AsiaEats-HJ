@@ -155,4 +155,16 @@ export class OrdersService {
 
     return updated;
   }
+
+  async cancel(actor: Actor, id: string): Promise<Order> {
+    const order = await this.getById(actor, id);
+
+    const event = new OrderStateMachine(actor, order).cancel();
+    order.updatedAt = new Date();
+
+    const updated = await this.repository.updateStatus(order);
+    await this.events.publish(event);
+
+    return updated;
+  }
 }

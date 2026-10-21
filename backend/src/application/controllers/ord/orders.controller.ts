@@ -22,6 +22,7 @@ import { CommandRunner } from '#application/commands/command-runner.js';
 import { AuthorizedCommand } from '#application/commands/decorators/authorized-command.js';
 import { LoggedCommand } from '#application/commands/decorators/logged-command.js';
 import { AcceptOrderCommand } from '#application/commands/ord/accept-order.command.js';
+import { CancelOrderCommand } from '#application/commands/ord/cancel-order.command.js';
 import { FindOrdersCommand } from '#application/commands/ord/find-orders.command.js';
 import { GetOrderCommand } from '#application/commands/ord/get-order.command.js';
 import { PlaceOrderCommand } from '#application/commands/ord/place-order.command.js';
@@ -122,6 +123,21 @@ export class OrdersController {
 
     let command: Command<Order> = new RejectOrderCommand(this.service, actor, id, request);
     command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Post(':id/cancel')
+  @HttpCode(200)
+  @ApiOkResponse({ type: Order })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiForbiddenResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse })
+  @ApiConflictResponse({ type: ErrorResponse })
+  cancel(@CurrentActor() actor: Actor, @Param('id') id: string) {
+    let command: Command<Order> = new CancelOrderCommand(this.service, actor, id);
+    command = new AuthorizedCommand(command, actor, [AccountRole.Customer, AccountRole.Operator]);
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
