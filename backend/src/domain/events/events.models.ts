@@ -3,14 +3,14 @@ import { IsNotEmpty, IsString } from 'class-validator';
 import { v7 as uuidv7 } from 'uuid';
 import type { Actor } from '#domain/reg/index.js';
 
-type EventParams<TPayload extends object> = {
+type EventParams<TPayload> = {
   entityId: string;
   payload?: TPayload;
   actor?: Actor | null;
 };
 
 // Event represents a domain event. Other modules' events inherit from this one
-export abstract class Event<TPayload extends object = object> {
+export abstract class Event<TPayload = object> {
   readonly id = uuidv7();
 
   abstract readonly entityType: string;
@@ -18,12 +18,12 @@ export abstract class Event<TPayload extends object = object> {
   readonly occurredAt = new Date();
 
   readonly entityId: string;
-  readonly payload: TPayload | null;
+  readonly payload: TPayload;
   readonly actor: Actor | null;
 
   constructor(params: EventParams<TPayload>) {
     this.entityId = params.entityId;
-    this.payload = params.payload ?? null;
+    this.payload = params.payload ?? (null as TPayload);
     this.actor = params.actor ?? null;
   }
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InternalError, NotFoundError } from '#domain/errors.js';
+import { ConflictError, InternalError, NotFoundError } from '#domain/errors.js';
 import { Order, OrderFilter, OrderRepository, OrderStatus } from '#domain/ord/index.js';
 import { PrismaService } from '#infrastructure/prisma.service.js';
 
@@ -73,10 +73,38 @@ export class PrismaOrderRepository extends OrderRepository {
     }
   }
 
-  async updateStatus(order: Order): Promise<Order> {
+  async listAccepted(restaurantId: string): Promise<Order[]> {
+    try {
+      const rows = await this.db.order.findMany({
+        where: { restaurantId, status: OrderStatus.Accepted },
+        include: { lines: { orderBy: [{ id: 'asc' }] } },
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      });
+
+      return rows.map(toOrderModel);
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
+
+  async getNextAccepted(restaurantId: string): Promise<Order | undefined> {
+    try {
+      const row = await this.db.order.findFirst({
+        where: { restaurantId, status: OrderStatus.Accepted },
+        include: { lines: { orderBy: [{ id: 'asc' }] } },
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      });
+
+      return row ? toOrderModel(row) : undefined;
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
+
+  async updateStatus(order: Order, previousStatus: OrderStatus): Promise<Order> {
     try {
       const row = await this.db.order.update({
-        where: { id: order.id },
+        where: { id: order.id, status: previousStatus },
         data: {
           status: order.status,
           rejectionReason: order.rejectionReason ?? null,
@@ -87,6 +115,9 @@ export class PrismaOrderRepository extends OrderRepository {
 
       return toOrderModel(row);
     } catch (err) {
+      if (this.db.isRecordNotFound(err)) {
+        throw new ConflictError('order status stale');
+      }
       throw new InternalError(err as Error);
     }
   }

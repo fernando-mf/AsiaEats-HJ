@@ -11,7 +11,7 @@ export class PrismaEventRepository extends EventRepository {
     super();
   }
 
-  async append(event: Event): Promise<void> {
+  async append(event: Event<unknown>): Promise<void> {
     try {
       await this.db.eventLog.create({
         data: {

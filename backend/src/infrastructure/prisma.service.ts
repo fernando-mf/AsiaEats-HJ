@@ -10,6 +10,8 @@ const UNIQUE_VIOLATION = 'P2002';
 // Postgres foreign key constraint violation as returned by Prisma.
 const FOREIGN_KEY_VIOLATION = 'P2003';
 
+const RECORD_NOT_FOUND = 'P2025';
+
 // PrismaService provides access to our PostgreSQL database through Prisma Client.
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy {
@@ -30,5 +32,10 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
   // isForeignKeyViolation reports whether the query failed due to a foreign key constraint violation.
   isForeignKeyViolation(err: unknown): boolean {
     return err instanceof Prisma.PrismaClientKnownRequestError && err.code === FOREIGN_KEY_VIOLATION;
+  }
+
+  // isRecordNotFound reports whether the query failed because no record matched the filter.
+  isRecordNotFound(err: unknown): boolean {
+    return err instanceof Prisma.PrismaClientKnownRequestError && err.code === RECORD_NOT_FOUND;
   }
 }

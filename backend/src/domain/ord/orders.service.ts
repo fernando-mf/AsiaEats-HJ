@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { EventsService } from '#domain/events/index.js';
-import { InvalidParamsError, NotFoundError } from '#domain/errors.js';
+import { ConflictError, InvalidParamsError, NotFoundError } from '#domain/errors.js';
 import { AccountRole, type Actor } from '#domain/reg/index.js';
 import { MenuItemNotInMenuError, MenuItemSoldOutError, RestaurantNotOpenError } from './orders.errors.js';
 import {
@@ -27,7 +27,10 @@ export abstract class OrderRepository {
   abstract create(order: Order): Promise<Order>;
   abstract getById(id: string, filter?: OrderFilter): Promise<Order>;
   abstract list(filter?: OrderFilter): Promise<Order[]>;
-  abstract updateStatus(order: Order): Promise<Order>;
+  abstract updateStatus(order: Order, previousStatus: OrderStatus): Promise<Order>;
+
+  abstract listAccepted(restaurantId: string): Promise<Order[]>; // aka "Preparation Queue"
+  abstract getNextAccepted(restaurantId: string): Promise<Order | undefined>; // take next item in "Preparation Queue"
 }
 
 @Injectable()
@@ -133,7 +136,7 @@ export class OrdersService {
     const event = new OrderStateMachine(actor, order).accept();
     order.updatedAt = new Date();
 
-    const updated = await this.repository.updateStatus(order);
+    const updated = await this.repository.updateStatus(order, event.payload.previousStatus);
     await this.events.publish(event);
 
     return updated;
@@ -150,7 +153,24 @@ export class OrdersService {
     const event = new OrderStateMachine(actor, order).reject(request.reason);
     order.updatedAt = new Date();
 
-    const updated = await this.repository.updateStatus(order);
+    const updated = await this.repository.updateStatus(order, event.payload.previousStatus);
+    await this.events.publish(event);
+
+    return updated;
+  }
+
+  async prepare(actor: Actor, id: string): Promise<Order> {
+    const order = await this.repository.getById(id, { restaurantOwnerId: actor.id });
+
+    const next = await this.repository.getNextAccepted(order.restaurantId);
+    if (next?.id !== order.id) {
+      throw new ConflictError('order is not next in the preparation queue');
+    }
+
+    const event = new OrderStateMachine(actor, order).prepare();
+    order.updatedAt = new Date();
+
+    const updated = await this.repository.updateStatus(order, event.payload.previousStatus);
     await this.events.publish(event);
 
     return updated;
@@ -162,7 +182,7 @@ export class OrdersService {
     const event = new OrderStateMachine(actor, order).cancel();
     order.updatedAt = new Date();
 
-    const updated = await this.repository.updateStatus(order);
+    const updated = await this.repository.updateStatus(order, event.payload.previousStatus);
     await this.events.publish(event);
 
     return updated;
