@@ -5,11 +5,14 @@ import { InvalidParamsError } from '#domain/errors.js';
 import type { Actor } from '#domain/reg/index.js';
 import { MenuItemNotInMenuError, MenuItemSoldOutError, RestaurantNotOpenError } from './orders.errors.js';
 import { Order, OrderLine, OrderPlacedEvent, OrderPlacementRequest, OrderStatus } from './orders.models.js';
+import { OrderStateMachine } from './orders.statemachine.js';
 import { MenuItemStatus, RestaurantStatus } from './restaurants.models.js';
 import { RestaurantsService } from './restaurants.service.js';
 
 export abstract class OrderRepository {
   abstract create(order: Order): Promise<Order>;
+  abstract getById(id: string): Promise<Order>;
+  abstract updateStatus(order: Order): Promise<Order>;
 }
 
 @Injectable()
@@ -76,5 +79,18 @@ export class OrdersService {
     );
 
     return created;
+  }
+
+  async accept(actor: Actor, id: string): Promise<Order> {
+    const order = await this.repository.getById(id);
+    await this.restaurants.ensureOwnership(actor, order.restaurantId);
+
+    const event = new OrderStateMachine(actor, order).accept();
+    order.updatedAt = new Date();
+
+    const updated = await this.repository.updateStatus(order);
+    await this.events.publish(event);
+
+    return updated;
   }
 }

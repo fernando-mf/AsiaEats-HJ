@@ -38,6 +38,35 @@ export class PrismaOrderRepository extends OrderRepository {
       throw new InternalError(err as Error);
     }
   }
+
+  async getById(id: string): Promise<Order> {
+    const row = await this.db.order.findUnique({
+      where: { id },
+      include: { lines: { orderBy: [{ id: 'asc' }] } },
+    });
+    if (!row) {
+      throw new NotFoundError('order');
+    }
+
+    return toOrderModel(row);
+  }
+
+  async updateStatus(order: Order): Promise<Order> {
+    try {
+      const row = await this.db.order.update({
+        where: { id: order.id },
+        data: {
+          status: order.status,
+          updatedAt: order.updatedAt,
+        },
+        include: { lines: { orderBy: [{ id: 'asc' }] } },
+      });
+
+      return toOrderModel(row);
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
 }
 
 function toOrderModel(row: {
