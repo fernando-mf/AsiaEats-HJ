@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Logger, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Logger, Param, Post } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -16,6 +16,7 @@ import { CommandRunner } from '#application/commands/command-runner.js';
 import { AuthorizedCommand } from '#application/commands/decorators/authorized-command.js';
 import { LoggedCommand } from '#application/commands/decorators/logged-command.js';
 import { AcceptOrderCommand } from '#application/commands/ord/accept-order.command.js';
+import { GetOrderCommand } from '#application/commands/ord/get-order.command.js';
 import { PlaceOrderCommand } from '#application/commands/ord/place-order.command.js';
 import { RejectOrderCommand } from '#application/commands/ord/reject-order.command.js';
 import { Command } from '#application/commands/command.js';
@@ -45,6 +46,23 @@ export class OrdersController {
 
     let command: Command<Order> = new PlaceOrderCommand(this.service, actor, request);
     command = new AuthorizedCommand(command, actor, [AccountRole.Customer]);
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Get(':id')
+  @ApiOkResponse({ type: Order })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiForbiddenResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse })
+  getById(@CurrentActor() actor: Actor, @Param('id') id: string) {
+    let command: Command<Order> = new GetOrderCommand(this.service, actor, id);
+    command = new AuthorizedCommand(command, actor, [
+      AccountRole.Customer,
+      AccountRole.Restaurant,
+      AccountRole.Operator,
+    ]);
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InternalError, NotFoundError } from '#domain/errors.js';
-import { Order, OrderRepository, OrderStatus } from '#domain/ord/index.js';
+import { Order, OrderFilter, OrderRepository, OrderStatus } from '#domain/ord/index.js';
 import { PrismaService } from '#infrastructure/prisma.service.js';
 
 @Injectable()
@@ -39,9 +39,13 @@ export class PrismaOrderRepository extends OrderRepository {
     }
   }
 
-  async getById(id: string): Promise<Order> {
+  async getById(id: string, filter: OrderFilter = {}): Promise<Order> {
     const row = await this.db.order.findUnique({
-      where: { id },
+      where: {
+        id,
+        customerId: filter.customerId,
+        restaurant: filter.restaurantOwnerId ? { ownerId: filter.restaurantOwnerId } : undefined,
+      },
       include: { lines: { orderBy: [{ id: 'asc' }] } },
     });
     if (!row) {

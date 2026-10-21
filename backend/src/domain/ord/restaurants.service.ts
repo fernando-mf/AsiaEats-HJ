@@ -141,14 +141,6 @@ export class RestaurantsService {
     return this.repository.getById(id);
   }
 
-  async ensureOwnership(actor: Actor, restaurantId: string): Promise<Restaurant> {
-    const restaurant = await this.repository.getById(restaurantId);
-    if (actor.id !== restaurant.ownerId) {
-      throw new ForbiddenError('you do not own this restaurant');
-    }
-    return restaurant;
-  }
-
   async find(request: RestaurantSearchRequest): Promise<RestaurantSearchResult[]> {
     const errors = await validate(request);
     if (errors.length > 0) {

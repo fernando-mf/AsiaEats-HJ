@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { EventsService } from '#domain/events/index.js';
-import { InvalidParamsError } from '#domain/errors.js';
-import type { Actor } from '#domain/reg/index.js';
+import { ForbiddenError, InvalidParamsError, NotFoundError } from '#domain/errors.js';
+import { AccountRole, type Actor } from '#domain/reg/index.js';
 import { MenuItemNotInMenuError, MenuItemSoldOutError, RestaurantNotOpenError } from './orders.errors.js';
 import {
   Order,
@@ -16,9 +16,14 @@ import { OrderStateMachine } from './orders.statemachine.js';
 import { MenuItemStatus, RestaurantStatus } from './restaurants.models.js';
 import { RestaurantsService } from './restaurants.service.js';
 
+export interface OrderFilter {
+  customerId?: string;
+  restaurantOwnerId?: string;
+}
+
 export abstract class OrderRepository {
   abstract create(order: Order): Promise<Order>;
-  abstract getById(id: string): Promise<Order>;
+  abstract getById(id: string, filter?: OrderFilter): Promise<Order>;
   abstract updateStatus(order: Order): Promise<Order>;
 }
 
@@ -88,9 +93,21 @@ export class OrdersService {
     return created;
   }
 
+  async getById(actor: Actor, id: string): Promise<Order> {
+    switch (actor.role) {
+      case AccountRole.Customer:
+        return this.repository.getById(id, { customerId: actor.id });
+      case AccountRole.Restaurant:
+        return this.repository.getById(id, { restaurantOwnerId: actor.id });
+      case AccountRole.Operator:
+        return this.repository.getById(id);
+      default:
+        throw new NotFoundError('order'); // don't reveal the existence of the order
+    }
+  }
+
   async accept(actor: Actor, id: string): Promise<Order> {
-    const order = await this.repository.getById(id);
-    await this.restaurants.ensureOwnership(actor, order.restaurantId);
+    const order = await this.repository.getById(id, { restaurantOwnerId: actor.id });
 
     const event = new OrderStateMachine(actor, order).accept();
     order.updatedAt = new Date();
@@ -107,8 +124,7 @@ export class OrdersService {
       throw InvalidParamsError.fromClassValidator(errors);
     }
 
-    const order = await this.repository.getById(id);
-    await this.restaurants.ensureOwnership(actor, order.restaurantId);
+    const order = await this.repository.getById(id, { restaurantOwnerId: actor.id });
 
     const event = new OrderStateMachine(actor, order).reject(request.reason);
     order.updatedAt = new Date();
