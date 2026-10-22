@@ -8,6 +8,7 @@ import {
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -55,6 +56,7 @@ export class RestaurantsController {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create restaurant' })
   @ApiCreatedResponse({ type: Restaurant })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
@@ -70,6 +72,7 @@ export class RestaurantsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Search restaurants' })
   @ApiOkResponse({ type: [RestaurantSearchResult] })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
@@ -83,6 +86,7 @@ export class RestaurantsController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update restaurant' })
   @ApiOkResponse({ type: Restaurant })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
@@ -99,6 +103,7 @@ export class RestaurantsController {
   }
 
   @Put(':id/status')
+  @ApiOperation({ summary: 'Update restaurant status' })
   @ApiOkResponse({ type: Restaurant })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
@@ -116,6 +121,7 @@ export class RestaurantsController {
   }
 
   @Get(':id/menu')
+  @ApiOperation({ summary: 'Get restaurant menu' })
   @ApiOkResponse({ type: [MenuItem] })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
   @ApiNotFoundResponse({ type: ErrorResponse })
@@ -127,6 +133,7 @@ export class RestaurantsController {
   }
 
   @Get(':id/preparation-queue')
+  @ApiOperation({ summary: 'Get preparation queue' })
   @ApiOkResponse({ type: [Order] })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
   @ApiForbiddenResponse({ type: ErrorResponse })
@@ -140,6 +147,7 @@ export class RestaurantsController {
   }
 
   @Post(':id/menu-items')
+  @ApiOperation({ summary: 'Create menu item' })
   @ApiCreatedResponse({ type: MenuItem })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
@@ -156,6 +164,7 @@ export class RestaurantsController {
   }
 
   @Put(':id/menu-items/:itemId')
+  @ApiOperation({ summary: 'Update menu item' })
   @ApiOkResponse({ type: MenuItem })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
@@ -177,6 +186,7 @@ export class RestaurantsController {
   }
 
   @Delete(':id/menu-items/:itemId')
+  @ApiOperation({ summary: 'Delete menu item' })
   @HttpCode(204)
   @ApiNoContentResponse()
   @ApiUnauthorizedResponse({ type: ErrorResponse })

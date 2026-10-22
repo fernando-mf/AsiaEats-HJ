@@ -7,6 +7,7 @@ import {
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -45,6 +46,7 @@ export class OrdersController {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: 'Place order' })
   @ApiCreatedResponse({ type: Order })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
@@ -62,6 +64,7 @@ export class OrdersController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get orders' })
   @ApiOkResponse({ type: [Order] })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
@@ -81,6 +84,7 @@ export class OrdersController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get order' })
   @ApiOkResponse({ type: Order })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
   @ApiForbiddenResponse({ type: ErrorResponse })
@@ -98,6 +102,7 @@ export class OrdersController {
   }
 
   @Post(':id/accept')
+  @ApiOperation({ summary: 'Accept order' })
   @HttpCode(200)
   @ApiOkResponse({ type: Order })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
@@ -113,6 +118,7 @@ export class OrdersController {
   }
 
   @Post(':id/reject')
+  @ApiOperation({ summary: 'Reject order' })
   @HttpCode(200)
   @ApiOkResponse({ type: Order })
   @ApiBadRequestResponse({ type: ErrorResponse })
@@ -131,6 +137,7 @@ export class OrdersController {
   }
 
   @Post(':id/prepare')
+  @ApiOperation({ summary: 'Start preparing order' })
   @HttpCode(200)
   @ApiOkResponse({ type: Order })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
@@ -146,6 +153,7 @@ export class OrdersController {
   }
 
   @Post(':id/ready')
+  @ApiOperation({ summary: 'Mark order ready' })
   @HttpCode(200)
   @ApiOkResponse({ type: Order })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
@@ -161,6 +169,7 @@ export class OrdersController {
   }
 
   @Post(':id/cancel')
+  @ApiOperation({ summary: 'Cancel order' })
   @HttpCode(200)
   @ApiOkResponse({ type: Order })
   @ApiUnauthorizedResponse({ type: ErrorResponse })

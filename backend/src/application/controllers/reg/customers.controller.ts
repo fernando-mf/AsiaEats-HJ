@@ -4,6 +4,7 @@ import {
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -29,6 +30,7 @@ export class CustomersController {
   ) {}
 
   @Put('me')
+  @ApiOperation({ summary: 'Update customer profile' })
   @ApiOkResponse({ type: CustomerResponse })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
@@ -44,6 +46,7 @@ export class CustomersController {
   }
 
   @Get('me')
+  @ApiOperation({ summary: 'Get customer profile' })
   @ApiOkResponse({ type: CustomerResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
   @ApiForbiddenResponse({ type: ErrorResponse })

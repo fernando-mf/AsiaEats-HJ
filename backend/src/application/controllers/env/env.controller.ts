@@ -33,7 +33,10 @@ export class EnvController {
 
   @Post('reset')
   @HttpCode(204)
-  @ApiOperation({ summary: 'Reset the environment and seeds it with default data. Requires ENV_MANAGER_ENABLED.' })
+  @ApiOperation({
+    summary: 'Reset environment',
+    description: 'Resets the environment and seeds it with default data. Requires ENV_MANAGER_ENABLED.',
+  })
   @ApiNoContentResponse()
   @ApiUnauthorizedResponse({ type: ErrorResponse })
   @ApiForbiddenResponse({ type: ErrorResponse })
