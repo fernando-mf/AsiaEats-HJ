@@ -2,7 +2,7 @@
   "services": {
     "api": {
       "root": "backend/",
-      "entrypoint": "dist/application/main.js",
+      "entrypoint": "server.js",
       "buildCommand": "pnpm build"
     }
   },
