@@ -1,0 +1,10 @@
+{
+  "services": {
+    "api": {
+      "root": "backend/",
+      "entrypoint": "src/application/main.ts",
+      "buildCommand": "pnpm build"
+    }
+  },
+  "rewrites": [{ "source": "/api/(.*)", "destination": { "service": "api" } }]
+}
