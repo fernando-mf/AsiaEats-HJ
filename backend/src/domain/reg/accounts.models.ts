@@ -1,5 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { IsEnum, IsString, MinLength } from 'class-validator';
+import { Event } from '#domain/events/index.js';
 
 export enum AccountRole {
   Customer = 'customer',
@@ -62,3 +63,10 @@ export class Account {
 }
 
 export type Actor = Pick<Account, 'id' | 'role'>;
+
+// AccountCreatedEvent is a generic creation event. Some specialized roles like `Customer`
+// have their own CustomerCreatedEvent. Non specialized roles use this.
+export class AccountCreatedEvent extends Event<ReturnType<Account['toJSON']>> {
+  readonly entityType = 'account';
+  readonly eventType = 'account.created';
+}

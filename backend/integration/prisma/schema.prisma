@@ -27,10 +27,26 @@ model Account {
   createdAt    DateTime    @map("created_at")
   updatedAt    DateTime    @map("updated_at")
 
-  restaurants Restaurant[]
-  orders      Order[]
+  restaurants     Restaurant[]
+  orders          Order[]
+  customerProfile CustomerProfile?
 
   @@map("accounts")
+}
+
+model CustomerProfile {
+  accountId  String   @id @map("account_id") @db.Uuid
+  street     String?
+  city       String?
+  postalCode String?  @map("postal_code")
+  latitude   Float?
+  longitude  Float?
+  createdAt  DateTime @map("created_at")
+  updatedAt  DateTime @map("updated_at")
+
+  account Account @relation(fields: [accountId], references: [id])
+
+  @@map("customers")
 }
 
 enum RestaurantStatus {

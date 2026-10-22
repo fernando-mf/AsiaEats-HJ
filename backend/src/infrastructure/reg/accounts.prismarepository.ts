@@ -49,23 +49,29 @@ export class PrismaAccountRepository extends AccountRepository {
     return this.toAccount(row);
   }
 
-  private toAccount(row: {
-    id: string;
-    name: string;
-    username: string;
-    role: string;
-    passwordHash: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }): Account {
-    const account = new Account();
-    account.id = row.id;
-    account.name = row.name;
-    account.username = row.username;
-    account.role = row.role as AccountRole;
-    account.passwordHash = row.passwordHash;
-    account.createdAt = row.createdAt;
-    account.updatedAt = row.updatedAt;
-    return account;
+  private toAccount(row: AccountRow): Account {
+    return toAccountModel(row);
   }
+}
+
+export type AccountRow = {
+  id: string;
+  name: string;
+  username: string;
+  role: string;
+  passwordHash: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export function toAccountModel(row: AccountRow): Account {
+  const account = new Account();
+  account.id = row.id;
+  account.name = row.name;
+  account.username = row.username;
+  account.role = row.role as AccountRole;
+  account.passwordHash = row.passwordHash;
+  account.createdAt = row.createdAt;
+  account.updatedAt = row.updatedAt;
+  return account;
 }
