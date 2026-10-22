@@ -8,6 +8,7 @@ import { StatusController } from '#application/controllers/status.controller.js'
 import { AuthController } from '#application/controllers/reg/auth.controller.js';
 import { CustomersController } from '#application/controllers/reg/customers.controller.js';
 import { EnvController } from '#application/controllers/env/env.controller.js';
+import { EventsController } from '#application/controllers/events/events.controller.js';
 import { OrdersController } from '#application/controllers/ord/orders.controller.js';
 import { RestaurantsController } from '#application/controllers/ord/restaurants.controller.js';
 import { ApplicationErrorFilter } from '#application/filters/application-error.filter.js';
@@ -37,6 +38,7 @@ import { JwtAuthGuard } from '#application/auth/jwt-auth.guard.js';
     AuthController,
     CustomersController,
     EnvController,
+    EventsController,
     OrdersController,
     RestaurantsController,
   ],
