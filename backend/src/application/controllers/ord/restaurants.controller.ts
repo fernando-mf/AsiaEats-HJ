@@ -16,6 +16,8 @@ import {
   MenuItem,
   MenuItemCreationRequest,
   MenuItemUpdateRequest,
+  Order,
+  OrdersService,
   Restaurant,
   RestaurantCreationRequest,
   RestaurantSearchRequest,
@@ -32,6 +34,7 @@ import { CreateRestaurantCommand } from '#application/commands/ord/create-restau
 import { DeleteMenuItemCommand } from '#application/commands/ord/delete-menu-item.command.js';
 import { FindRestaurantsCommand } from '#application/commands/ord/find-restaurants.command.js';
 import { GetMenuCommand } from '#application/commands/ord/get-menu.command.js';
+import { GetPreparationQueueCommand } from '#application/commands/ord/get-preparation-queue.command.js';
 import { UpdateMenuItemCommand } from '#application/commands/ord/update-menu-item.command.js';
 import { UpdateRestaurantStatusCommand } from '#application/commands/ord/update-restaurant-status.command.js';
 import { UpdateRestaurantCommand } from '#application/commands/ord/update-restaurant.command.js';
@@ -46,7 +49,8 @@ export class RestaurantsController {
   private readonly logger = new Logger(RestaurantsController.name);
 
   constructor(
-    private readonly service: RestaurantsService,
+    private readonly restaurants: RestaurantsService,
+    private readonly orders: OrdersService,
     private readonly commandRunner: CommandRunner,
   ) {}
 
@@ -58,7 +62,7 @@ export class RestaurantsController {
   create(@CurrentActor() actor: Actor, @Body() body: RestaurantCreationRequest) {
     const request = RestaurantCreationRequest.initialize(body);
 
-    let command: Command<Restaurant> = new CreateRestaurantCommand(this.service, actor, request);
+    let command: Command<Restaurant> = new CreateRestaurantCommand(this.restaurants, actor, request);
     command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
     command = new LoggedCommand(command, this.logger, actor);
 
@@ -72,7 +76,7 @@ export class RestaurantsController {
   find(@CurrentActor() actor: Actor, @Query() query: RestaurantSearchRequest) {
     const request = RestaurantSearchRequest.initialize(query);
 
-    let command: Command<RestaurantSearchResult[]> = new FindRestaurantsCommand(this.service, request);
+    let command: Command<RestaurantSearchResult[]> = new FindRestaurantsCommand(this.restaurants, request);
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
@@ -87,7 +91,7 @@ export class RestaurantsController {
   update(@CurrentActor() actor: Actor, @Param('id') id: string, @Body() body: RestaurantUpdateRequest) {
     const request = RestaurantUpdateRequest.initialize(body);
 
-    let command: Command<Restaurant> = new UpdateRestaurantCommand(this.service, actor, id, request);
+    let command: Command<Restaurant> = new UpdateRestaurantCommand(this.restaurants, actor, id, request);
     command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant, AccountRole.Operator]);
     command = new LoggedCommand(command, this.logger, actor);
 
@@ -104,7 +108,7 @@ export class RestaurantsController {
   updateStatus(@CurrentActor() actor: Actor, @Param('id') id: string, @Body() body: RestaurantStatusUpdateRequest) {
     const request = RestaurantStatusUpdateRequest.initialize(body);
 
-    let command: Command<Restaurant> = new UpdateRestaurantStatusCommand(this.service, actor, id, request);
+    let command: Command<Restaurant> = new UpdateRestaurantStatusCommand(this.restaurants, actor, id, request);
     command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant, AccountRole.Operator]);
     command = new LoggedCommand(command, this.logger, actor);
 
@@ -116,7 +120,20 @@ export class RestaurantsController {
   @ApiUnauthorizedResponse({ type: ErrorResponse })
   @ApiNotFoundResponse({ type: ErrorResponse })
   getMenu(@CurrentActor() actor: Actor, @Param('id') id: string) {
-    let command: Command<MenuItem[]> = new GetMenuCommand(this.service, id);
+    let command: Command<MenuItem[]> = new GetMenuCommand(this.restaurants, id);
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Get(':id/preparation-queue')
+  @ApiOkResponse({ type: [Order] })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiForbiddenResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse })
+  getPreparationQueue(@CurrentActor() actor: Actor, @Param('id') id: string) {
+    let command: Command<Order[]> = new GetPreparationQueueCommand(this.orders, actor, id);
+    command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant, AccountRole.Operator]);
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
@@ -131,7 +148,7 @@ export class RestaurantsController {
   createMenuItem(@CurrentActor() actor: Actor, @Param('id') id: string, @Body() body: MenuItemCreationRequest) {
     const request = MenuItemCreationRequest.initialize(body);
 
-    let command: Command<MenuItem> = new CreateMenuItemCommand(this.service, actor, id, request);
+    let command: Command<MenuItem> = new CreateMenuItemCommand(this.restaurants, actor, id, request);
     command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
     command = new LoggedCommand(command, this.logger, actor);
 
@@ -152,7 +169,7 @@ export class RestaurantsController {
   ) {
     const request = MenuItemUpdateRequest.initialize(body);
 
-    let command: Command<MenuItem> = new UpdateMenuItemCommand(this.service, actor, id, itemId, request);
+    let command: Command<MenuItem> = new UpdateMenuItemCommand(this.restaurants, actor, id, itemId, request);
     command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
     command = new LoggedCommand(command, this.logger, actor);
 
@@ -166,7 +183,7 @@ export class RestaurantsController {
   @ApiForbiddenResponse({ type: ErrorResponse })
   @ApiNotFoundResponse({ type: ErrorResponse })
   deleteMenuItem(@CurrentActor() actor: Actor, @Param('id') id: string, @Param('itemId') itemId: string) {
-    let command: Command<void> = new DeleteMenuItemCommand(this.service, actor, id, itemId);
+    let command: Command<void> = new DeleteMenuItemCommand(this.restaurants, actor, id, itemId);
     command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
     command = new LoggedCommand(command, this.logger, actor);
 

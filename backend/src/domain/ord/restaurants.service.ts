@@ -84,7 +84,7 @@ export class RestaurantsService {
       throw InvalidParamsError.fromClassValidator(errors);
     }
 
-    const restaurant = await this.getRestaurantEnsuringPermissions(actor, id);
+    const restaurant = await this.getManagedRestaurant(actor, id);
 
     restaurant.name = request.name;
     restaurant.position = request.position;
@@ -109,7 +109,7 @@ export class RestaurantsService {
       throw InvalidParamsError.fromClassValidator(errors);
     }
 
-    const restaurant = await this.getRestaurantEnsuringPermissions(actor, id);
+    const restaurant = await this.getManagedRestaurant(actor, id);
 
     const previousStatus = restaurant.status;
     if (previousStatus === request.status) {
@@ -167,7 +167,7 @@ export class RestaurantsService {
       throw InvalidParamsError.fromClassValidator(errors);
     }
 
-    const restaurant = await this.getRestaurantEnsuringPermissions(actor, restaurantId);
+    const restaurant = await this.getManagedRestaurant(actor, restaurantId);
 
     const now = new Date();
 
@@ -203,7 +203,7 @@ export class RestaurantsService {
       throw InvalidParamsError.fromClassValidator(errors);
     }
 
-    const restaurant = await this.getRestaurantEnsuringPermissions(actor, restaurantId);
+    const restaurant = await this.getManagedRestaurant(actor, restaurantId);
     const menuItem = await this.repository.getMenuItem(restaurant.id, itemId);
 
     menuItem.name = request.name;
@@ -225,7 +225,7 @@ export class RestaurantsService {
   }
 
   async deleteMenuItem(actor: Actor, restaurantId: string, itemId: string): Promise<void> {
-    const restaurant = await this.getRestaurantEnsuringPermissions(actor, restaurantId);
+    const restaurant = await this.getManagedRestaurant(actor, restaurantId);
 
     await this.repository.deleteMenuItem(restaurant.id, itemId);
 
@@ -237,10 +237,10 @@ export class RestaurantsService {
     );
   }
 
-  // getRestaurantEnsuringPermissions returns a restaurant ensuring access permissions.
+  // getManagedRestaurant returns a restaurant ensuring the actor may manage it.
   // - operators may manage any restaurant
   // - restaurant owners may manage their own restaurant
-  private async getRestaurantEnsuringPermissions(actor: Actor, restaurantId: string): Promise<Restaurant> {
+  async getManagedRestaurant(actor: Actor, restaurantId: string): Promise<Restaurant> {
     const restaurant = await this.repository.getById(restaurantId);
 
     if (actor.role !== AccountRole.Operator && actor.id !== restaurant.ownerId) {

@@ -188,6 +188,11 @@ export class OrdersService {
     return updated;
   }
 
+  async getPreparationQueue(actor: Actor, restaurantId: string): Promise<Order[]> {
+    const restaurant = await this.restaurants.getManagedRestaurant(actor, restaurantId);
+    return this.repository.listAccepted(restaurant.id);
+  }
+
   async cancel(actor: Actor, id: string): Promise<Order> {
     const order = await this.getById(actor, id);
 

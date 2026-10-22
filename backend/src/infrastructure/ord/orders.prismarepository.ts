@@ -78,7 +78,7 @@ export class PrismaOrderRepository extends OrderRepository {
       const rows = await this.db.order.findMany({
         where: { restaurantId, status: OrderStatus.Accepted },
         include: { lines: { orderBy: [{ id: 'asc' }] } },
-        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        orderBy: [{ updatedAt: 'asc' }, { id: 'asc' }],
       });
 
       return rows.map(toOrderModel);
@@ -92,7 +92,7 @@ export class PrismaOrderRepository extends OrderRepository {
       const row = await this.db.order.findFirst({
         where: { restaurantId, status: OrderStatus.Accepted },
         include: { lines: { orderBy: [{ id: 'asc' }] } },
-        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        orderBy: [{ updatedAt: 'asc' }, { id: 'asc' }],
       });
 
       return row ? toOrderModel(row) : undefined;
