@@ -14,6 +14,9 @@ import {
   Restaurant,
   RestaurantCreatedEvent,
   RestaurantCreationRequest,
+  type RestaurantFilter,
+  RestaurantSearchRequest,
+  type RestaurantSearchResult,
   RestaurantStatus,
   RestaurantStatusChangedEvent,
   RestaurantStatusUpdateRequest,
@@ -27,6 +30,7 @@ export abstract class RestaurantRepository {
   abstract updateStatus(restaurant: Restaurant): Promise<Restaurant>;
   abstract getById(id: string): Promise<Restaurant>;
   abstract getByOwnerId(ownerId: string): Promise<Restaurant>;
+  abstract list(filter?: RestaurantFilter): Promise<RestaurantSearchResult[]>;
 
   abstract createMenuItem(menuItem: MenuItem): Promise<MenuItem>;
   abstract getMenuItem(restaurantId: string, itemId: string): Promise<MenuItem>;
@@ -80,7 +84,7 @@ export class RestaurantsService {
       throw InvalidParamsError.fromClassValidator(errors);
     }
 
-    const restaurant = await this.getRestaurantEnsuringPermissions(actor, id);
+    const restaurant = await this.getManagedRestaurant(actor, id);
 
     restaurant.name = request.name;
     restaurant.position = request.position;
@@ -105,7 +109,7 @@ export class RestaurantsService {
       throw InvalidParamsError.fromClassValidator(errors);
     }
 
-    const restaurant = await this.getRestaurantEnsuringPermissions(actor, id);
+    const restaurant = await this.getManagedRestaurant(actor, id);
 
     const previousStatus = restaurant.status;
     if (previousStatus === request.status) {
@@ -137,6 +141,21 @@ export class RestaurantsService {
     return this.repository.getById(id);
   }
 
+  async find(request: RestaurantSearchRequest): Promise<RestaurantSearchResult[]> {
+    const errors = await validate(request);
+    if (errors.length > 0) {
+      throw InvalidParamsError.fromClassValidator(errors);
+    }
+
+    const filter: RestaurantFilter = {};
+    if (request.lat !== undefined && request.lon !== undefined) {
+      filter.position = { latitude: request.lat, longitude: request.lon };
+      filter.radiusKm = request.radiusKm;
+    }
+
+    return this.repository.list(filter);
+  }
+
   async getMenu(restaurantId: string): Promise<MenuItem[]> {
     const restaurant = await this.repository.getById(restaurantId);
     return this.repository.listMenuItems(restaurant.id);
@@ -148,7 +167,7 @@ export class RestaurantsService {
       throw InvalidParamsError.fromClassValidator(errors);
     }
 
-    const restaurant = await this.getRestaurantEnsuringPermissions(actor, restaurantId);
+    const restaurant = await this.getManagedRestaurant(actor, restaurantId);
 
     const now = new Date();
 
@@ -184,7 +203,7 @@ export class RestaurantsService {
       throw InvalidParamsError.fromClassValidator(errors);
     }
 
-    const restaurant = await this.getRestaurantEnsuringPermissions(actor, restaurantId);
+    const restaurant = await this.getManagedRestaurant(actor, restaurantId);
     const menuItem = await this.repository.getMenuItem(restaurant.id, itemId);
 
     menuItem.name = request.name;
@@ -206,7 +225,7 @@ export class RestaurantsService {
   }
 
   async deleteMenuItem(actor: Actor, restaurantId: string, itemId: string): Promise<void> {
-    const restaurant = await this.getRestaurantEnsuringPermissions(actor, restaurantId);
+    const restaurant = await this.getManagedRestaurant(actor, restaurantId);
 
     await this.repository.deleteMenuItem(restaurant.id, itemId);
 
@@ -218,10 +237,10 @@ export class RestaurantsService {
     );
   }
 
-  // getRestaurantEnsuringPermissions returns a restaurant ensuring access permissions.
+  // getManagedRestaurant returns a restaurant ensuring the actor may manage it.
   // - operators may manage any restaurant
   // - restaurant owners may manage their own restaurant
-  private async getRestaurantEnsuringPermissions(actor: Actor, restaurantId: string): Promise<Restaurant> {
+  async getManagedRestaurant(actor: Actor, restaurantId: string): Promise<Restaurant> {
     const restaurant = await this.repository.getById(restaurantId);
 
     if (actor.role !== AccountRole.Operator && actor.id !== restaurant.ownerId) {

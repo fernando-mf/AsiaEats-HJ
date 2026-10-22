@@ -1,5 +1,16 @@
-import { plainToInstance, Type } from 'class-transformer';
-import { ArrayNotEmpty, IsArray, IsInt, IsUUID, Min, ValidateNested } from 'class-validator';
+import { plainToInstance, Transform, Type } from 'class-transformer';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  Min,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
 import { Event } from '#domain/events/index.js';
 
 export enum OrderStatus {
@@ -37,6 +48,32 @@ export class OrderPlacementRequest {
   }
 }
 
+export class OrderRejectionRequest {
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString()
+  @MinLength(3)
+  @MaxLength(500)
+  reason: string;
+
+  static initialize(raw: OrderRejectionRequest): OrderRejectionRequest {
+    return plainToInstance(OrderRejectionRequest, raw);
+  }
+}
+
+export class OrderSearchRequest {
+  @IsOptional()
+  @IsUUID()
+  restaurantId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  customerId?: string;
+
+  static initialize(raw: OrderSearchRequest): OrderSearchRequest {
+    return plainToInstance(OrderSearchRequest, raw);
+  }
+}
+
 export class OrderLine {
   id: string;
   orderId: string;
@@ -51,6 +88,7 @@ export class Order {
   customerId: string;
   restaurantId: string;
   status: OrderStatus;
+  rejectionReason?: string;
   lines: OrderLine[];
   createdAt: Date;
   updatedAt: Date;
@@ -64,6 +102,7 @@ export class OrderPlacedEvent extends Event<Order> {
 export class OrderStatusChangedEvent extends Event<{
   previousStatus: OrderStatus;
   newStatus: OrderStatus;
+  reason?: string;
 }> {
   readonly entityType = 'order';
   readonly eventType = 'order.status_changed';

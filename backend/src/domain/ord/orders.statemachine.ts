@@ -1,5 +1,5 @@
 import { ApplicationError } from '#domain/errors.js';
-import type { Actor } from '#domain/reg/index.js';
+import { AccountRole, type Actor } from '#domain/reg/index.js';
 import { Order, OrderStatus, OrderStatusChangedEvent } from './orders.models.js';
 
 export class InvalidOrderTransitionError extends ApplicationError {
@@ -19,11 +19,16 @@ const ALLOWED_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
   [OrderStatus.Placed]: [OrderStatus.Accepted, OrderStatus.Rejected, OrderStatus.Cancelled],
   [OrderStatus.Accepted]: [OrderStatus.Preparing, OrderStatus.Cancelled],
   [OrderStatus.Preparing]: [OrderStatus.Ready, OrderStatus.Cancelled],
-  [OrderStatus.Ready]: [OrderStatus.PickedUp],
-  [OrderStatus.PickedUp]: [OrderStatus.Delivered],
+  [OrderStatus.Ready]: [OrderStatus.PickedUp, OrderStatus.Cancelled],
+  [OrderStatus.PickedUp]: [OrderStatus.Delivered, OrderStatus.Cancelled],
   [OrderStatus.Delivered]: [],
   [OrderStatus.Rejected]: [],
   [OrderStatus.Cancelled]: [],
+};
+
+const CANCELLABLE_FROM: Partial<Record<AccountRole, readonly OrderStatus[]>> = {
+  [AccountRole.Customer]: [OrderStatus.Placed],
+  [AccountRole.Operator]: Object.values(OrderStatus),
 };
 
 function validateTransition(from: OrderStatus, to: OrderStatus): void {
@@ -45,11 +50,18 @@ export class OrderStateMachine {
     return this.transition(OrderStatus.Accepted);
   }
 
-  reject(): OrderStatusChangedEvent {
-    return this.transition(OrderStatus.Rejected);
+  reject(reason: string): OrderStatusChangedEvent {
+    const event = this.transition(OrderStatus.Rejected, { reason });
+    this.order.rejectionReason = reason;
+    return event;
   }
 
   cancel(): OrderStatusChangedEvent {
+    const allowed = CANCELLABLE_FROM[this.actor.role]?.includes(this.order.status) ?? false;
+    if (!allowed) {
+      throw new InvalidOrderTransitionError(this.order.status, OrderStatus.Cancelled);
+    }
+
     return this.transition(OrderStatus.Cancelled);
   }
 
@@ -69,7 +81,7 @@ export class OrderStateMachine {
     return this.transition(OrderStatus.Delivered);
   }
 
-  private transition(to: OrderStatus): OrderStatusChangedEvent {
+  private transition(to: OrderStatus, extra: { reason?: string } = {}): OrderStatusChangedEvent {
     const previousStatus = this.order.status;
     validateTransition(previousStatus, to);
 
@@ -77,7 +89,7 @@ export class OrderStateMachine {
 
     return new OrderStatusChangedEvent({
       entityId: this.order.id,
-      payload: { previousStatus, newStatus: to },
+      payload: { previousStatus, newStatus: to, ...extra },
       actor: this.actor,
     });
   }
