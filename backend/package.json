@@ -22,6 +22,7 @@
     "build": "pnpm db:generate && nest build",
     "dev": "nest start --watch --env-file .env",
     "start": "node dist/application/main.js",
+    "seed": "pnpm build && node integration/seed.ts",
     "openapi": "pnpm build && node --env-file-if-exists=.env dist/application/openapi.js",
     "deps:up": "docker compose -f integration/docker-compose.yml up",
     "deps:down": "docker compose -f integration/docker-compose.yml down",
@@ -52,7 +53,7 @@
   "devDependencies": {
     "@nestjs/cli": "^12.0.0",
     "@nestjs/schematics": "^12.0.0",
-    "@types/node": "^24.0.0",
+    "@types/node": "^24.19.2",
     "prisma": "7.10.0",
     "typescript": "^6.0.2",
     "vitest": "^5.0.5"
