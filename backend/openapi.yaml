@@ -11,6 +11,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StatusResponse"
+      summary: Get API status
       tags:
         - status
   /api/auth/register:
@@ -42,6 +43,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      summary: Create account
       tags:
         - auth
   /api/auth/login:
@@ -73,6 +75,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      summary: Log in
       tags:
         - auth
   /api/auth/me:
@@ -94,10 +97,12 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Get current account
       tags:
         - auth
   /api/customers/me:
     put:
+      description: "**Allowed roles:** `customer`"
       operationId: CustomersController_update
       parameters: []
       requestBody:
@@ -126,16 +131,20 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `customer`"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Update customer profile
       tags:
         - customers
+      x-roles:
+        - customer
     get:
+      description: "**Allowed roles:** `customer`"
       operationId: CustomersController_get
       parameters: []
       responses:
@@ -152,17 +161,24 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `customer`"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Get customer profile
       tags:
         - customers
+      x-roles:
+        - customer
   /api/env/reset:
     post:
+      description: |-
+        Resets the environment and seeds it with default data. Requires ENV_MANAGER_ENABLED.
+
+        **Allowed roles:** `operator`
       operationId: EnvController_reset
       parameters: []
       responses:
@@ -175,18 +191,71 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `operator`"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
-      summary: Reset the environment and seeds it with default data. Requires ENV_MANAGER_ENABLED.
+      summary: Reset environment
       tags:
         - env
+      x-roles:
+        - operator
+  /api/events:
+    get:
+      description: "**Allowed roles:** `operator`, `restaurant`"
+      operationId: EventsController_getByEntity
+      parameters:
+        - name: entityType
+          required: true
+          in: query
+          schema:
+            type: string
+        - name: entityId
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StoredEvent"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `operator`, `restaurant`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Get events by entity
+      tags:
+        - events
+      x-roles:
+        - operator
+        - restaurant
   /api/orders:
     post:
+      description: "**Allowed roles:** `customer`"
       operationId: OrdersController_place
       parameters: []
       requestBody:
@@ -215,7 +284,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `customer`"
           content:
             application/json:
               schema:
@@ -234,9 +303,13 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Place order
       tags:
         - orders
+      x-roles:
+        - customer
     get:
+      description: "**Allowed roles:** `customer`, `restaurant`, `operator`"
       operationId: OrdersController_find
       parameters:
         - name: restaurantId
@@ -273,17 +346,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `customer`, `restaurant`, `operator`"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Get orders
       tags:
         - orders
+      x-roles:
+        - customer
+        - restaurant
+        - operator
   /api/orders/{id}:
     get:
+      description: "**Allowed roles:** `customer`, `restaurant`, `operator`"
       operationId: OrdersController_getById
       parameters:
         - name: id
@@ -305,7 +384,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `customer`, `restaurant`, `operator`"
           content:
             application/json:
               schema:
@@ -318,10 +397,16 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Get order
       tags:
         - orders
+      x-roles:
+        - customer
+        - restaurant
+        - operator
   /api/orders/{id}/accept:
     post:
+      description: "**Allowed roles:** `restaurant`"
       operationId: OrdersController_accept
       parameters:
         - name: id
@@ -343,7 +428,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `restaurant`"
           content:
             application/json:
               schema:
@@ -362,10 +447,14 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Accept order
       tags:
         - orders
+      x-roles:
+        - restaurant
   /api/orders/{id}/reject:
     post:
+      description: "**Allowed roles:** `restaurant`"
       operationId: OrdersController_reject
       parameters:
         - name: id
@@ -399,7 +488,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `restaurant`"
           content:
             application/json:
               schema:
@@ -418,10 +507,14 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Reject order
       tags:
         - orders
+      x-roles:
+        - restaurant
   /api/orders/{id}/prepare:
     post:
+      description: "**Allowed roles:** `restaurant`"
       operationId: OrdersController_prepare
       parameters:
         - name: id
@@ -443,7 +536,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `restaurant`"
           content:
             application/json:
               schema:
@@ -462,10 +555,14 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Start preparing order
       tags:
         - orders
+      x-roles:
+        - restaurant
   /api/orders/{id}/ready:
     post:
+      description: "**Allowed roles:** `restaurant`"
       operationId: OrdersController_ready
       parameters:
         - name: id
@@ -487,7 +584,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `restaurant`"
           content:
             application/json:
               schema:
@@ -506,10 +603,14 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Mark order ready
       tags:
         - orders
+      x-roles:
+        - restaurant
   /api/orders/{id}/cancel:
     post:
+      description: "**Allowed roles:** `customer`, `operator`"
       operationId: OrdersController_cancel
       parameters:
         - name: id
@@ -531,7 +632,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `customer`, `operator`"
           content:
             application/json:
               schema:
@@ -550,10 +651,15 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Cancel order
       tags:
         - orders
+      x-roles:
+        - customer
+        - operator
   /api/restaurants:
     post:
+      description: "**Allowed roles:** `restaurant`"
       operationId: RestaurantsController_create
       parameters: []
       requestBody:
@@ -582,15 +688,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `restaurant`"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Create restaurant
       tags:
         - restaurants
+      x-roles:
+        - restaurant
     get:
       operationId: RestaurantsController_find
       parameters:
@@ -633,10 +742,12 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Search restaurants
       tags:
         - restaurants
   /api/restaurants/{id}:
     put:
+      description: "**Allowed roles:** `restaurant`, `operator`"
       operationId: RestaurantsController_update
       parameters:
         - name: id
@@ -670,7 +781,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `restaurant`, `operator`"
           content:
             application/json:
               schema:
@@ -683,10 +794,15 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Update restaurant
       tags:
         - restaurants
+      x-roles:
+        - restaurant
+        - operator
   /api/restaurants/{id}/status:
     put:
+      description: "**Allowed roles:** `restaurant`, `operator`"
       operationId: RestaurantsController_updateStatus
       parameters:
         - name: id
@@ -720,7 +836,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `restaurant`, `operator`"
           content:
             application/json:
               schema:
@@ -739,8 +855,12 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Update restaurant status
       tags:
         - restaurants
+      x-roles:
+        - restaurant
+        - operator
   /api/restaurants/{id}/menu:
     get:
       operationId: RestaurantsController_getMenu
@@ -773,10 +893,12 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Get restaurant menu
       tags:
         - restaurants
   /api/restaurants/{id}/preparation-queue:
     get:
+      description: "**Allowed roles:** `restaurant`, `operator`"
       operationId: RestaurantsController_getPreparationQueue
       parameters:
         - name: id
@@ -800,7 +922,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `restaurant`, `operator`"
           content:
             application/json:
               schema:
@@ -813,10 +935,15 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Get preparation queue
       tags:
         - restaurants
+      x-roles:
+        - restaurant
+        - operator
   /api/restaurants/{id}/menu-items:
     post:
+      description: "**Allowed roles:** `restaurant`"
       operationId: RestaurantsController_createMenuItem
       parameters:
         - name: id
@@ -850,7 +977,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `restaurant`"
           content:
             application/json:
               schema:
@@ -863,10 +990,14 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Create menu item
       tags:
         - restaurants
+      x-roles:
+        - restaurant
   /api/restaurants/{id}/menu-items/{itemId}:
     put:
+      description: "**Allowed roles:** `restaurant`"
       operationId: RestaurantsController_updateMenuItem
       parameters:
         - name: id
@@ -905,7 +1036,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `restaurant`"
           content:
             application/json:
               schema:
@@ -918,9 +1049,13 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Update menu item
       tags:
         - restaurants
+      x-roles:
+        - restaurant
     delete:
+      description: "**Allowed roles:** `restaurant`"
       operationId: RestaurantsController_deleteMenuItem
       parameters:
         - name: id
@@ -943,7 +1078,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: ""
+          description: "Requires one of the roles: `restaurant`"
           content:
             application/json:
               schema:
@@ -956,8 +1091,11 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
+      summary: Delete menu item
       tags:
         - restaurants
+      x-roles:
+        - restaurant
 info:
   title: AsiaEats API
   description: EatChinese NestJS API
@@ -1153,6 +1291,34 @@ components:
         - createdAt
         - updatedAt
         - account
+    StoredEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: string
+        eventType:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+        actor:
+          type: object
+          nullable: true
+        occurredAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - entityType
+        - entityId
+        - eventType
+        - payload
+        - actor
+        - occurredAt
     OrderItemRequest:
       type: object
       properties:

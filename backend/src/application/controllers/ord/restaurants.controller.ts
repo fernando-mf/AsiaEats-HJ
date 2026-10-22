@@ -4,7 +4,6 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiConflictResponse,
-  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -41,6 +40,7 @@ import { UpdateRestaurantStatusCommand } from '#application/commands/ord/update-
 import { UpdateRestaurantCommand } from '#application/commands/ord/update-restaurant.command.js';
 import { Command } from '#application/commands/command.js';
 import { CurrentActor } from '#application/auth/current-actor.decorator.js';
+import { ApiRoles, getApiRoles } from '#application/controllers/api-roles.decorator.js';
 import { ErrorResponse } from '#application/controllers/responses.dto.js';
 
 @ApiTags('restaurants')
@@ -56,16 +56,16 @@ export class RestaurantsController {
   ) {}
 
   @Post()
+  @ApiRoles(AccountRole.Restaurant)
   @ApiOperation({ summary: 'Create restaurant' })
   @ApiCreatedResponse({ type: Restaurant })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
-  @ApiForbiddenResponse({ type: ErrorResponse })
   create(@CurrentActor() actor: Actor, @Body() body: RestaurantCreationRequest) {
     const request = RestaurantCreationRequest.initialize(body);
 
     let command: Command<Restaurant> = new CreateRestaurantCommand(this.restaurants, actor, request);
-    command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.create));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
@@ -86,35 +86,35 @@ export class RestaurantsController {
   }
 
   @Put(':id')
+  @ApiRoles(AccountRole.Restaurant, AccountRole.Operator)
   @ApiOperation({ summary: 'Update restaurant' })
   @ApiOkResponse({ type: Restaurant })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
-  @ApiForbiddenResponse({ type: ErrorResponse })
   @ApiNotFoundResponse({ type: ErrorResponse })
   update(@CurrentActor() actor: Actor, @Param('id') id: string, @Body() body: RestaurantUpdateRequest) {
     const request = RestaurantUpdateRequest.initialize(body);
 
     let command: Command<Restaurant> = new UpdateRestaurantCommand(this.restaurants, actor, id, request);
-    command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant, AccountRole.Operator]);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.update));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
   }
 
   @Put(':id/status')
+  @ApiRoles(AccountRole.Restaurant, AccountRole.Operator)
   @ApiOperation({ summary: 'Update restaurant status' })
   @ApiOkResponse({ type: Restaurant })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
-  @ApiForbiddenResponse({ type: ErrorResponse })
   @ApiNotFoundResponse({ type: ErrorResponse })
   @ApiConflictResponse({ type: ErrorResponse })
   updateStatus(@CurrentActor() actor: Actor, @Param('id') id: string, @Body() body: RestaurantStatusUpdateRequest) {
     const request = RestaurantStatusUpdateRequest.initialize(body);
 
     let command: Command<Restaurant> = new UpdateRestaurantStatusCommand(this.restaurants, actor, id, request);
-    command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant, AccountRole.Operator]);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.updateStatus));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
@@ -133,42 +133,42 @@ export class RestaurantsController {
   }
 
   @Get(':id/preparation-queue')
+  @ApiRoles(AccountRole.Restaurant, AccountRole.Operator)
   @ApiOperation({ summary: 'Get preparation queue' })
   @ApiOkResponse({ type: [Order] })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
-  @ApiForbiddenResponse({ type: ErrorResponse })
   @ApiNotFoundResponse({ type: ErrorResponse })
   getPreparationQueue(@CurrentActor() actor: Actor, @Param('id') id: string) {
     let command: Command<Order[]> = new GetPreparationQueueCommand(this.orders, actor, id);
-    command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant, AccountRole.Operator]);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.getPreparationQueue));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
   }
 
   @Post(':id/menu-items')
+  @ApiRoles(AccountRole.Restaurant)
   @ApiOperation({ summary: 'Create menu item' })
   @ApiCreatedResponse({ type: MenuItem })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
-  @ApiForbiddenResponse({ type: ErrorResponse })
   @ApiNotFoundResponse({ type: ErrorResponse })
   createMenuItem(@CurrentActor() actor: Actor, @Param('id') id: string, @Body() body: MenuItemCreationRequest) {
     const request = MenuItemCreationRequest.initialize(body);
 
     let command: Command<MenuItem> = new CreateMenuItemCommand(this.restaurants, actor, id, request);
-    command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.createMenuItem));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
   }
 
   @Put(':id/menu-items/:itemId')
+  @ApiRoles(AccountRole.Restaurant)
   @ApiOperation({ summary: 'Update menu item' })
   @ApiOkResponse({ type: MenuItem })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
-  @ApiForbiddenResponse({ type: ErrorResponse })
   @ApiNotFoundResponse({ type: ErrorResponse })
   updateMenuItem(
     @CurrentActor() actor: Actor,
@@ -179,22 +179,22 @@ export class RestaurantsController {
     const request = MenuItemUpdateRequest.initialize(body);
 
     let command: Command<MenuItem> = new UpdateMenuItemCommand(this.restaurants, actor, id, itemId, request);
-    command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.updateMenuItem));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
   }
 
   @Delete(':id/menu-items/:itemId')
+  @ApiRoles(AccountRole.Restaurant)
   @ApiOperation({ summary: 'Delete menu item' })
   @HttpCode(204)
   @ApiNoContentResponse()
   @ApiUnauthorizedResponse({ type: ErrorResponse })
-  @ApiForbiddenResponse({ type: ErrorResponse })
   @ApiNotFoundResponse({ type: ErrorResponse })
   deleteMenuItem(@CurrentActor() actor: Actor, @Param('id') id: string, @Param('itemId') itemId: string) {
     let command: Command<void> = new DeleteMenuItemCommand(this.restaurants, actor, id, itemId);
-    command = new AuthorizedCommand(command, actor, [AccountRole.Restaurant]);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.deleteMenuItem));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);

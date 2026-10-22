@@ -2,7 +2,6 @@ import { Controller, Get, Logger, Query } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
-  ApiForbiddenResponse,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -17,6 +16,7 @@ import { LoggedCommand } from '#application/commands/decorators/logged-command.j
 import { GetEventsByEntityCommand } from '#application/commands/events/get-events-by-entity.command.js';
 import { Command } from '#application/commands/command.js';
 import { CurrentActor } from '#application/auth/current-actor.decorator.js';
+import { ApiRoles, getApiRoles } from '#application/controllers/api-roles.decorator.js';
 import { ErrorResponse } from '#application/controllers/responses.dto.js';
 
 @ApiTags('events')
@@ -31,20 +31,20 @@ export class EventsController {
   ) {}
 
   @Get()
+  @ApiRoles(AccountRole.Operator, AccountRole.Restaurant)
   @ApiOperation({ summary: 'Get events by entity' })
   @ApiQuery({ name: 'entityType', required: true })
   @ApiQuery({ name: 'entityId', required: true })
   @ApiOkResponse({ type: [StoredEvent] })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
-  @ApiForbiddenResponse({ type: ErrorResponse })
   getByEntity(
     @CurrentActor() actor: Actor,
     @Query('entityType') entityType: string,
     @Query('entityId') entityId: string,
   ) {
     let command: Command<StoredEvent[]> = new GetEventsByEntityCommand(this.events, entityType, entityId);
-    command = new AuthorizedCommand(command, actor, [AccountRole.Operator, AccountRole.Restaurant]);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.getByEntity));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
