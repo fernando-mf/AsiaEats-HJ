@@ -7,7 +7,7 @@ import { EnvService } from '#domain/env/index.js';
 // This script is run once during the initial env setup, afterwards the env can be
 // reset and seeded using the POST /api/env/reset endpoint using an `operator` role.
 async function seed() {
-  const envFile = resolve(process.argv[2] ?? '.env');
+  const envFile = resolve(process.env.ENV_FILE ?? '.env');
   if (existsSync(envFile)) {
     process.loadEnvFile(envFile);
     console.log(`Loaded env file ${envFile}`);

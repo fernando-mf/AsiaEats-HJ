@@ -1,7 +1,7 @@
 import { defineConfig } from 'prisma/config';
 
 try {
-  process.loadEnvFile();
+  process.loadEnvFile(process.env.ENV_FILE ?? '.env');
 } catch {
   // no .env file, let's assume variables are set in the environment
 }
