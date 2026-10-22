@@ -28,8 +28,7 @@ export abstract class Event<TPayload = object> {
   }
 }
 
-// StoredEvent is the same as Event. Useful when a class is not needed.
-export type StoredEvent = {
+export class StoredEvent {
   id: string;
   entityType: string;
   entityId: string;
@@ -37,7 +36,7 @@ export type StoredEvent = {
   payload: Record<string, unknown>;
   actor: Actor | null;
   occurredAt: Date;
-};
+}
 
 export class GetByEntityQuery {
   @IsString()
