@@ -14,4 +14,5 @@ async function bootstrap() {
   await app.listen(config.get('PORT', { infer: true }));
 }
 
-await bootstrap();
+// Must not be awaited: Vercel intercepts listen() and waits for this module to finish loading.
+void bootstrap();

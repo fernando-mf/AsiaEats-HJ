@@ -5,7 +5,8 @@
       "root": "backend/",
       "framework": "nestjs",
       "entrypoint": "server.js",
-      "buildCommand": "pnpm build"
+      "buildCommand": "pnpm build",
+      "installCommand": "pnpm install"
     }
   },
   "rewrites": [{ "source": "/api/(.*)", "destination": { "service": "api" } }]
