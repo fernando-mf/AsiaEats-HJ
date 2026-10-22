@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { EnvService } from './env/env.service.js';
 import { EventsService } from './events/events.service.js';
 import { OrdersService } from './ord/orders.service.js';
 import { RestaurantsService } from './ord/restaurants.service.js';
@@ -11,6 +12,7 @@ import { CustomersService } from './reg/customers.service.js';
     AccountsService,
     CustomersService,
     DefaultAccountCreationHandler,
+    EnvService,
     EventsService,
     OrdersService,
     RestaurantsService,
@@ -20,6 +22,6 @@ import { CustomersService } from './reg/customers.service.js';
       inject: [CustomersService],
     },
   ],
-  exports: [AccountsService, CustomersService, EventsService, OrdersService, RestaurantsService],
+  exports: [AccountsService, CustomersService, EnvService, EventsService, OrdersService, RestaurantsService],
 })
 export class DomainModule {}

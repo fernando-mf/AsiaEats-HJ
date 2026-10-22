@@ -161,6 +161,30 @@ paths:
         - bearer: []
       tags:
         - customers
+  /api/env/reset:
+    post:
+      operationId: EnvController_reset
+      parameters: []
+      responses:
+        "204":
+          description: ""
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Reset the environment and seeds it with default data. Requires ENV_MANAGER_ENABLED.
+      tags:
+        - env
   /api/orders:
     post:
       operationId: OrdersController_place

@@ -7,6 +7,7 @@ import { InfrastructureModule } from '#infrastructure/infrastructure.module.js';
 import { StatusController } from './controllers/status.controller.js';
 import { AuthController } from './controllers/reg/auth.controller.js';
 import { CustomersController } from './controllers/reg/customers.controller.js';
+import { EnvController } from './controllers/env/env.controller.js';
 import { OrdersController } from './controllers/ord/orders.controller.js';
 import { RestaurantsController } from './controllers/ord/restaurants.controller.js';
 import { ApplicationErrorFilter } from './filters/application-error.filter.js';
@@ -31,7 +32,14 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard.js';
     InfrastructureModule,
     DomainModule,
   ],
-  controllers: [StatusController, AuthController, CustomersController, OrdersController, RestaurantsController],
+  controllers: [
+    StatusController,
+    AuthController,
+    CustomersController,
+    EnvController,
+    OrdersController,
+    RestaurantsController,
+  ],
   providers: [
     CommandRunner,
     { provide: APP_FILTER, useClass: ApplicationErrorFilter },
