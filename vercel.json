@@ -1,8 +1,10 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
     "api": {
       "root": "backend/",
-      "entrypoint": "src/application/main.ts",
+      "framework": "nestjs",
+      "entrypoint": "server.js",
       "buildCommand": "pnpm build"
     }
   },

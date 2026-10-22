@@ -28,3 +28,5 @@ backend/src/infrastructure/generated/
 backend/prisma.config.js
 backend/prisma.config.d.ts
 backend/prisma.config.js.map
+.vercel
+.env*

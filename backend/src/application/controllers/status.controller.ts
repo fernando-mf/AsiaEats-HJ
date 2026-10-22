@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '#application/auth/public.decorator.js';
-import { StatusResponse } from './responses.dto.js';
+import { StatusResponse } from '#application/controllers/responses.dto.js';
 
 @ApiTags('status')
 @Public()

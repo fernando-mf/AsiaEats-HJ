@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { UnauthenticatedError } from '#domain/errors.js';
 import { AccountRole, type Actor } from '#domain/reg/index.js';
-import { IS_PUBLIC_KEY } from './public.decorator.js';
+import { IS_PUBLIC_KEY } from '#application/auth/public.decorator.js';
 
 export type AuthenticatedRequest = {
   headers: { authorization?: string };
