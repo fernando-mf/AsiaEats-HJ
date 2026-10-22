@@ -6,6 +6,7 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -33,6 +34,7 @@ export class AuthController {
 
   @Public()
   @Post('register')
+  @ApiOperation({ summary: 'Create account' })
   @ApiCreatedResponse({ type: AccountResponse })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiConflictResponse({ type: ErrorResponse })
@@ -48,6 +50,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(200)
+  @ApiOperation({ summary: 'Log in' })
   @ApiOkResponse({ type: LoginResponse })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
@@ -61,6 +64,7 @@ export class AuthController {
   }
 
   @Get('me')
+  @ApiOperation({ summary: 'Get current account' })
   @ApiBearerAuth()
   @ApiOkResponse({ type: AccountResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
