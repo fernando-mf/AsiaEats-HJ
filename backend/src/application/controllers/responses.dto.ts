@@ -1,5 +1,5 @@
 import { OmitType } from '@nestjs/swagger';
-import { Account } from '#domain/reg/index.js';
+import { Account, Customer } from '#domain/reg/index.js';
 
 export class FieldErrorResponse {
   field: string;
@@ -15,6 +15,11 @@ export class ErrorResponse {
 
 // Account.toJSON() omits the password hash, so the API response does too.
 export class AccountResponse extends OmitType(Account, ['passwordHash'] as const) {}
+
+// Customer.toJSON() embeds the account without its password hash.
+export class CustomerResponse extends OmitType(Customer, ['account'] as const) {
+  account: AccountResponse;
+}
 
 export class LoginResponse {
   accessToken: string;

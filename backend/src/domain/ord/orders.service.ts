@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { EventsService } from '#domain/events/index.js';
 import { ConflictError, InvalidParamsError, NotFoundError } from '#domain/errors.js';
-import { AccountRole, type Actor } from '#domain/reg/index.js';
+import { AccountRole, type Actor, CustomersService } from '#domain/reg/index.js';
 import { MenuItemNotInMenuError, MenuItemSoldOutError, RestaurantNotOpenError } from './orders.errors.js';
 import {
   Order,
@@ -38,13 +38,21 @@ export class OrdersService {
   constructor(
     private readonly repository: OrderRepository,
     private readonly restaurants: RestaurantsService,
+    private readonly customers: CustomersService,
     private readonly events: EventsService,
   ) {}
 
   async place(actor: Actor, request: OrderPlacementRequest): Promise<Order> {
-    const errors = await validate(request, { whitelist: true, forbidNonWhitelisted: true });
+    const errors = await validate(request);
     if (errors.length > 0) {
       throw InvalidParamsError.fromClassValidator(errors);
+    }
+
+    const customer = await this.customers.getById(actor.id);
+    if (!customer.address) {
+      throw new InvalidParamsError([
+        { field: 'deliveryAddress', messages: ['customer must set a delivery address before placing an order'] },
+      ]);
     }
 
     const ids = request.items.map(item => item.menuItemId);
