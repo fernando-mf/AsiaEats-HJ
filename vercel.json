@@ -1,6 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
+    "web": {
+      "root": "ui/",
+      "framework": "vite",
+      "buildCommand": "pnpm build",
+      "installCommand": "pnpm install",
+      "outputDirectory": "dist",
+      "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+    },
     "api": {
       "root": "backend/",
       "framework": "nestjs",
@@ -9,5 +17,8 @@
       "installCommand": "pnpm install"
     }
   },
-  "rewrites": [{ "source": "/api/(.*)", "destination": { "service": "api" } }]
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": { "service": "api" } },
+    { "source": "/(.*)", "destination": { "service": "web" } }
+  ]
 }
