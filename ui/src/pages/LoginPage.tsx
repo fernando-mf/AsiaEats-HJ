@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../components/auth/AuthLayout';
-import { ApiError, postJson } from '../shared/api/client';
+import { ApiError, postJson, setAccessToken } from '../shared/api/client';
+
+type LoginResponse = { accessToken: string; account: { role: string } };
 
 type LoginFeedback = {
   kind: 'error' | 'success';
@@ -21,6 +23,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<LoginFeedback | null>(null);
+  const navigate = useNavigate();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,8 +38,9 @@ export function LoginPage() {
     setFeedback(null);
 
     try {
-      await postJson('/auth/login', { username: normalizedUsername, password });
-      setFeedback({ kind: 'success', message: 'Signed in successfully.' });
+      const result = await postJson<LoginResponse>('/auth/login', { username: normalizedUsername, password });
+      setAccessToken(result.accessToken);
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       setFeedback({ kind: 'error', message: getLoginError(error) });
     } finally {
@@ -100,6 +104,11 @@ export function LoginPage() {
             </p>
           ) : null}
         </form>
+
+        <p className="demo-hint">
+          Demo: <strong>alice</strong> / <strong>password123</strong> (customer) ·{' '}
+          <strong>golden-dragon</strong> / <strong>password123</strong> (restaurant)
+        </p>
 
         <p className="form-switch">
           New to EatChinese? <Link to="/register">Create an account</Link>
