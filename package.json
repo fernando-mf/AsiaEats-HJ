@@ -4,6 +4,7 @@
   "private": true,
   "description": "SOEN 343 food-delivery simulator focused specifically on Chinese food.",
   "scripts": {
+    "dev": "pnpm -r --parallel --stream --filter backend --filter ui run dev",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
