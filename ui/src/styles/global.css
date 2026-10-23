@@ -755,3 +755,19 @@ a:hover {
     transition-duration: 0.01ms !important;
   }
 }
+
+.demo-hint {
+  margin: 18px 0 0;
+  padding: 10px 12px;
+  color: #91aaa3;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.demo-hint strong {
+  color: #c1ddd5;
+}
