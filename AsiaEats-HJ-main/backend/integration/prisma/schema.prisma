@@ -1,0 +1,158 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../../src/infrastructure/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccountRole {
+  customer
+  restaurant
+  courier
+  operator
+
+  @@map("account_role")
+}
+
+model Account {
+  id           String      @id @default(uuid(7)) @db.Uuid
+  name         String
+  username     String      @unique
+  role         AccountRole
+  passwordHash String      @map("password_hash")
+  createdAt    DateTime    @map("created_at")
+  updatedAt    DateTime    @map("updated_at")
+
+  restaurants     Restaurant[]
+  orders          Order[]
+  customerProfile CustomerProfile?
+
+  @@map("accounts")
+}
+
+model CustomerProfile {
+  accountId  String   @id @map("account_id") @db.Uuid
+  street     String?
+  city       String?
+  postalCode String?  @map("postal_code")
+  latitude   Float?
+  longitude  Float?
+  createdAt  DateTime @map("created_at")
+  updatedAt  DateTime @map("updated_at")
+
+  account Account @relation(fields: [accountId], references: [id])
+
+  @@map("customers")
+}
+
+enum RestaurantStatus {
+  open
+  paused
+  closed
+
+  @@map("restaurant_status")
+}
+
+model Restaurant {
+  id        String           @id @default(uuid(7)) @db.Uuid
+  ownerId   String           @map("owner_id") @db.Uuid
+  name      String
+  status    RestaurantStatus
+  latitude  Float
+  longitude Float
+  createdAt DateTime         @map("created_at")
+  updatedAt DateTime         @map("updated_at")
+
+  owner     Account    @relation(fields: [ownerId], references: [id])
+  menuItems MenuItem[]
+  orders    Order[]
+
+  @@unique([ownerId])
+  @@map("restaurants")
+}
+
+enum MenuItemStatus {
+  available
+  sold_out
+
+  @@map("menu_item_status")
+}
+
+model MenuItem {
+  id           String         @id @default(uuid(7)) @db.Uuid
+  restaurantId String         @map("restaurant_id") @db.Uuid
+  name         String
+  price        Decimal        @db.Decimal(10, 2)
+  status       MenuItemStatus
+  createdAt    DateTime       @map("created_at")
+  updatedAt    DateTime       @map("updated_at")
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+
+  @@index([restaurantId])
+  @@map("menu_items")
+}
+
+enum OrderStatus {
+  placed
+  accepted
+  preparing
+  ready
+  picked_up
+  delivered
+  rejected
+  cancelled
+
+  @@map("order_status")
+}
+
+model Order {
+  id              String      @id @default(uuid(7)) @db.Uuid
+  customerId      String      @map("customer_id") @db.Uuid
+  restaurantId    String      @map("restaurant_id") @db.Uuid
+  status          OrderStatus
+  rejectionReason String?     @map("rejection_reason")
+  createdAt       DateTime    @map("created_at")
+  updatedAt       DateTime    @map("updated_at")
+
+  customer   Account     @relation(fields: [customerId], references: [id])
+  restaurant Restaurant  @relation(fields: [restaurantId], references: [id])
+  lines      OrderLine[]
+
+  @@index([customerId])
+  @@index([restaurantId])
+  @@map("orders")
+}
+
+model OrderLine {
+  id         String  @id @default(uuid(7)) @db.Uuid
+  orderId    String  @map("order_id") @db.Uuid
+  menuItemId String  @map("menu_item_id") @db.Uuid
+  name       String
+  unitPrice  Decimal @map("unit_price") @db.Decimal(10, 2)
+  quantity   Int
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@map("order_lines")
+}
+
+// EventLog is append-only. Rows are inserted by the event publisher and never updated or deleted.
+model EventLog {
+  id         String       @id @db.Uuid
+  entityType String       @map("entity_type")
+  entityId   String       @map("entity_id")
+  eventType  String       @map("event_type")
+  payload    Json         @db.JsonB
+  actorId    String?      @map("actor_id") @db.Uuid
+  actorRole  AccountRole? @map("actor_role")
+  occurredAt DateTime     @map("occurred_at")
+
+  @@index([entityType, entityId])
+  @@map("event_log")
+}
