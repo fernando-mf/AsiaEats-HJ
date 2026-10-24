@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ToastRegion } from '../components/feedback/ToastRegion';
+import { useToast } from '../components/feedback/useToast';
 import { ApiError, apiErrorMessage, clearAccessToken, getAccessToken, requestJson } from '../shared/api/client';
 import './dashboard.css';
 
@@ -30,21 +32,20 @@ export function DashboardPage() {
   const [pendingRestaurantId, setPendingRestaurantId] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState('');
   const [customerPage, setCustomerPage] = useState<CustomerPage>('restaurants');
   const [restaurantPage, setRestaurantPage] = useState<RestaurantPage>('orders');
   const [menuDraft, setMenuDraft] = useState<MenuDraft>({ name: '', price: '', quantity: '0', status: 'available' });
   const [editingMenuItem, setEditingMenuItem] = useState<string | null>(null);
   const [restaurantEmail, setRestaurantEmail] = useState('');
   const restaurantSwitchDialogRef = useRef<HTMLDialogElement>(null);
+  const { toast, showToast, dismissToast } = useToast();
 
   const run = useCallback(async <T,>(action: () => Promise<T>): Promise<T | undefined> => {
     setBusy('loading');
-    setErrorMessage('');
     try {
       return await action();
     } catch (error) {
-      setErrorMessage(apiErrorMessage(error));
+      showToast(apiErrorMessage(error), 'error');
       if (error instanceof ApiError && error.code === 'unauthenticated') {
         clearAccessToken();
         navigate('/login', { replace: true });
@@ -53,7 +54,7 @@ export function DashboardPage() {
     } finally {
       setBusy(null);
     }
-  }, [navigate]);
+  }, [navigate, showToast]);
 
   const loadAccount = useCallback(async () => {
     const result = await run(() => requestJson<Account>('/auth/me'));
@@ -129,14 +130,17 @@ export function DashboardPage() {
 
   function addToCart(item: MenuItem) {
     setCart(current => ({ ...current, [item.id]: (current[item.id] ?? 0) + 1 }));
+    showToast(`${item.name} added to cart.`);
   }
   function changeQuantity(item: MenuItem, delta: number) {
+    const removesItem = cart[item.id] !== undefined && cart[item.id] + delta <= 0;
     setCart(current => {
       const next = { ...current };
       const quantity = (next[item.id] ?? 0) + delta;
       if (quantity <= 0) delete next[item.id]; else next[item.id] = quantity;
       return next;
     });
+    if (removesItem) showToast(`${item.name} removed from cart.`);
   }
   function selectRestaurant(restaurantId: string) {
     const isDifferentRestaurant = selectedRestaurant !== restaurantId;
@@ -155,10 +159,12 @@ export function DashboardPage() {
   }
   function confirmRestaurantSwitch() {
     if (!pendingRestaurantId) return;
+    const restaurantName = pendingRestaurant?.name ?? 'the selected restaurant';
     setCart({});
     setSelectedRestaurant(pendingRestaurantId);
     setCustomerPage('menu');
     setPendingRestaurantId(null);
+    showToast(`Cart cleared. Now browsing ${restaurantName}.`);
   }
   async function placeOrder() {
     if (!selectedRestaurant || !cartLines.length) return;
@@ -169,17 +175,27 @@ export function DashboardPage() {
     if (result) {
       setCart({});
       setCustomerPage('profile');
+      showToast('Order placed successfully.');
       await loadOrders();
     }
   }
   async function orderAction(order: Order, action: 'accept' | 'reject' | 'prepare' | 'ready') {
     const body = action === 'reject' ? { reason: window.prompt('Why is this order being rejected?') ?? '' } : undefined;
     if (action === 'reject' && (!body || body.reason.trim().length < 3)) {
-      setErrorMessage('Please enter a rejection reason of at least 3 characters.');
+      showToast('Please enter a rejection reason of at least 3 characters.', 'error');
       return;
     }
     const result = await run(() => requestJson<Order>(`/orders/${order.id}/${action}`, { method: 'POST', body }));
-    if (result) await loadOrders();
+    if (result) {
+      const messages = {
+        accept: 'Order accepted.',
+        reject: 'Order rejected.',
+        prepare: 'Order is now being prepared.',
+        ready: 'Order marked ready.',
+      };
+      showToast(messages[action]);
+      await loadOrders();
+    }
   }
   function saveMenuQuantities(next: Record<string, number>) {
     setMenuQuantities(next);
@@ -200,15 +216,17 @@ export function DashboardPage() {
     const price = Number(menuDraft.price);
     const quantity = Number(menuDraft.quantity);
     if (!name || !Number.isFinite(price) || price < 0 || !Number.isInteger(quantity) || quantity < 0) {
-      setErrorMessage('Enter an item name, a valid non-negative price, and a whole-number quantity.');
+      showToast('Enter an item name, a valid non-negative price, and a whole-number quantity.', 'error');
       return;
     }
+    const wasEditing = editingMenuItem !== null;
     const body = { name, price, status: menuDraft.status };
     const result = await run(() => requestJson<MenuItem>(editingMenuItem
       ? `/restaurants/${ownedRestaurant.id}/menu-items/${editingMenuItem}`
       : `/restaurants/${ownedRestaurant.id}/menu-items`, { method: editingMenuItem ? 'PUT' : 'POST', body }));
     if (result) {
       saveMenuQuantities({ ...menuQuantities, [result.id]: quantity });
+      showToast(`${result.name} ${wasEditing ? 'updated' : 'created'} successfully.`);
       await loadMenu(ownedRestaurant.id);
       resetMenuDraft();
     }
@@ -220,6 +238,7 @@ export function DashboardPage() {
       const next = { ...menuQuantities };
       delete next[item.id];
       saveMenuQuantities(next);
+      showToast(`${item.name} deleted successfully.`);
       await loadMenu(ownedRestaurant.id);
       if (editingMenuItem === item.id) resetMenuDraft();
     }
@@ -228,7 +247,7 @@ export function DashboardPage() {
     event.preventDefault();
     if (!ownedRestaurant) return;
     window.localStorage.setItem(`asiaeats-restaurant-email-${ownedRestaurant.id}`, restaurantEmail.trim());
-    setErrorMessage('');
+    showToast('Contact email saved on this device.');
   }
   function logout() {
     clearAccessToken();
@@ -257,7 +276,7 @@ export function DashboardPage() {
         </div>
       </header>
 
-      {errorMessage ? <div className="app-alert" role="alert">{errorMessage}<button onClick={() => setErrorMessage('')} aria-label="Dismiss message">×</button></div> : null}
+      <ToastRegion toast={toast} onDismiss={dismissToast} />
 
       <dialog
         ref={restaurantSwitchDialogRef}
