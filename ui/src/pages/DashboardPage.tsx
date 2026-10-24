@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ToastRegion } from '../components/feedback/ToastRegion';
 import { useToast } from '../components/feedback/useToast';
 import { ApiError, apiErrorMessage, clearAccessToken, getAccessToken, requestJson } from '../shared/api/client';
+import { clearStoredCart, readStoredCart, writeStoredCart } from '../shared/cart/cartStorage';
 import './dashboard.css';
 
 type Role = 'customer' | 'restaurant' | 'courier' | 'operator';
@@ -24,11 +25,12 @@ function orderTotal(order: Order) {
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const [restoredCart] = useState(readStoredCart);
   const [account, setAccount] = useState<Account | null>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [selectedRestaurant, setSelectedRestaurant] = useState('');
+  const [selectedRestaurant, setSelectedRestaurant] = useState(restoredCart?.restaurantId ?? '');
   const [menu, setMenu] = useState<MenuItem[]>([]);
-  const [cart, setCart] = useState<Record<string, number>>({});
+  const [cart, setCart] = useState<Record<string, number>>(restoredCart?.items ?? {});
   const [pendingRestaurantId, setPendingRestaurantId] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -107,6 +109,10 @@ export function DashboardPage() {
     if (pendingRestaurantId && !dialog.open) dialog.showModal();
     if (!pendingRestaurantId && dialog.open) dialog.close();
   }, [pendingRestaurantId]);
+
+  useEffect(() => {
+    writeStoredCart({ restaurantId: selectedRestaurant, items: cart });
+  }, [cart, selectedRestaurant]);
 
   const selected = restaurants.find(restaurant => restaurant.id === selectedRestaurant);
   const pendingRestaurant = restaurants.find(restaurant => restaurant.id === pendingRestaurantId);
@@ -250,6 +256,7 @@ export function DashboardPage() {
     showToast('Contact email saved on this device.');
   }
   function logout() {
+    clearStoredCart();
     clearAccessToken();
     navigate('/login', { replace: true });
   }
