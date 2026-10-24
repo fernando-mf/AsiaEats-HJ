@@ -490,6 +490,14 @@
 .order-restaurant-name { color: var(--color-primary) !important; font-weight: 700; }
 .app-alert { display: flex; justify-content: space-between; gap: 12px; max-width: 1240px; margin: 16px auto; padding: 12px 16px; border: 1px solid #b85c52; border-radius: 10px; background: rgba(184,92,82,.1); color: var(--color-text); }
 .app-alert button { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 20px; }
+.restaurant-switch-dialog { width: min(92vw, 500px); padding: 0; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: 16px; box-shadow: 0 28px 70px rgba(0,0,0,.48); }
+.restaurant-switch-dialog::backdrop { background: rgba(3,8,7,.78); backdrop-filter: blur(5px); }
+.restaurant-switch-dialog-content { padding: clamp(24px, 4vw, 32px); }
+.restaurant-switch-dialog h2 { margin: 0; font-family: var(--font-display); font-size: clamp(24px, 4vw, 30px); line-height: 1.15; letter-spacing: -.025em; }
+.restaurant-switch-dialog p { max-width: 46ch; margin: 14px 0 0; color: var(--color-text-secondary); line-height: 1.65; }
+.restaurant-switch-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 26px; }
+.restaurant-switch-dialog-actions button { min-height: 44px; padding: 0 16px; border-radius: 10px; font: inherit; font-weight: 750; }
+.restaurant-switch-confirm:hover { color: #ffe2dd; background: #3a211e; border-color: #985047; }
 .site-footer { display: flex; justify-content: center; gap: 10px; max-width: 1240px; margin: 36px auto 0; padding: 20px 0 0; border-top: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: 12px; }
 .site-footer strong { color: var(--color-text); }
 
@@ -512,6 +520,8 @@
   .storefront-cart-row { grid-template-columns: minmax(0, 1fr) auto; }
   .storefront-cart-row > strong { grid-column: 1 / -1; text-align: right; }
   .profile-banner { align-items: flex-start; flex-direction: column; padding: 24px; }
+  .restaurant-switch-dialog-actions { align-items: stretch; flex-direction: column; }
+  .restaurant-switch-dialog-actions button { width: 100%; }
   .site-footer { flex-direction: column; align-items: center; gap: 2px; }
 }
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiError, apiErrorMessage, clearAccessToken, getAccessToken, requestJson } from '../shared/api/client';
 import './dashboard.css';
@@ -27,6 +27,7 @@ export function DashboardPage() {
   const [selectedRestaurant, setSelectedRestaurant] = useState('');
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<Record<string, number>>({});
+  const [pendingRestaurantId, setPendingRestaurantId] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -35,6 +36,7 @@ export function DashboardPage() {
   const [menuDraft, setMenuDraft] = useState<MenuDraft>({ name: '', price: '', quantity: '0', status: 'available' });
   const [editingMenuItem, setEditingMenuItem] = useState<string | null>(null);
   const [restaurantEmail, setRestaurantEmail] = useState('');
+  const restaurantSwitchDialogRef = useRef<HTMLDialogElement>(null);
 
   const run = useCallback(async <T,>(action: () => Promise<T>): Promise<T | undefined> => {
     setBusy('loading');
@@ -98,7 +100,15 @@ export function DashboardPage() {
     if (account && (account.role === 'customer' || account.role === 'restaurant')) void loadOrders();
   }, [account, loadOrders]);
 
+  useEffect(() => {
+    const dialog = restaurantSwitchDialogRef.current;
+    if (!dialog) return;
+    if (pendingRestaurantId && !dialog.open) dialog.showModal();
+    if (!pendingRestaurantId && dialog.open) dialog.close();
+  }, [pendingRestaurantId]);
+
   const selected = restaurants.find(restaurant => restaurant.id === selectedRestaurant);
+  const pendingRestaurant = restaurants.find(restaurant => restaurant.id === pendingRestaurantId);
   const ownedRestaurant = account?.role === 'restaurant' ? restaurants.find(r => r.ownerId === account.id) : undefined;
   const restaurantQuantityKey = ownedRestaurant ? `asiaeats-menu-quantities-${ownedRestaurant.id}` : '';
   const [menuQuantities, setMenuQuantities] = useState<Record<string, number>>({});
@@ -127,6 +137,28 @@ export function DashboardPage() {
       if (quantity <= 0) delete next[item.id]; else next[item.id] = quantity;
       return next;
     });
+  }
+  function selectRestaurant(restaurantId: string) {
+    const isDifferentRestaurant = selectedRestaurant !== restaurantId;
+    const cartHasItems = Object.keys(cart).length > 0;
+
+    if (isDifferentRestaurant && cartHasItems) {
+      setPendingRestaurantId(restaurantId);
+      return;
+    }
+
+    setSelectedRestaurant(restaurantId);
+    setCustomerPage('menu');
+  }
+  function cancelRestaurantSwitch() {
+    setPendingRestaurantId(null);
+  }
+  function confirmRestaurantSwitch() {
+    if (!pendingRestaurantId) return;
+    setCart({});
+    setSelectedRestaurant(pendingRestaurantId);
+    setCustomerPage('menu');
+    setPendingRestaurantId(null);
   }
   async function placeOrder() {
     if (!selectedRestaurant || !cartLines.length) return;
@@ -227,6 +259,26 @@ export function DashboardPage() {
 
       {errorMessage ? <div className="app-alert" role="alert">{errorMessage}<button onClick={() => setErrorMessage('')} aria-label="Dismiss message">×</button></div> : null}
 
+      <dialog
+        ref={restaurantSwitchDialogRef}
+        className="restaurant-switch-dialog"
+        aria-labelledby="restaurant-switch-title"
+        aria-describedby="restaurant-switch-description"
+        onCancel={event => {
+          event.preventDefault();
+          cancelRestaurantSwitch();
+        }}
+      >
+        <div className="restaurant-switch-dialog-content">
+          <h2 id="restaurant-switch-title">Switch to {pendingRestaurant?.name ?? 'another restaurant'}?</h2>
+          <p id="restaurant-switch-description">Your cart contains items from another restaurant. Switching restaurants will clear your cart. Do you want to continue?</p>
+          <div className="restaurant-switch-dialog-actions">
+            <button className="secondary-button" type="button" autoFocus onClick={cancelRestaurantSwitch}>Keep my cart</button>
+            <button className="danger-button restaurant-switch-confirm" type="button" onClick={confirmRestaurantSwitch}>Switch and clear cart</button>
+          </div>
+        </div>
+      </dialog>
+
       <div className="dashboard-main customer-main">
         {account?.role === 'customer' ? (
           <>
@@ -239,7 +291,7 @@ export function DashboardPage() {
               <section className="panel storefront-panel">
                 <div className="panel-heading"><div><p className="eyebrow">EXPLORE</p><h2>All restaurants</h2><p className="muted">Choose a restaurant to discover its full menu.</p></div><button className="secondary-button" onClick={() => void loadRestaurants()} disabled={busy !== null}>Refresh</button></div>
                 {restaurants.length ? <div className="restaurant-grid storefront-grid">{restaurants.map((restaurant, index) => (
-                  <button className="restaurant-card storefront-card" key={restaurant.id} onClick={() => { if (selectedRestaurant !== restaurant.id) setCart({}); setSelectedRestaurant(restaurant.id); setCustomerPage('menu'); }}>
+                  <button className="restaurant-card storefront-card" key={restaurant.id} onClick={() => selectRestaurant(restaurant.id)}>
                     <span className={`restaurant-art art-${index % 5}`}>{['🥢', '🍜', '🥟', '🍚', '🍲'][index % 5]}</span>
                     <span className={`restaurant-status status-${restaurant.status}`}><i />{restaurant.status}</span>
                     <strong>{restaurant.name}</strong><span className="restaurant-card-caption">Explore menu <b>→</b></span>
