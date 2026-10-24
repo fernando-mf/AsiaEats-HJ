@@ -4,6 +4,13 @@ import { ToastRegion } from '../components/feedback/ToastRegion';
 import { useToast } from '../components/feedback/useToast';
 import { ApiError, apiErrorMessage, clearAccessToken, getAccessToken, requestJson } from '../shared/api/client';
 import { clearStoredCart, readStoredCart, writeStoredCart } from '../shared/cart/cartStorage';
+import {
+  clearDashboardSession,
+  readDashboardSession,
+  writeDashboardSession,
+  type CustomerPage,
+  type RestaurantPage,
+} from '../shared/dashboard/dashboardSession';
 import './dashboard.css';
 
 type Role = 'customer' | 'restaurant' | 'courier' | 'operator';
@@ -12,8 +19,6 @@ type Restaurant = { id: string; ownerId: string; name: string; status: 'open' | 
 type MenuItem = { id: string; restaurantId: string; name: string; price: number; status: 'available' | 'sold_out' };
 type OrderLine = { id: string; menuItemId: string; name: string; unitPrice: number; quantity: number };
 type Order = { id: string; customerId: string; restaurantId: string; status: string; rejectionReason?: string; lines: OrderLine[]; createdAt: string };
-type CustomerPage = 'restaurants' | 'menu' | 'cart' | 'profile';
-type RestaurantPage = 'orders' | 'menu' | 'profile';
 type MenuDraft = { name: string; price: string; quantity: string; status: 'available' | 'sold_out' };
 
 function money(value: number) {
@@ -25,17 +30,20 @@ function orderTotal(order: Order) {
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const [restoredDashboard] = useState(readDashboardSession);
   const [restoredCart] = useState(readStoredCart);
   const [account, setAccount] = useState<Account | null>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [selectedRestaurant, setSelectedRestaurant] = useState(restoredCart?.restaurantId ?? '');
+  const [selectedRestaurant, setSelectedRestaurant] = useState(
+    restoredCart?.restaurantId ?? restoredDashboard?.selectedRestaurantId ?? '',
+  );
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<Record<string, number>>(restoredCart?.items ?? {});
   const [pendingRestaurantId, setPendingRestaurantId] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
-  const [customerPage, setCustomerPage] = useState<CustomerPage>('restaurants');
-  const [restaurantPage, setRestaurantPage] = useState<RestaurantPage>('orders');
+  const [customerPage, setCustomerPage] = useState<CustomerPage>(restoredDashboard?.customerPage ?? 'restaurants');
+  const [restaurantPage, setRestaurantPage] = useState<RestaurantPage>(restoredDashboard?.restaurantPage ?? 'orders');
   const [menuDraft, setMenuDraft] = useState<MenuDraft>({ name: '', price: '', quantity: '0', status: 'available' });
   const [editingMenuItem, setEditingMenuItem] = useState<string | null>(null);
   const [restaurantEmail, setRestaurantEmail] = useState('');
@@ -113,6 +121,10 @@ export function DashboardPage() {
   useEffect(() => {
     writeStoredCart({ restaurantId: selectedRestaurant, items: cart });
   }, [cart, selectedRestaurant]);
+
+  useEffect(() => {
+    writeDashboardSession({ customerPage, restaurantPage, selectedRestaurantId: selectedRestaurant });
+  }, [customerPage, restaurantPage, selectedRestaurant]);
 
   const selected = restaurants.find(restaurant => restaurant.id === selectedRestaurant);
   const pendingRestaurant = restaurants.find(restaurant => restaurant.id === pendingRestaurantId);
@@ -257,6 +269,7 @@ export function DashboardPage() {
   }
   function logout() {
     clearStoredCart();
+    clearDashboardSession();
     clearAccessToken();
     navigate('/login', { replace: true });
   }
