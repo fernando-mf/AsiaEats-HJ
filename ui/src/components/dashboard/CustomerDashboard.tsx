@@ -8,6 +8,7 @@ import {
 import { requestJson } from '../../shared/api/client';
 import { CartView } from '../customer/CartView';
 import { CustomerProfile } from '../customer/CustomerProfile';
+import { OrdersPage } from '../customer/OrdersPage';
 import { RestaurantList } from '../customer/RestaurantList';
 import { RestaurantMenu } from '../customer/RestaurantMenu';
 import { DashboardHeader } from './DashboardHeader';
@@ -170,7 +171,7 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
     );
     if (result) {
       setCart({});
-      setCustomerPage('profile');
+      setCustomerPage('orders');
       showToast('Order placed successfully.');
       await loadOrders();
     }
@@ -223,7 +224,7 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
             busy={busy}
             onRefresh={() => void loadRestaurants()}
             onSelectRestaurant={selectRestaurant}
-            onViewAllOrders={() => setCustomerPage('profile')}
+            onViewAllOrders={() => setCustomerPage('orders')}
           />
         ) : null}
 
@@ -253,15 +254,16 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
           />
         ) : null}
 
-        {customerPage === 'profile' ? (
-          <CustomerProfile
-            account={account}
+        {customerPage === 'orders' ? (
+          <OrdersPage
             orders={orders}
             restaurants={restaurants}
             busy={busy}
             onRefreshOrders={() => void loadOrders()}
           />
         ) : null}
+
+        {customerPage === 'profile' ? <CustomerProfile account={account} /> : null}
       </div>
     </>
   );

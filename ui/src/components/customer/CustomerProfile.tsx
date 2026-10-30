@@ -1,15 +1,10 @@
-import type { Account, Order, Restaurant } from '../dashboard/dashboard.types';
-import { OrderHistory } from './OrderHistory';
+import type { Account } from '../dashboard/dashboard.types';
 
 type CustomerProfileProps = {
   account: Account;
-  orders: Order[];
-  restaurants: Restaurant[];
-  busy: string | null;
-  onRefreshOrders: () => void;
 };
 
-export function CustomerProfile({ account, orders, restaurants, busy, onRefreshOrders }: CustomerProfileProps) {
+export function CustomerProfile({ account }: CustomerProfileProps) {
   const roleLabel = account.role.charAt(0).toUpperCase() + account.role.slice(1);
 
   return (
@@ -19,7 +14,7 @@ export function CustomerProfile({ account, orders, restaurants, busy, onRefreshO
         <div>
           <p className="eyebrow">YOUR ACCOUNT</p>
           <h1>{account.name}</h1>
-          <p>Manage your details and keep track of your orders.</p>
+          <p>Your account details.</p>
         </div>
       </section>
       <section className="panel storefront-panel">
@@ -52,19 +47,6 @@ export function CustomerProfile({ account, orders, restaurants, busy, onRefreshO
             <strong>{roleLabel}</strong>
           </div>
         </div>
-      </section>
-      <section className="panel storefront-panel">
-        <div className="panel-heading">
-          <div>
-            <p className="eyebrow">ORDER HISTORY</p>
-            <h2>Your previous orders</h2>
-            <p className="muted">Track the status and total of each order you’ve placed.</p>
-          </div>
-          <button className="secondary-button" onClick={onRefreshOrders} disabled={busy !== null}>
-            Refresh
-          </button>
-        </div>
-        <OrderHistory orders={orders} restaurants={restaurants} />
       </section>
     </>
   );

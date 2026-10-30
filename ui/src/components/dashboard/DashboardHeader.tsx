@@ -1,7 +1,7 @@
 import { useRef, type ToggleEvent } from 'react';
 import type { CustomerPage } from '../../shared/dashboard/dashboardSession';
 import { BrandMark } from '../brand/BrandMark';
-import { IconBag, IconPin } from '../icons/Icons';
+import { IconBag, IconGrid, IconPin, IconReceipt } from '../icons/Icons';
 import type { Account } from './dashboard.types';
 import { formatMoney } from './dashboard.utils';
 
@@ -85,7 +85,16 @@ export function DashboardHeader({
                 aria-current={onDiscover ? 'page' : undefined}
                 onClick={() => onCustomerPageChange('restaurants')}
               >
+                <IconGrid size={16} />
                 Discover
+              </button>
+              <button
+                className={`header-nav-link${customerPage === 'orders' ? ' active' : ''}`}
+                aria-current={customerPage === 'orders' ? 'page' : undefined}
+                onClick={() => onCustomerPageChange('orders')}
+              >
+                <IconReceipt size={16} />
+                Orders
               </button>
             </nav>
             <button
