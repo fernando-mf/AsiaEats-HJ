@@ -376,6 +376,118 @@
   line-height: 1.6;
 }
 
+/* Output console docked at the bottom of the dashboard, in the normal page flow. */
+.console-panel--docked {
+  position: static;
+  max-width: 1240px;
+  margin: 28px auto 0;
+  border-radius: 12px;
+}
+
+.console-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 16px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.console-panel--collapsed .console-bar {
+  border-bottom: 0;
+}
+
+.console-summary {
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.console-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.console-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.console-toggle input {
+  margin: 0;
+  accent-color: var(--color-primary);
+}
+
+.console-button {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 7px;
+  font-size: 12px;
+}
+
+.console-panel--docked .console {
+  min-height: 0;
+  max-height: 170px;
+  padding: 6px 8px;
+}
+
+.console-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.console-panel--docked .console-line {
+  grid-template-columns: 58px minmax(0, 200px) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+
+.console-line > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.console-command-name {
+  font-weight: 700;
+}
+
+.console-panel--docked .console-error {
+  background: rgba(242, 154, 141, 0.07);
+  box-shadow: inset 2px 0 0 #e5675a;
+}
+
+.console-error .console-outcome {
+  color: #ff8f80;
+}
+
+.console-actor {
+  text-align: right;
+}
+
+@media (max-width: 600px) {
+  .console-panel--docked .console-line {
+    grid-template-columns: 58px minmax(0, 1fr);
+    row-gap: 0;
+  }
+
+  .console-outcome,
+  .console-actor {
+    grid-column: 2;
+    text-align: left;
+  }
+}
+
 @media (max-width: 1050px) {
   .dashboard-grid {
     grid-template-columns: 1fr;

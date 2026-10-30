@@ -4,10 +4,12 @@ import { CustomerDashboard } from '../components/dashboard/CustomerDashboard';
 import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import { RestaurantDashboard } from '../components/dashboard/RestaurantDashboard';
 import type { Account } from '../components/dashboard/dashboard.types';
+import { OutputConsole } from '../components/feedback/OutputConsole';
 import { ToastRegion } from '../components/feedback/ToastRegion';
 import { useToast } from '../components/feedback/useToast';
 import { ApiError, apiErrorMessage, clearAccessToken, getAccessToken, requestJson } from '../shared/api/client';
 import { clearStoredCart } from '../shared/cart/cartStorage';
+import { setConsoleActor } from '../shared/console/outputConsole';
 import { clearDashboardSession } from '../shared/dashboard/dashboardSession';
 import './dashboard.css';
 
@@ -25,6 +27,7 @@ export function DashboardPage() {
       } catch (error) {
         showToast(apiErrorMessage(error), 'error');
         if (error instanceof ApiError && error.code === 'unauthenticated') {
+          setConsoleActor(undefined);
           clearAccessToken();
           navigate('/login', { replace: true });
         }
@@ -38,7 +41,10 @@ export function DashboardPage() {
 
   const loadAccount = useCallback(async () => {
     const result = await run(() => requestJson<Account>('/auth/me'));
-    if (result) setAccount(result);
+    if (result) {
+      setConsoleActor({ username: result.username, role: result.role });
+      setAccount(result);
+    }
   }, [run]);
 
   useEffect(() => {
@@ -52,6 +58,7 @@ export function DashboardPage() {
   function logout() {
     clearStoredCart();
     clearDashboardSession();
+    setConsoleActor(undefined);
     clearAccessToken();
     navigate('/login', { replace: true });
   }
@@ -85,6 +92,8 @@ export function DashboardPage() {
           </div>
         </>
       )}
+
+      <OutputConsole />
 
       <footer className="site-footer">
         <strong>AsiaEats</strong>
