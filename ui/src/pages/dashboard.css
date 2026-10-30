@@ -37,16 +37,11 @@
   min-width: 0;
 }
 
-.panel,
 .console-panel {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  box-shadow: var(--shadow-elevated);
-}
-
-.panel {
-  padding: clamp(20px, 3vw, 28px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
 }
 
 .panel-heading,
@@ -64,20 +59,6 @@
   font-family: var(--font-display);
   font-size: 24px;
   letter-spacing: -0.02em;
-}
-
-.eyebrow {
-  margin: 0;
-  color: #83cbbb;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.13em;
-}
-
-.muted {
-  margin: 6px 0 0;
-  color: var(--color-text-secondary);
-  line-height: 1.5;
 }
 
 .restaurant-grid {
@@ -117,18 +98,6 @@
   font-size: 12px;
   text-transform: capitalize;
 }
-
-.status-dot {
-  width: 9px;
-  height: 9px;
-  margin-top: 4px;
-  border-radius: 50%;
-  background: #75847f;
-}
-
-.status-open { background: #69c9ad; }
-.status-paused { background: #d9ad5a; }
-.status-closed { background: #8d7773; }
 
 .menu-list,
 .cart-list,
@@ -173,61 +142,6 @@
   flex-shrink: 0;
 }
 
-.primary-button.small,
-.small-button,
-.secondary-button,
-.danger-button {
-  min-height: 38px;
-  padding: 0 13px;
-  border-radius: 9px;
-  font-size: 13px;
-}
-
-.small-button {
-  color: var(--color-text);
-  background: var(--color-primary-soft);
-  border: 1px solid var(--color-border-strong);
-  cursor: pointer;
-}
-
-.small-button:hover:not(:disabled) {
-  border-color: var(--color-primary);
-}
-
-.small-button:disabled,
-.primary-button:disabled,
-.secondary-button:disabled,
-.danger-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.secondary-button {
-  color: var(--color-text);
-  background: var(--color-background);
-  border: 1px solid var(--color-border-strong);
-  cursor: pointer;
-}
-
-.secondary-button:hover:not(:disabled) {
-  background: var(--color-surface-secondary);
-}
-
-.danger-button {
-  color: #ffc1b7;
-  background: var(--color-error-soft);
-  border: 1px solid #60352f;
-  cursor: pointer;
-}
-
-.text-button {
-  padding: 3px 6px;
-  color: #8fd1c1;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-
 .cart-list {
   margin-bottom: 14px;
 }
@@ -261,27 +175,6 @@
   align-items: center;
   gap: 10px;
 }
-
-.order-status {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 4px 8px;
-  border-radius: 999px;
-  font-size: 10px !important;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.status-pill-placed { color: #d8e8e3; background: #30413d; }
-.status-pill-accepted { color: #b8dfd3; background: #25493f; }
-.status-pill-preparing { color: #e7d5a7; background: #4b4029; }
-.status-pill-ready { color: #c9e7dc; background: #285045; }
-.status-pill-rejected,
-.status-pill-cancelled { color: #ffc1b7; background: #4d302d; }
-.status-pill-picked_up,
-.status-pill-delivered { color: #c9d9ef; background: #2d3c50; }
 
 .order-controls {
   flex-wrap: wrap;
@@ -560,10 +453,6 @@
 .art-3 { background: linear-gradient(135deg, #d8d7ed, #bcbce0); }
 .art-4 { background: linear-gradient(135deg, #e8d2c9, #d9a99c); }
 .storefront-card strong { font-size: 17px; }
-.restaurant-status { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-secondary); font-size: 11px; text-transform: capitalize; }
-.restaurant-status i { width: 7px; height: 7px; border-radius: 50%; background: #75847f; }
-.restaurant-status.status-open i { background: #69c9ad; }
-.restaurant-status.status-paused i { background: #d9ad5a; }
 .restaurant-card-caption { display: flex; width: 100%; justify-content: space-between; margin-top: auto; color: var(--color-text-secondary); font-size: 12px; }
 .restaurant-card-caption b { color: var(--color-primary); font-size: 17px; }
 .order-history-preview { margin-bottom: 10px; }
@@ -639,7 +528,6 @@
 .restaurant-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
 .menu-editor-form, .restaurant-email-form { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-background); }
 .menu-editor-form label, .restaurant-email-form label { display: grid; gap: 7px; color: var(--color-text-secondary); font-size: 12px; font-weight: 700; }
-.menu-editor-form input, .menu-editor-form select, .restaurant-email-form input { width: 100%; min-height: 43px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 9px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; }
 .menu-form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .menu-form-actions, .managed-menu-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .menu-quantity-note, .restaurant-email-form > p { margin: 0; font-size: 12px; line-height: 1.5; }
@@ -648,7 +536,5 @@
 .managed-menu-item { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--color-border); }
 .managed-menu-info { display: grid; gap: 5px; }
 .managed-menu-info > span:not(.restaurant-status) { color: var(--color-text-secondary); font-size: 12px; }
-.danger-button { padding: 9px 12px; border: 1px solid rgba(184,92,82,.45); border-radius: 9px; background: rgba(184,92,82,.08); color: var(--color-text); cursor: pointer; font-weight: 700; }
-.danger-button:disabled { opacity: .5; cursor: not-allowed; }
 .restaurant-email-form { margin-top: 22px; }
 @media (max-width: 700px) { .menu-form-grid { grid-template-columns: 1fr; } .managed-menu-item { align-items: flex-start; flex-direction: column; } }

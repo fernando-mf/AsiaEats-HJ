@@ -296,82 +296,17 @@ a:hover {
   font-weight: 650;
 }
 
-.field-group input {
-  width: 100%;
-  height: 48px;
-  padding: 0 14px;
-  color: var(--color-text);
-  caret-color: var(--color-focus);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
-  border-radius: 10px;
-  outline: none;
-  transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.field-group input::placeholder {
-  color: #72857f;
-}
-
-.field-group input:hover {
-  border-color: #49615a;
-}
-
-.field-group input:focus {
-  background: #121e1b;
-  border-color: var(--color-focus);
-  box-shadow: 0 0 0 3px rgba(93, 194, 173, 0.13);
-}
-
-.field-group input[aria-invalid='true'] {
-  border-color: var(--color-error);
-}
-
 .form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
-.primary-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  padding: 0 20px;
-  color: #f4fffc;
-  background: var(--color-primary);
-  border: 0;
-  border-radius: 10px;
-  font-weight: 750;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background-color 160ms ease,
-    transform 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.primary-button:hover {
-  color: #ffffff;
-  background: var(--color-primary-hover);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
-  transform: translateY(-1px);
-}
-
-.primary-button:active {
-  box-shadow: none;
-  transform: translateY(0);
-}
-
-.primary-button:disabled {
-  color: #9db2ac;
-  background: #28423c;
-  cursor: wait;
-  transform: none;
+/* Auth pages use a taller primary button than the dashboard. */
+.auth-form .primary-button,
+.button-link {
+  min-height: 46px;
+  font-size: 15px;
 }
 
 .form-notice,
@@ -659,7 +594,7 @@ a:hover {
   }
 
   .field-group input,
-  .primary-button {
+  .auth-form .primary-button {
     min-height: 44px;
     height: 44px;
   }

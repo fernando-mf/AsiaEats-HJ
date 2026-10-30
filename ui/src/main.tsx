@@ -1,6 +1,7 @@
 // Base styles load before any page or component styles so those can override them.
 import './styles/theme.css';
 import './styles/global.css';
+import './styles/components.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';

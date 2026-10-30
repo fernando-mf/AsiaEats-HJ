@@ -1,0 +1,264 @@
+/* Shared components: buttons, form controls, cards, status pills and text helpers. */
+
+/* ---------- Buttons ---------- */
+.primary-button,
+.secondary-button,
+.ghost-button,
+.soft-button,
+.danger-button,
+.small-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-weight: 560;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.primary-button {
+  color: var(--on-primary);
+  background: var(--primary);
+}
+
+.primary-button:hover:not(:disabled) {
+  color: var(--on-primary);
+  background: var(--primary-hover);
+}
+
+.secondary-button {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.ghost-button {
+  color: var(--text-2);
+  background: transparent;
+}
+
+.ghost-button:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.soft-button,
+.small-button {
+  color: var(--primary-ink);
+  background: var(--primary-soft);
+}
+
+.soft-button:hover:not(:disabled),
+.small-button:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.danger-button {
+  color: var(--red-ink);
+  background: var(--red-soft);
+  border-color: rgba(242, 154, 138, 0.28);
+}
+
+.danger-button:hover:not(:disabled) {
+  border-color: rgba(242, 154, 138, 0.55);
+}
+
+.primary-button.small,
+.small-button {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 12.5px;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled,
+.ghost-button:disabled,
+.soft-button:disabled,
+.danger-button:disabled,
+.small-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.text-button {
+  padding: 3px 6px;
+  color: var(--primary-ink);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font-weight: 560;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  color: var(--accent-ink);
+}
+
+/* ---------- Form controls ---------- */
+:where(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea) {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  color: var(--text);
+  caret-color: var(--primary-ink);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  outline: none;
+  font-size: 14px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+:where(textarea) {
+  padding-block: 12px;
+  resize: vertical;
+}
+
+:where(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea):hover {
+  border-color: #49615a;
+}
+
+:where(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea):focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+:where(input, select, textarea)[aria-invalid='true'] {
+  border-color: var(--red-ink);
+}
+
+:where(input[type='checkbox'], input[type='radio']) {
+  accent-color: var(--primary);
+}
+
+/* ---------- Cards and panels ---------- */
+.panel,
+.card {
+  padding: clamp(20px, 3vw, 24px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+/* ---------- Status pills ---------- */
+/* Order statuses use .order-status.status-pill-<status>; restaurant and menu-item
+   statuses use .restaurant-status.status-<open|paused|closed> with an <i> dot. */
+.pill,
+.order-status,
+.order-card .order-status,
+.restaurant-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  height: 22px;
+  padding: 0 9px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 560;
+  line-height: 1;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.pill::before,
+.order-status::before {
+  width: 6px;
+  height: 6px;
+  content: '';
+  background: currentColor;
+  border-radius: 50%;
+}
+
+.restaurant-status i {
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+.pill--primary,
+.order-status.status-pill-placed {
+  color: var(--primary-ink);
+  background: var(--primary-soft);
+}
+
+.pill--accent,
+.order-status.status-pill-accepted {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.pill--amber,
+.order-status.status-pill-preparing,
+.restaurant-status.status-paused {
+  color: var(--amber-ink);
+  background: var(--amber-soft);
+}
+
+.pill--green,
+.order-status.status-pill-ready,
+.restaurant-status.status-open {
+  color: var(--green-ink);
+  background: var(--green-soft);
+}
+
+.pill--red,
+.order-status.status-pill-rejected,
+.order-status.status-pill-cancelled {
+  color: var(--red-ink);
+  background: var(--red-soft);
+}
+
+.pill--neutral,
+.order-status.status-pill-picked_up,
+.order-status.status-pill-delivered,
+.restaurant-status.status-closed {
+  color: var(--text-2);
+  background: var(--surface-2);
+}
+
+/* ---------- Text helpers ---------- */
+.eyebrow {
+  margin: 0;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.muted {
+  margin: 6px 0 0;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.zh {
+  font-family: var(--font-zh);
+}
