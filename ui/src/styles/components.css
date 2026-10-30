@@ -130,6 +130,39 @@
   border-color: var(--text);
 }
 
+/* Segmented control: a row of options in one rounded strip; aria-pressed marks the active one. */
+.segmented {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.segmented > button {
+  height: 30px;
+  padding: 0 12px;
+  color: var(--text-2);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 520;
+  cursor: pointer;
+}
+
+.segmented > button:hover {
+  color: var(--text);
+}
+
+.segmented > button[aria-pressed='true'] {
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-weight: 600;
+}
+
 .text-button {
   padding: 3px 6px;
   color: var(--primary-ink);

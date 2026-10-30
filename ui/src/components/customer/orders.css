@@ -1,0 +1,533 @@
+/* Customer Orders page: in-progress orders, past orders and a side summary. */
+.orders-page {
+  display: grid;
+  gap: 28px;
+}
+
+.orders-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.orders-page-head h1 {
+  margin: 6px 0 0;
+  font-size: 32px;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.orders-page-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.orders-page h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 620;
+}
+
+.orders-section {
+  display: grid;
+  gap: 14px;
+}
+
+.orders-section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.orders-section-head .mono {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.order-thumb {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+}
+
+.order-thumb--lg {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+}
+
+/* ---------- Live (featured) order ---------- */
+.order-live {
+  display: grid;
+  gap: 22px;
+  border-radius: 20px;
+}
+
+.order-live-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.order-live-title {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+
+.order-live-title > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.order-live-title h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 640;
+  letter-spacing: -0.02em;
+}
+
+.order-live-title > .mono,
+.order-live-total > span {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.order-live-total {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+
+.order-live-total strong {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Step tracker: placed → … → delivered */
+.order-steps {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-step {
+  position: relative;
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  justify-items: center;
+  min-width: 0;
+  text-align: center;
+}
+
+/* The connecting line runs behind the markers, from each step to the next. */
+.order-step::after {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  content: '';
+  background: var(--border);
+}
+
+.order-step:last-child::after {
+  display: none;
+}
+
+.order-step--done::after {
+  background: var(--primary);
+}
+
+.order-step-marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  margin-bottom: 8px;
+  color: var(--on-primary);
+  background: var(--surface);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+  place-items: center;
+}
+
+.order-step--done .order-step-marker {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.order-step--current .order-step-marker {
+  border: 2px solid var(--primary);
+  box-shadow: 0 0 0 5px var(--primary-soft);
+}
+
+.order-step--current .order-step-marker::before {
+  width: 10px;
+  height: 10px;
+  content: '';
+  background: var(--primary);
+  border-radius: 50%;
+}
+
+.order-step-label {
+  color: var(--text-3);
+  font-size: 13px;
+  font-weight: 560;
+  text-transform: capitalize;
+}
+
+.order-step--done .order-step-label {
+  color: var(--text);
+}
+
+.order-step--current .order-step-label {
+  color: var(--text);
+  font-weight: 640;
+}
+
+.order-step-time {
+  min-height: 15px;
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+.order-live-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 20px;
+}
+
+.order-lines {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 16px;
+  background: var(--surface-2);
+  border-radius: 14px;
+}
+
+.order-line {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  gap: 10px;
+  font-size: 13.5px;
+}
+
+.order-line > .mono:first-child {
+  color: var(--text-3);
+}
+
+.order-lines-total {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 620;
+}
+
+.order-live-info {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.order-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--text-3);
+}
+
+.order-info-row > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.order-info-row > div {
+  display: grid;
+}
+
+.order-info-row strong {
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 580;
+}
+
+.order-info-row span {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+
+/* ---------- Compact in-progress order ---------- */
+.order-compact {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 20px;
+}
+
+.order-compact-main {
+  display: grid;
+  flex: 1;
+  gap: 3px;
+  min-width: 0;
+}
+
+.order-compact-main > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.order-compact-main strong {
+  font-size: 16px;
+  font-weight: 620;
+}
+
+.order-compact-main > span {
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-compact-main .mono {
+  color: var(--text-3);
+}
+
+.order-compact-note {
+  max-width: 210px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  text-align: right;
+}
+
+.order-compact-total {
+  width: 76px;
+  font-size: 14px;
+  font-weight: 560;
+  text-align: right;
+}
+
+/* ---------- Past orders and side panel ---------- */
+.orders-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.past-orders {
+  display: grid;
+  gap: 4px;
+  padding: 18px 12px 12px;
+}
+
+.past-orders-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px 8px;
+}
+
+.past-order {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 64px 112px 96px;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+
+.past-order:hover {
+  background: var(--surface-2);
+}
+
+.past-order-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.past-order-main strong {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.past-order-main span {
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.past-order-date {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+
+.past-order-total {
+  font-size: 13.5px;
+  font-weight: 550;
+  text-align: right;
+}
+
+.past-order-total.is-uncharged {
+  color: var(--text-3);
+}
+
+.past-orders-empty {
+  margin: 0;
+  padding: 24px 14px;
+  color: var(--text-2);
+  text-align: center;
+}
+
+.orders-aside {
+  display: grid;
+  gap: 16px;
+}
+
+.orders-summary {
+  display: grid;
+  gap: 6px;
+}
+
+.orders-summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 6px;
+}
+
+.orders-summary-head h2 {
+  font-size: 15px;
+}
+
+.orders-summary-head .mono {
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+
+.orders-summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  color: var(--text-2);
+  border-top: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.orders-summary-row .mono {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 560;
+}
+
+.order-again {
+  display: grid;
+  gap: 4px;
+  padding: 16px 12px;
+}
+
+.order-again h2 {
+  margin: 0 8px 6px;
+  font-size: 15px;
+}
+
+.order-again-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  color: var(--text-3);
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.order-again-row:hover {
+  background: var(--surface-2);
+}
+
+.order-again-initial {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  place-items: center;
+}
+
+.order-again-name {
+  display: grid;
+  flex: 1;
+}
+
+.order-again-name strong {
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 580;
+}
+
+.order-again-name span {
+  font-size: 12px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1000px) {
+  .orders-grid,
+  .order-live-body {
+    grid-template-columns: 1fr;
+  }
+
+  .order-compact-note {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .order-live-head {
+    flex-wrap: wrap;
+  }
+
+  .order-step-label {
+    font-size: 11px;
+  }
+
+  .order-step-time {
+    display: none;
+  }
+
+  .past-order {
+    grid-template-columns: 44px minmax(0, 1fr) auto auto;
+    gap: 10px;
+  }
+
+  .past-order-date {
+    display: none;
+  }
+}

@@ -258,8 +258,11 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
           <OrdersPage
             orders={orders}
             restaurants={restaurants}
+            address={address}
             busy={busy}
             onRefreshOrders={() => void loadOrders()}
+            onFindRestaurants={() => setCustomerPage('restaurants')}
+            onOpenRestaurant={selectRestaurant}
           />
         ) : null}
 

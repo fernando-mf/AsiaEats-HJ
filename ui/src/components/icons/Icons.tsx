@@ -80,6 +80,31 @@ export function IconReceipt(props: IconProps) {
   );
 }
 
+export function IconClock(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </Icon>
+  );
+}
+
+export function IconCheck(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="m5 12 4.5 4.5L19 7" />
+    </Icon>
+  );
+}
+
+export function IconChevronRight(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="m9 6 6 6-6 6" />
+    </Icon>
+  );
+}
+
 export function IconArrowRight(props: IconProps) {
   return (
     <Icon {...props}>

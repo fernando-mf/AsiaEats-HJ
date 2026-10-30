@@ -55,6 +55,7 @@ export type Order = {
   rejectionReason?: string;
   lines: OrderLine[];
   createdAt: string;
+  updatedAt?: string;
 };
 
 export type CartLine = {
