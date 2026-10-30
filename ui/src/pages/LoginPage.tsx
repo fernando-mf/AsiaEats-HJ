@@ -6,6 +6,15 @@ import { logError, setConsoleActor } from '../shared/console/outputConsole';
 
 type LoginResponse = { accessToken: string; account: { username: string; role: string } };
 
+// Seeded demo accounts, one per role (backend/src/domain/env/env.seed.ts). All share one password.
+const DEMO_PASSWORD = 'password123';
+const demoAccounts = [
+  { username: 'alice', role: 'customer' },
+  { username: 'golden-dragon', role: 'restaurant' },
+  { username: 'courier', role: 'courier' },
+  { username: 'operator1', role: 'operator' },
+];
+
 type LoginFeedback = {
   kind: 'error' | 'success';
   message: string;
@@ -52,6 +61,12 @@ export function LoginPage() {
     }
   }
 
+  function fillDemoAccount(demoUsername: string) {
+    setUsername(demoUsername);
+    setPassword(DEMO_PASSWORD);
+    setFeedback(null);
+  }
+
   return (
     <AuthLayout>
       <div className="login-surface">
@@ -60,7 +75,8 @@ export function LoginPage() {
           <p>Sign in to continue to EatChinese.</p>
         </header>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
+        {/* noValidate: our own check runs (and logs to the output console) instead of the browser's. */}
+        <form className="auth-form" onSubmit={handleSubmit} noValidate>
           <div className="field-group">
             <label htmlFor="login-username">Username</label>
             <input
@@ -109,10 +125,24 @@ export function LoginPage() {
           ) : null}
         </form>
 
-        <p className="demo-hint">
-          Demo: <strong>alice</strong> / <strong>password123</strong> (customer) ·{' '}
-          <strong>golden-dragon</strong> / <strong>password123</strong> (restaurant)
-        </p>
+        <section className="demo-accounts" aria-labelledby="demo-accounts-title">
+          <p className="demo-accounts-title" id="demo-accounts-title">
+            Demo accounts · click to fill · password <span className="mono">{DEMO_PASSWORD}</span>
+          </p>
+          <div className="demo-account-list">
+            {demoAccounts.map(account => (
+              <button
+                className="demo-account"
+                type="button"
+                key={account.username}
+                onClick={() => fillDemoAccount(account.username)}
+              >
+                <span className="mono">{account.username}</span>
+                <span className="demo-account-role">{account.role}</span>
+              </button>
+            ))}
+          </div>
+        </section>
 
         <p className="form-switch">
           New to EatChinese? <Link to="/register">Create an account</Link>

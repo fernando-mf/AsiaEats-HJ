@@ -148,6 +148,21 @@
   accent-color: var(--primary);
 }
 
+/* Keep browser autofill on our palette instead of the browser's blue-grey. The inset
+   shadow paints the field; the :focus rule keeps the focus ring on autofilled fields. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover {
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+  box-shadow: 0 0 0 1000px var(--surface) inset;
+}
+
+input:-webkit-autofill:focus {
+  box-shadow:
+    0 0 0 1000px var(--surface) inset,
+    0 0 0 4px var(--primary-soft);
+}
+
 /* ---------- Cards and panels ---------- */
 .panel,
 .card {
@@ -259,16 +274,6 @@
 
 :root[data-theme='light'] .brand-wordmark--on-light {
   display: block;
-}
-
-.brand-badge {
-  padding: 2px 5px;
-  color: var(--text-3);
-  border: 1px solid var(--border-strong);
-  border-radius: 5px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.06em;
 }
 
 .brand--lg .brand-wordmark {

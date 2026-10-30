@@ -157,27 +157,25 @@ a:hover {
   gap: 16px;
   align-items: center;
   padding: 13px 16px;
-  background: rgba(10, 17, 16, 0.48);
-  border: 1px solid var(--color-border-strong);
+  /* Showcase content, not a control: lighter fill and a faint border so the
+     tiles don't read like the form inputs. */
+  background: rgba(231, 240, 237, 0.03);
+  border: 1px solid var(--border);
   border-radius: 14px;
-}
-
-.food-tile:nth-child(2) {
-  margin-left: 48px;
 }
 
 .food-icon {
   display: grid;
   width: 52px;
   height: 52px;
-  color: #89cfbd;
-  background: var(--color-primary-soft);
+  color: var(--accent-ink);
+  background: var(--primary-soft);
   border-radius: 12px;
   place-items: center;
 }
 
 .food-icon svg {
-  width: 36px;
+  width: 40px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -469,10 +467,6 @@ a:hover {
     margin-top: 72px;
   }
 
-  .food-tile:nth-child(2) {
-    margin-left: 0;
-  }
-
   .auth-form-panel {
     padding-inline: 36px;
   }
@@ -518,7 +512,7 @@ a:hover {
   }
 
   .food-icon svg {
-    width: 31px;
+    width: 34px;
   }
 
   .story-note {
@@ -662,18 +656,46 @@ a:hover {
   }
 }
 
-.demo-hint {
-  margin: 18px 0 0;
-  padding: 10px 12px;
-  color: #91aaa3;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 9px;
-  font-size: 12px;
-  line-height: 1.5;
-  text-align: center;
+/* Seeded demo accounts on the sign-in page: one chip per role, click to fill. */
+.demo-accounts {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  margin-top: 20px;
 }
 
-.demo-hint strong {
-  color: #c1ddd5;
+.demo-accounts-title {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.demo-account-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.demo-account {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 11px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: border-color 160ms ease;
+}
+
+.demo-account:hover {
+  border-color: var(--primary);
+}
+
+.demo-account-role {
+  color: var(--text-3);
+  font-size: 11.5px;
 }
