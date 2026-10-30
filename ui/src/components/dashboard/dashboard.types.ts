@@ -11,6 +11,19 @@ export type Account = {
   createdAt?: string;
 };
 
+export type Address = {
+  street: string;
+  city: string;
+  postalCode: string;
+  latitude: number;
+  longitude: number;
+};
+
+// Response of GET /customers/me.
+export type CustomerProfileResponse = {
+  address: Address | null;
+};
+
 export type Restaurant = {
   id: string;
   ownerId: string;

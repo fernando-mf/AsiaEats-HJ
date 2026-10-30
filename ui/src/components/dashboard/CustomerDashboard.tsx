@@ -11,7 +11,16 @@ import { CustomerProfile } from '../customer/CustomerProfile';
 import { RestaurantList } from '../customer/RestaurantList';
 import { RestaurantMenu } from '../customer/RestaurantMenu';
 import { DashboardHeader } from './DashboardHeader';
-import type { Account, MenuItem, Order, Restaurant, RunAction, ShowToast } from './dashboard.types';
+import type {
+  Account,
+  Address,
+  CustomerProfileResponse,
+  MenuItem,
+  Order,
+  Restaurant,
+  RunAction,
+  ShowToast,
+} from './dashboard.types';
 
 type CustomerDashboardProps = {
   account: Account;
@@ -32,6 +41,8 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
   const [cart, setCart] = useState<Record<string, number>>(restoredCart?.items ?? {});
   const [pendingRestaurantId, setPendingRestaurantId] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  // undefined while loading, null when the customer has not set an address.
+  const [address, setAddress] = useState<Address | null | undefined>(undefined);
   const [customerPage, setCustomerPage] = useState<CustomerPage>(restoredDashboard?.customerPage ?? 'restaurants');
   const restaurantPage = restoredDashboard?.restaurantPage ?? 'orders';
   const restaurantSwitchDialogRef = useRef<HTMLDialogElement>(null);
@@ -56,6 +67,15 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
     const result = await run(() => requestJson<Order[]>(`/orders?customerId=${encodeURIComponent(account.id)}`));
     if (result) setOrders(result);
   }, [account.id, run]);
+
+  const loadProfile = useCallback(async () => {
+    const result = await run(() => requestJson<CustomerProfileResponse>('/customers/me'));
+    if (result) setAddress(result.address);
+  }, [run]);
+
+  useEffect(() => {
+    void loadProfile();
+  }, [loadProfile]);
 
   useEffect(() => {
     void loadRestaurants();
@@ -161,6 +181,8 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
       <DashboardHeader
         account={account}
         cartCount={cartCount}
+        cartTotal={cartTotal}
+        deliveryAddress={address === undefined ? undefined : (address?.street ?? null)}
         customerPage={customerPage}
         onCustomerPageChange={setCustomerPage}
         onLogout={onLogout}
