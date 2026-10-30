@@ -95,6 +95,41 @@
   cursor: not-allowed;
 }
 
+/* Square button holding a single icon, e.g. "add to cart". */
+.icon-button {
+  width: 34px;
+  min-height: 34px;
+  padding: 0;
+}
+
+/* Toggle chip for filters and quick picks; aria-pressed marks the active state. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 13px;
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 520;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.chip[aria-pressed='true'] {
+  color: var(--bg);
+  background: var(--text);
+  border-color: var(--text);
+}
+
 .text-button {
   padding: 3px 6px;
   color: var(--primary-ink);
@@ -251,6 +286,55 @@ input:-webkit-autofill:focus {
 .restaurant-status.status-closed {
   color: var(--text-2);
   background: var(--surface-2);
+}
+
+/* ---------- Dish placeholder art ---------- */
+/* A muted color block with a line-drawn dish icon, used where a photo would go. */
+.dish-art {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  place-items: center;
+}
+
+.dish-art > svg {
+  opacity: 0.8;
+}
+
+.dish-art--dumplings {
+  color: #a3adc4;
+  background: #1e2129;
+}
+
+.dish-art--noodles {
+  color: #c9ae7e;
+  background: #2a2419;
+}
+
+.dish-art--tofu {
+  color: #d4a391;
+  background: #2a1e19;
+}
+
+.dish-art--dimsum {
+  color: #a5bc97;
+  background: #1c231a;
+}
+
+.dish-art--soup {
+  color: #d79a88;
+  background: #2b1d19;
+}
+
+.dish-art--rice {
+  color: #b5a8c9;
+  background: #221f28;
+}
+
+.dish-art--wonton {
+  color: #c8b08f;
+  background: #26211a;
 }
 
 /* ---------- Brand ---------- */
