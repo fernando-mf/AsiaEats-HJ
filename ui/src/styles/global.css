@@ -6,23 +6,26 @@
 
 html {
   min-width: 320px;
-  background: var(--color-background);
+  background: var(--bg);
 }
 
 body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  color: var(--color-text);
-  background: var(--color-background);
+  color: var(--text);
+  background: var(--bg);
   font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -32,18 +35,22 @@ a {
 }
 
 a {
-  color: #70c7b5;
+  color: var(--primary-ink);
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
 }
 
 a:hover {
-  color: #9bddcf;
+  color: var(--accent-ink);
+}
+
+::placeholder {
+  color: var(--text-3);
 }
 
 ::selection {
-  color: var(--color-text);
-  background: var(--color-primary);
+  color: var(--text);
+  background: var(--primary);
 }
 
 ::-webkit-scrollbar {
@@ -61,8 +68,8 @@ a:hover {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 3px;
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .auth-shell {
