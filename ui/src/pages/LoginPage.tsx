@@ -2,8 +2,9 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../components/auth/AuthLayout';
 import { ApiError, postJson, setAccessToken } from '../shared/api/client';
+import { logError, setConsoleActor } from '../shared/console/outputConsole';
 
-type LoginResponse = { accessToken: string; account: { role: string } };
+type LoginResponse = { accessToken: string; account: { username: string; role: string } };
 
 type LoginFeedback = {
   kind: 'error' | 'success';
@@ -30,7 +31,9 @@ export function LoginPage() {
 
     const normalizedUsername = username.trim();
     if (!normalizedUsername || !password) {
-      setFeedback({ kind: 'error', message: 'Enter your username and password.' });
+      const message = 'Enter your username and password.';
+      logError('LoginCommand', message);
+      setFeedback({ kind: 'error', message });
       return;
     }
 
@@ -40,6 +43,7 @@ export function LoginPage() {
     try {
       const result = await postJson<LoginResponse>('/auth/login', { username: normalizedUsername, password });
       setAccessToken(result.accessToken);
+      setConsoleActor({ username: result.account.username, role: result.account.role });
       navigate('/dashboard', { replace: true });
     } catch (error) {
       setFeedback({ kind: 'error', message: getLoginError(error) });

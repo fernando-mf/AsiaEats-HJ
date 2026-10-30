@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { requestJson } from '../../shared/api/client';
+import { logError } from '../../shared/console/outputConsole';
 import {
   readDashboardSession,
   writeDashboardSession,
@@ -100,7 +101,9 @@ export function RestaurantDashboard({ account, busy, run, showToast, onLogout }:
   async function orderAction(order: Order, action: OrderAction) {
     const body = action === 'reject' ? { reason: window.prompt('Why is this order being rejected?') ?? '' } : undefined;
     if (action === 'reject' && (!body || body.reason.trim().length < 3)) {
-      showToast('Please enter a rejection reason of at least 3 characters.', 'error');
+      const message = 'Please enter a rejection reason of at least 3 characters.';
+      logError('RejectOrderCommand', message);
+      showToast(message, 'error');
       return;
     }
     const result = await run(() => requestJson<Order>(`/orders/${order.id}/${action}`, { method: 'POST', body }));
@@ -143,7 +146,9 @@ export function RestaurantDashboard({ account, busy, run, showToast, onLogout }:
     const price = Number(menuDraft.price);
     const quantity = Number(menuDraft.quantity);
     if (!name || !Number.isFinite(price) || price < 0 || !Number.isInteger(quantity) || quantity < 0) {
-      showToast('Enter an item name, a valid non-negative price, and a whole-number quantity.', 'error');
+      const message = 'Enter an item name, a valid non-negative price, and a whole-number quantity.';
+      logError(editingMenuItem ? 'UpdateMenuItemCommand' : 'CreateMenuItemCommand', message);
+      showToast(message, 'error');
       return;
     }
     const wasEditing = editingMenuItem !== null;

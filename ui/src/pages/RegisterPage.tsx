@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AuthLayout } from '../components/auth/AuthLayout';
 import { RoleCard, type PublicRole } from '../components/auth/RoleCard';
 import { ApiError, postJson } from '../shared/api/client';
+import { logError } from '../shared/console/outputConsole';
 
 type RegistrationForm = {
   name: string;
@@ -103,6 +104,7 @@ export function RegisterPage() {
     const validationErrors = validate(form);
 
     if (Object.keys(validationErrors).length > 0) {
+      logError('CreateAccountCommand', Object.values(validationErrors).join(' '));
       setErrors(validationErrors);
       return;
     }
