@@ -4,7 +4,7 @@ import type { Account, AccountCreationRequest, AccountsService } from '#domain/r
 import { CreateAccountCommand } from './create-account.command.js';
 
 describe('CreateAccountCommand', () => {
-  it('preserves its stable name and delegates account creation to AccountsService', async () => {
+  it('preserves its stable name and delegates to the public registration of AccountsService', async () => {
     const request = {
       name: 'Test Customer',
       username: 'customer',
@@ -12,13 +12,13 @@ describe('CreateAccountCommand', () => {
       role: AccountRole.Customer,
     } as AccountCreationRequest;
     const account = { id: 'account-1' } as Account;
-    const create = vi.fn().mockResolvedValue(account);
-    const accountsService = { create } as unknown as AccountsService;
+    const register = vi.fn().mockResolvedValue(account);
+    const accountsService = { register } as unknown as AccountsService;
     const command = new CreateAccountCommand(accountsService, request);
 
     expect(command.name).toBe('CreateAccountCommand');
     await expect(command.execute()).resolves.toBe(account);
-    expect(create).toHaveBeenCalledOnce();
-    expect(create).toHaveBeenCalledWith(request);
+    expect(register).toHaveBeenCalledOnce();
+    expect(register).toHaveBeenCalledWith(request);
   });
 });

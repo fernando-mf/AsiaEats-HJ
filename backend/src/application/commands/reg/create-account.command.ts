@@ -10,6 +10,6 @@ export class CreateAccountCommand implements Command<Account> {
   ) {}
 
   execute(): Promise<Account> {
-    return this.accountsService.create(this.request);
+    return this.accountsService.register(this.request);
   }
 }
