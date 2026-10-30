@@ -48,8 +48,9 @@ export function RestaurantDashboard({ account, busy, run, showToast, onLogout }:
     const result = await run(() => requestJson<Restaurant[]>('/restaurants'));
     if (result) {
       setRestaurants(result);
-      const preferred = result.find(restaurant => restaurant.ownerId === account.id);
-      setSelectedRestaurant(current => current || preferred?.id || result[0]?.id || '');
+      // Restaurant staff only manage (and may only read) their own restaurant.
+      const owned = result.find(restaurant => restaurant.ownerId === account.id);
+      setSelectedRestaurant(owned?.id ?? '');
     }
   }, [account.id, run]);
 

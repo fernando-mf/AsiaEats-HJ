@@ -205,7 +205,7 @@ paths:
         - operator
   /api/events:
     get:
-      description: "**Allowed roles:** `operator`, `restaurant`"
+      description: "**Allowed roles:** `operator`"
       operationId: EventsController_getByEntity
       parameters:
         - name: entityType
@@ -240,7 +240,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: "Requires one of the roles: `operator`, `restaurant`"
+          description: "Requires one of the roles: `operator`"
           content:
             application/json:
               schema:
@@ -252,7 +252,6 @@ paths:
         - events
       x-roles:
         - operator
-        - restaurant
   /api/orders:
     post:
       description: "**Allowed roles:** `customer`"
@@ -701,6 +700,7 @@ paths:
       x-roles:
         - restaurant
     get:
+      description: "**Allowed roles:** `customer`, `restaurant`, `operator`"
       operationId: RestaurantsController_find
       parameters:
         - name: lat
@@ -740,11 +740,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `customer`, `restaurant`, `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
       summary: Search restaurants
       tags:
         - restaurants
+      x-roles:
+        - customer
+        - restaurant
+        - operator
   /api/restaurants/{id}:
     put:
       description: "**Allowed roles:** `restaurant`, `operator`"
@@ -863,6 +873,10 @@ paths:
         - operator
   /api/restaurants/{id}/menu:
     get:
+      description: |-
+        Restaurant staff may only read the menu of their own restaurant.
+
+        **Allowed roles:** `customer`, `restaurant`, `operator`
       operationId: RestaurantsController_getMenu
       parameters:
         - name: id
@@ -885,6 +899,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `customer`, `restaurant`, `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: ""
           content:
@@ -896,6 +916,10 @@ paths:
       summary: Get restaurant menu
       tags:
         - restaurants
+      x-roles:
+        - customer
+        - restaurant
+        - operator
   /api/restaurants/{id}/preparation-queue:
     get:
       description: "**Allowed roles:** `restaurant`, `operator`"

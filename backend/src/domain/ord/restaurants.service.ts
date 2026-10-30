@@ -161,6 +161,18 @@ export class RestaurantsService {
     return this.repository.listMenuItems(restaurant.id);
   }
 
+  // browseMenu returns a restaurant's menu to an actor. Restaurant staff may only read
+  // their own restaurant's menu; customers and operators may read any menu.
+  async browseMenu(actor: Actor, restaurantId: string): Promise<MenuItem[]> {
+    const restaurant = await this.repository.getById(restaurantId);
+
+    if (actor.role === AccountRole.Restaurant && actor.id !== restaurant.ownerId) {
+      throw new ForbiddenError('cannot read the menu of a restaurant you do not own');
+    }
+
+    return this.repository.listMenuItems(restaurant.id);
+  }
+
   async createMenuItem(actor: Actor, restaurantId: string, request: MenuItemCreationRequest): Promise<MenuItem> {
     const errors = await validate(request, { whitelist: true, forbidNonWhitelisted: true });
     if (errors.length > 0) {

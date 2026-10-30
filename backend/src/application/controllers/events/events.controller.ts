@@ -31,7 +31,7 @@ export class EventsController {
   ) {}
 
   @Get()
-  @ApiRoles(AccountRole.Operator, AccountRole.Restaurant)
+  @ApiRoles(AccountRole.Operator)
   @ApiOperation({ summary: 'Get events by entity' })
   @ApiQuery({ name: 'entityType', required: true })
   @ApiQuery({ name: 'entityId', required: true })

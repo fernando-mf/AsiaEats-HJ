@@ -72,6 +72,7 @@ export class RestaurantsController {
   }
 
   @Get()
+  @ApiRoles(AccountRole.Customer, AccountRole.Restaurant, AccountRole.Operator)
   @ApiOperation({ summary: 'Search restaurants' })
   @ApiOkResponse({ type: [RestaurantSearchResult] })
   @ApiBadRequestResponse({ type: ErrorResponse })
@@ -80,6 +81,7 @@ export class RestaurantsController {
     const request = RestaurantSearchRequest.initialize(query);
 
     let command: Command<RestaurantSearchResult[]> = new FindRestaurantsCommand(this.restaurants, request);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.find));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
@@ -121,12 +123,17 @@ export class RestaurantsController {
   }
 
   @Get(':id/menu')
-  @ApiOperation({ summary: 'Get restaurant menu' })
+  @ApiRoles(AccountRole.Customer, AccountRole.Restaurant, AccountRole.Operator)
+  @ApiOperation({
+    summary: 'Get restaurant menu',
+    description: 'Restaurant staff may only read the menu of their own restaurant.',
+  })
   @ApiOkResponse({ type: [MenuItem] })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
   @ApiNotFoundResponse({ type: ErrorResponse })
   getMenu(@CurrentActor() actor: Actor, @Param('id') id: string) {
-    let command: Command<MenuItem[]> = new GetMenuCommand(this.restaurants, id);
+    let command: Command<MenuItem[]> = new GetMenuCommand(this.restaurants, actor, id);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.getMenu));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
