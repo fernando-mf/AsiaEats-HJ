@@ -96,8 +96,8 @@ export function DashboardPage() {
       <OutputConsole />
 
       <footer className="site-footer">
-        <strong>AsiaEats</strong>
-        <span>Discover a little more delicious.</span>
+        <strong>EatChinese</strong>
+        <span>Chinese food, found locally in Montréal.</span>
       </footer>
     </main>
   );

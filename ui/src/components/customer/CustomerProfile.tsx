@@ -43,7 +43,7 @@ export function CustomerProfile({ account, orders, restaurants, busy, onRefreshO
             <strong>{account.email || 'Not provided for this account'}</strong>
             {!account.email ? (
               <small>
-                This version of AsiaEats uses usernames to sign in and does not currently store an email address.
+                This version of EatChinese uses usernames to sign in and does not currently store an email address.
               </small>
             ) : null}
           </div>
