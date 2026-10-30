@@ -1,4 +1,5 @@
 import type { CustomerPage } from '../../shared/dashboard/dashboardSession';
+import { BrandMark } from '../brand/BrandMark';
 import type { Account } from './dashboard.types';
 
 type DashboardHeaderProps = {
@@ -24,11 +25,8 @@ export function DashboardHeader({
 
   return (
     <header className="dashboard-header site-header">
-      <button className="brand-mark" onClick={() => onCustomerPageChange?.('restaurants')} aria-label="AsiaEats home">
-        <span className="brand-icon">A</span>
-        <span>
-          AsiaEats<small>GOOD FOOD, GOOD MOOD</small>
-        </span>
+      <button className="brand-button" onClick={() => onCustomerPageChange?.('restaurants')} aria-label="EatChinese home">
+        <BrandMark />
       </button>
       <div className="header-actions">
         {account?.role === 'customer' && customerPage && onCustomerPageChange

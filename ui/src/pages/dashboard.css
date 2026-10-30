@@ -431,9 +431,7 @@
 /* Customer storefront and profile */
 .dashboard-shell { padding-top: 18px; }
 .site-header { align-items: center; max-width: 1240px; padding-bottom: 18px; border-bottom: 1px solid var(--color-border); }
-.brand-mark { display: inline-flex; align-items: center; gap: 10px; padding: 0; border: 0; background: transparent; color: var(--color-text); font-size: 22px; font-weight: 850; letter-spacing: -0.04em; cursor: pointer; text-align: left; }
-.brand-mark small { display: block; margin-top: -2px; color: var(--color-text-secondary); font-size: 9px; letter-spacing: .14em; }
-.brand-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 14px; background: var(--color-primary); color: #10201c; font-family: var(--font-display); font-size: 25px; }
+.brand-button { padding: 4px; border: 0; border-radius: var(--radius-md); background: transparent; cursor: pointer; }
 .header-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 .nav-button { padding: 10px 13px; border: 1px solid transparent; border-radius: 10px; color: var(--color-text-secondary); background: transparent; cursor: pointer; font-size: 13px; font-weight: 700; }
 .nav-button span { margin-right: 5px; }

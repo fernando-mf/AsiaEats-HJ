@@ -238,6 +238,43 @@
   background: var(--surface-2);
 }
 
+/* ---------- Brand ---------- */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-wordmark {
+  display: block;
+  width: auto;
+  height: 30px;
+}
+
+/* The app is dark-only for now; a light theme swaps the wordmark variants. */
+.brand-wordmark--on-light,
+:root[data-theme='light'] .brand-wordmark--on-dark {
+  display: none;
+}
+
+:root[data-theme='light'] .brand-wordmark--on-light {
+  display: block;
+}
+
+.brand-badge {
+  padding: 2px 5px;
+  color: var(--text-3);
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.brand--lg .brand-wordmark {
+  height: 40px;
+}
+
 /* ---------- Text helpers ---------- */
 .eyebrow {
   margin: 0;

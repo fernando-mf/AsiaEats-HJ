@@ -111,42 +111,6 @@ a:hover {
   gap: 12px;
 }
 
-.brand-mark {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  color: var(--color-text);
-  background: var(--color-primary);
-  border-radius: 12px;
-  place-items: center;
-}
-
-.brand-mark svg {
-  width: 28px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
-}
-
-.brand-name {
-  font-size: 20px;
-  font-weight: 750;
-  letter-spacing: -0.02em;
-}
-
-.city-badge {
-  padding: 3px 8px;
-  color: #b8d8d0;
-  background: var(--color-primary-soft);
-  border: 1px solid var(--color-border-strong);
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.08em;
-}
-
 .story-copy {
   z-index: 1;
   max-width: 590px;
