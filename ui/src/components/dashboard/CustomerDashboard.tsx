@@ -158,6 +158,15 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
     showToast(`Cart cleared. Now browsing ${restaurantName}.`);
   }
 
+  async function cancelOrder(order: Order) {
+    if (!window.confirm(`Cancel order #${order.id.slice(0, 8)}?`)) return;
+    const result = await run(() => requestJson<Order>(`/orders/${order.id}/cancel`, { method: 'POST' }));
+    if (result) {
+      showToast('Order cancelled.');
+      await loadOrders();
+    }
+  }
+
   async function placeOrder() {
     if (!selectedRestaurant || !cartLines.length) return;
     const result = await run(() =>
@@ -263,6 +272,7 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
             onRefreshOrders={() => void loadOrders()}
             onFindRestaurants={() => setCustomerPage('restaurants')}
             onOpenRestaurant={selectRestaurant}
+            onCancelOrder={order => void cancelOrder(order)}
           />
         ) : null}
 

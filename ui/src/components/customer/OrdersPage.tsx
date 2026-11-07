@@ -14,7 +14,32 @@ type OrdersPageProps = {
   onRefreshOrders: () => void;
   onFindRestaurants: () => void;
   onOpenRestaurant: (restaurantId: string) => void;
+  onCancelOrder: (order: Order) => void;
 };
+
+type CancelProps = {
+  busy: string | null;
+  onCancel: (order: Order) => void;
+};
+
+// Customers may cancel only while the order is still placed (Appendix A, R-ORD-04).
+const NOT_CANCELLABLE = 'The restaurant has accepted this order, so it can no longer be cancelled.';
+
+function CancelButton({ order, busy, onCancel }: CancelProps & { order: Order }) {
+  const cancellable = order.status === 'placed';
+
+  return (
+    <button
+      className="secondary-button cancel-button"
+      type="button"
+      disabled={!cancellable || busy !== null}
+      title={cancellable ? undefined : NOT_CANCELLABLE}
+      onClick={() => onCancel(order)}
+    >
+      Cancel order
+    </button>
+  );
+}
 
 type PastFilter = 'all' | 'delivered' | 'cancelled' | 'rejected';
 
@@ -89,7 +114,13 @@ function OrderSteps({ order }: { order: Order }) {
   );
 }
 
-function LiveOrder({ order, restaurantName, address }: { order: Order; restaurantName: string; address: Address | null | undefined }) {
+function LiveOrder({
+  order,
+  restaurantName,
+  address,
+  busy,
+  onCancel,
+}: CancelProps & { order: Order; restaurantName: string; address: Address | null | undefined }) {
   return (
     <article className="card order-live">
       <div className="order-live-head">
@@ -145,13 +176,22 @@ function LiveOrder({ order, restaurantName, address }: { order: Order; restauran
               {order.updatedAt ? <span>Last update {timeFormat.format(new Date(order.updatedAt))}</span> : null}
             </div>
           </div>
+          <div className="order-live-actions">
+            <CancelButton order={order} busy={busy} onCancel={onCancel} />
+            {order.status !== 'placed' ? <span className="order-cancel-note">{NOT_CANCELLABLE}</span> : null}
+          </div>
         </div>
       </div>
     </article>
   );
 }
 
-function CompactOrder({ order, restaurantName }: { order: Order; restaurantName: string }) {
+function CompactOrder({
+  order,
+  restaurantName,
+  busy,
+  onCancel,
+}: CancelProps & { order: Order; restaurantName: string }) {
   return (
     <article className="card order-compact">
       <OrderThumb order={order} />
@@ -169,6 +209,7 @@ function CompactOrder({ order, restaurantName }: { order: Order; restaurantName:
       </div>
       <span className="order-compact-note">{statusMessages[order.status] ?? ''}</span>
       <span className="mono order-compact-total">{formatMoney(orderTotal(order))}</span>
+      <CancelButton order={order} busy={busy} onCancel={onCancel} />
     </article>
   );
 }
@@ -205,6 +246,7 @@ export function OrdersPage({
   onRefreshOrders,
   onFindRestaurants,
   onOpenRestaurant,
+  onCancelOrder,
 }: OrdersPageProps) {
   const [filter, setFilter] = useState<PastFilter>('all');
   // Taken once on mount: used to pick out this month's orders.
@@ -253,9 +295,21 @@ export function OrdersPage({
             <h2>In progress</h2>
             <span className="mono">{active.length}</span>
           </div>
-          <LiveOrder order={featured} restaurantName={restaurantName(featured.restaurantId)} address={address} />
+          <LiveOrder
+            order={featured}
+            restaurantName={restaurantName(featured.restaurantId)}
+            address={address}
+            busy={busy}
+            onCancel={onCancelOrder}
+          />
           {otherActive.map(order => (
-            <CompactOrder key={order.id} order={order} restaurantName={restaurantName(order.restaurantId)} />
+            <CompactOrder
+              key={order.id}
+              order={order}
+              restaurantName={restaurantName(order.restaurantId)}
+              busy={busy}
+              onCancel={onCancelOrder}
+            />
           ))}
         </section>
       ) : null}
