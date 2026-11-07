@@ -59,101 +59,107 @@ export function DashboardHeader({
   }
 
   return (
-    <header className="dashboard-header site-header">
-      <button className="brand-button" onClick={() => onCustomerPageChange?.('restaurants')} aria-label="EatChinese home">
-        <BrandMark />
-      </button>
+    <div className="site-header-bar">
+      <header className="dashboard-header site-header">
+        <button
+          className="brand-button"
+          onClick={() => onCustomerPageChange?.('restaurants')}
+          aria-label="EatChinese home"
+        >
+          <BrandMark />
+        </button>
 
-      {showCustomerNav && deliveryAddress !== undefined ? (
-        <div className="deliver-to">
-          <IconPin size={17} />
-          <span>
-            <small>Deliver to</small>
-            <strong>{deliveryAddress ?? 'No address yet'}</strong>
-          </span>
-        </div>
-      ) : null}
-
-      <span className="header-spacer" />
-
-      <div className="header-actions">
-        {showCustomerNav ? (
-          <>
-            <nav className="header-nav" aria-label="Main">
-              <button
-                className={`header-nav-link${onDiscover ? ' active' : ''}`}
-                aria-current={onDiscover ? 'page' : undefined}
-                onClick={() => onCustomerPageChange('restaurants')}
-              >
-                <IconGrid size={16} />
-                Discover
-              </button>
-              <button
-                className={`header-nav-link${customerPage === 'orders' ? ' active' : ''}`}
-                aria-current={customerPage === 'orders' ? 'page' : undefined}
-                onClick={() => onCustomerPageChange('orders')}
-              >
-                <IconReceipt size={16} />
-                Orders
-              </button>
-            </nav>
-            <button
-              className="cart-button"
-              aria-label={`Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
-              onClick={() => onCustomerPageChange('cart')}
-            >
-              <IconBag size={17} />
-              <span className="mono">{formatMoney(cartTotal)}</span>
-              {cartCount ? <span className="cart-count">{cartCount}</span> : null}
-            </button>
-          </>
+        {showCustomerNav && deliveryAddress !== undefined ? (
+          <div className="deliver-to">
+            <IconPin size={17} />
+            <span>
+              <small>Deliver to</small>
+              <strong>{deliveryAddress ?? 'No address yet'}</strong>
+            </span>
+          </div>
         ) : null}
 
-        {account ? (
-          <>
-            <button
-              ref={avatarRef}
-              className="avatar avatar-button"
-              type="button"
-              popoverTarget="account-menu"
-              aria-label={`Account: ${account.name}`}
-            >
-              {initials(account.name)}
-            </button>
-            {/* Right after its trigger, so browsers add no implicit aria-details. */}
-            <div
-              ref={accountMenuRef}
-              id="account-menu"
-              className="account-menu"
-              popover="auto"
-              onToggle={positionAccountMenu}
-            >
-              <div className="account-menu-head">
-                <strong>{account.name}</strong>
-                <span>
-                  @{account.username} · {account.role}
-                </span>
-              </div>
-              {showCustomerNav ? (
+        <span className="header-spacer" />
+
+        <div className="header-actions">
+          {showCustomerNav ? (
+            <>
+              <nav className="header-nav" aria-label="Main">
                 <button
-                  className="account-menu-item"
-                  type="button"
-                  onClick={() => runFromMenu(() => onCustomerPageChange('profile'))}
+                  className={`header-nav-link${onDiscover ? ' active' : ''}`}
+                  aria-current={onDiscover ? 'page' : undefined}
+                  onClick={() => onCustomerPageChange('restaurants')}
                 >
-                  Profile
+                  <IconGrid size={16} />
+                  Discover
                 </button>
-              ) : null}
-              <button className="account-menu-item" type="button" onClick={() => runFromMenu(onLogout)}>
-                Sign out
+                <button
+                  className={`header-nav-link${customerPage === 'orders' ? ' active' : ''}`}
+                  aria-current={customerPage === 'orders' ? 'page' : undefined}
+                  onClick={() => onCustomerPageChange('orders')}
+                >
+                  <IconReceipt size={16} />
+                  Orders
+                </button>
+              </nav>
+              <button
+                className="cart-button"
+                aria-label={`Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
+                onClick={() => onCustomerPageChange('cart')}
+              >
+                <IconBag size={17} />
+                <span className="mono">{formatMoney(cartTotal)}</span>
+                {cartCount ? <span className="cart-count">{cartCount}</span> : null}
               </button>
-            </div>
-          </>
-        ) : (
-          <button className="ghost-button" onClick={onLogout}>
-            Sign out
-          </button>
-        )}
-      </div>
-    </header>
+            </>
+          ) : null}
+
+          {account ? (
+            <>
+              <button
+                ref={avatarRef}
+                className="avatar avatar-button"
+                type="button"
+                popoverTarget="account-menu"
+                aria-label={`Account: ${account.name}`}
+              >
+                {initials(account.name)}
+              </button>
+              {/* Right after its trigger, so browsers add no implicit aria-details. */}
+              <div
+                ref={accountMenuRef}
+                id="account-menu"
+                className="account-menu"
+                popover="auto"
+                onToggle={positionAccountMenu}
+              >
+                <div className="account-menu-head">
+                  <strong>{account.name}</strong>
+                  <span>
+                    @{account.username} · {account.role}
+                  </span>
+                </div>
+                {showCustomerNav ? (
+                  <button
+                    className="account-menu-item"
+                    type="button"
+                    onClick={() => runFromMenu(() => onCustomerPageChange('profile'))}
+                  >
+                    Profile
+                  </button>
+                ) : null}
+                <button className="account-menu-item" type="button" onClick={() => runFromMenu(onLogout)}>
+                  Sign out
+                </button>
+              </div>
+            </>
+          ) : (
+            <button className="ghost-button" onClick={onLogout}>
+              Sign out
+            </button>
+          )}
+        </div>
+      </header>
+    </div>
   );
 }

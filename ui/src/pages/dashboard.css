@@ -1,7 +1,9 @@
 
 .dashboard-shell {
+  /* Side padding of the page; the header bar bleeds out by the same amount. */
+  --shell-gutter: clamp(20px, 4vw, 64px);
   min-height: 100svh;
-  padding: 34px clamp(20px, 4vw, 64px) 56px;
+  padding: 0 var(--shell-gutter) 56px;
   background: var(--color-background);
 }
 
@@ -429,8 +431,9 @@
 }
 
 /* Customer storefront and profile */
-.dashboard-shell { padding-top: 18px; }
-.site-header { align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 20px; max-width: 1240px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+/* Full-width header bar on --surface (as in the prototype); its content stays at the page width. */
+.site-header-bar { position: sticky; top: 0; z-index: 30; margin: 0 calc(-1 * var(--shell-gutter)); padding: 0 var(--shell-gutter); background: var(--surface); border-bottom: 1px solid var(--border); }
+.site-header { align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 20px; max-width: 1240px; min-height: 68px; margin: 0 auto; padding: 12px 0; }
 .brand-button { padding: 4px; border: 0; border-radius: var(--radius-md); background: transparent; cursor: pointer; }
 .header-spacer { flex: 1; }
 .header-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 14px; }
@@ -532,7 +535,7 @@
   .storefront-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 600px) {
-  .dashboard-shell { padding-right: 14px; padding-left: 14px; }
+  .dashboard-shell { --shell-gutter: 14px; }
   .header-spacer { display: none; }
   .header-actions { gap: 8px; }
   .header-nav { margin-right: 0; }
