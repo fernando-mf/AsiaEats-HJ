@@ -9,7 +9,7 @@ import { requestJson } from '../../shared/api/client';
 import { CartView } from '../customer/CartView';
 import { CustomerProfile } from '../customer/CustomerProfile';
 import { OrdersPage } from '../customer/OrdersPage';
-import { RestaurantList } from '../customer/RestaurantList';
+import { CustomerHome } from '../customer/CustomerHome';
 import { RestaurantMenu } from '../customer/RestaurantMenu';
 import { DashboardHeader } from './DashboardHeader';
 import type {
@@ -48,13 +48,15 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
   const restaurantPage = restoredDashboard?.restaurantPage ?? 'orders';
   const restaurantSwitchDialogRef = useRef<HTMLDialogElement>(null);
 
+  // Searching from the customer's address makes the backend return distances, nearest first.
   const loadRestaurants = useCallback(async () => {
-    const result = await run(() => requestJson<Restaurant[]>('/restaurants'));
+    const from = address ? `?lat=${address.latitude}&lon=${address.longitude}` : '';
+    const result = await run(() => requestJson<Restaurant[]>(`/restaurants${from}`));
     if (result) {
       setRestaurants(result);
       setSelectedRestaurant(current => current || result[0]?.id || '');
     }
-  }, [run]);
+  }, [address, run]);
 
   const loadMenu = useCallback(
     async (restaurantId: string) => {
@@ -71,16 +73,18 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
 
   const loadProfile = useCallback(async () => {
     const result = await run(() => requestJson<CustomerProfileResponse>('/customers/me'));
-    if (result) setAddress(result.address);
+    // A failed profile load counts as "no address" so restaurants still load.
+    setAddress(result ? result.address : null);
   }, [run]);
 
   useEffect(() => {
     void loadProfile();
   }, [loadProfile]);
 
+  // Restaurants wait for the profile, since the address decides the distances.
   useEffect(() => {
-    void loadRestaurants();
-  }, [loadRestaurants]);
+    if (address !== undefined) void loadRestaurants();
+  }, [address, loadRestaurants]);
 
   useEffect(() => {
     if (selectedRestaurant) void loadMenu(selectedRestaurant);
@@ -227,12 +231,13 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
 
       <div className="dashboard-main customer-main">
         {customerPage === 'restaurants' ? (
-          <RestaurantList
+          <CustomerHome
             restaurants={restaurants}
+            hasAddress={Boolean(address)}
             recentOrders={orders.slice(0, 3)}
             busy={busy}
             onRefresh={() => void loadRestaurants()}
-            onSelectRestaurant={selectRestaurant}
+            onOpenRestaurant={selectRestaurant}
             onViewAllOrders={() => setCustomerPage('orders')}
           />
         ) : null}

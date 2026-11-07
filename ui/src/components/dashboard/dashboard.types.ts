@@ -29,6 +29,8 @@ export type Restaurant = {
   ownerId: string;
   name: string;
   status: 'open' | 'paused' | 'closed';
+  // Present when restaurants are searched from a position (the customer's address).
+  distanceKm?: number;
 };
 
 export type MenuItem = {
