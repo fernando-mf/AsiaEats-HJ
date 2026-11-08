@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DishArt } from '../food/DishArt';
 import { dishKind } from '../food/dishKind';
-import { IconPlus, IconSearch } from '../icons/Icons';
+import { IconArrowRight, IconPlus, IconSearch } from '../icons/Icons';
 import type { MenuItem, Order, Restaurant } from '../dashboard/dashboard.types';
 import { formatMoney } from '../dashboard/dashboard.utils';
 import { OrderHistory } from './OrderHistory';
@@ -98,6 +98,46 @@ function DishCard({
   );
 }
 
+function Spotlight({
+  restaurant,
+  menu,
+  onOpen,
+}: {
+  restaurant: Restaurant;
+  menu: MenuItem[];
+  onOpen: () => void;
+}) {
+  const available = menu.filter(item => item.status === 'available');
+
+  return (
+    <section className="card home-spotlight" aria-labelledby="home-spotlight-title">
+      <DishArt kind={dishKind(available[0]?.name ?? restaurant.name)} className="home-spotlight-art" iconSize={72} />
+      <div className="home-spotlight-body">
+        <p className="eyebrow">Local spotlight</p>
+        <div>
+          <h3 id="home-spotlight-title">{restaurant.name}</h3>
+          <p className="muted">
+            {menu.length} {menu.length === 1 ? 'dish' : 'dishes'} on the menu
+            {restaurant.distanceKm !== undefined ? ` · ${formatDistance(restaurant.distanceKm)} away` : ''}
+          </p>
+        </div>
+        <ul className="home-spotlight-menu">
+          {available.slice(0, 3).map(item => (
+            <li key={item.id}>
+              <span>{item.name}</span>
+              <span className="mono">{formatMoney(item.price)}</span>
+            </li>
+          ))}
+        </ul>
+        <button className="primary-button home-spotlight-action" type="button" onClick={onOpen}>
+          View menu
+          <IconArrowRight size={16} />
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function CustomerHome({
   restaurants,
   menus,
@@ -125,6 +165,12 @@ export function CustomerHome({
         .map(item => ({ item, restaurant })),
     );
   const pick = dishes[0];
+  // Spotlight an open restaurant with dishes, preferably not the one already in Tonight's pick.
+  const spotlightCandidates = restaurants.filter(
+    restaurant => restaurant.status === 'open' && (menus[restaurant.id] ?? []).some(item => item.status === 'available'),
+  );
+  const spotlight =
+    spotlightCandidates.find(restaurant => restaurant.id !== pick?.restaurant.id) ?? spotlightCandidates[0];
   const quickPicks = [...new Set(dishes.map(dish => dish.item.name))].slice(0, QUICK_PICKS);
   const matchingDishes = search
     ? dishes.filter(dish => matches(dish.item.name) || matches(dish.restaurant.name))
@@ -216,6 +262,14 @@ export function CustomerHome({
             <p className="empty">No dishes match your search.</p>
           )}
         </section>
+      ) : null}
+
+      {spotlight && !search ? (
+        <Spotlight
+          restaurant={spotlight}
+          menu={menus[spotlight.id] ?? []}
+          onOpen={() => onOpenRestaurant(spotlight.id)}
+        />
       ) : null}
 
       <section className="home-section" aria-labelledby="home-restaurants-title">

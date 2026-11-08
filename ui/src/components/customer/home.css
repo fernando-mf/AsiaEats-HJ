@@ -235,6 +235,63 @@
   font-weight: 550;
 }
 
+/* ---------- Local spotlight ---------- */
+.home-spotlight {
+  display: flex;
+  gap: 32px;
+  padding: 10px;
+}
+
+.home-spotlight-art {
+  flex-shrink: 0;
+  width: 46%;
+  min-height: 300px;
+  border-radius: 12px;
+}
+
+.home-spotlight-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 22px 26px 22px 0;
+}
+
+.home-spotlight-body h3 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 640;
+  letter-spacing: -0.03em;
+}
+
+.home-spotlight-menu {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-spotlight-menu li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14.5px;
+  font-weight: 540;
+}
+
+.home-spotlight-menu .mono {
+  font-size: 13.5px;
+  font-weight: 400;
+}
+
+.home-spotlight-action {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
 /* ---------- Restaurant cards ---------- */
 .restaurant-tile-grid {
   display: grid;
@@ -315,6 +372,20 @@
   .restaurant-tile-grid,
   .dish-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-spotlight {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .home-spotlight-art {
+    width: 100%;
+    min-height: 200px;
+  }
+
+  .home-spotlight-body {
+    padding: 20px 14px 14px;
   }
 }
 
