@@ -5,11 +5,13 @@ import { OrdersService } from './ord/orders.service.js';
 import { RestaurantsService } from './ord/restaurants.service.js';
 import { ACCOUNT_CREATION_HANDLERS, DefaultAccountCreationHandler } from './reg/accounts.handlers.js';
 import { AccountsService } from './reg/accounts.service.js';
+import { CouriersService } from './reg/couriers.service.js';
 import { CustomersService } from './reg/customers.service.js';
 
 @Module({
   providers: [
     AccountsService,
+    CouriersService,
     CustomersService,
     DefaultAccountCreationHandler,
     EnvService,
@@ -18,8 +20,8 @@ import { CustomersService } from './reg/customers.service.js';
     RestaurantsService,
     {
       provide: ACCOUNT_CREATION_HANDLERS,
-      useFactory: (customers: CustomersService) => [customers],
-      inject: [CustomersService],
+      useFactory: (customers: CustomersService, couriers: CouriersService) => [customers, couriers],
+      inject: [CustomersService, CouriersService],
     },
   ],
   exports: [AccountsService, CustomersService, EnvService, EventsService, OrdersService, RestaurantsService],
