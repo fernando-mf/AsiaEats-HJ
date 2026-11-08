@@ -33,6 +33,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "./scripts/run-tests.sh",
+    "test:e2e:update": "UPDATE_SNAPSHOTS=true ./scripts/run-tests.sh",
     "test:e2e:local": "vitest run -c vitest.e2e.config.ts"
   },
   "dependencies": {

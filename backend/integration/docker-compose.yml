@@ -53,9 +53,12 @@ services:
   tests:
     <<: *backend
     command: ["pnpm", "--filter", "backend", "test:e2e:local"]
+    volumes:
+      - ./tests:/app/backend/integration/tests
     environment:
       <<: *backend-env
       API_URL: http://api:3000/api
+      UPDATE_SNAPSHOTS: ${UPDATE_SNAPSHOTS:-false}
     depends_on:
       api:
         condition: service_healthy
