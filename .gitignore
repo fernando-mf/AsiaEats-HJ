@@ -30,3 +30,5 @@ backend/prisma.config.d.ts
 backend/prisma.config.js.map
 .vercel
 .env*
+.claude
+.cursor

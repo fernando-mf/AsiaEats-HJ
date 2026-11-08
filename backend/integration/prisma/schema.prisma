@@ -30,6 +30,7 @@ model Account {
   restaurants     Restaurant[]
   orders          Order[]
   customerProfile CustomerProfile?
+  courier         Courier?
 
   @@map("accounts")
 }
@@ -47,6 +48,28 @@ model CustomerProfile {
   account Account @relation(fields: [accountId], references: [id])
 
   @@map("customers")
+}
+
+enum CourierStatus {
+  offline
+  idle
+  assigned
+  carrying
+
+  @@map("courier_status")
+}
+
+model Courier {
+  accountId String        @id @map("account_id") @db.Uuid
+  latitude  Float?
+  longitude Float?
+  status    CourierStatus
+  createdAt DateTime      @map("created_at")
+  updatedAt DateTime      @map("updated_at")
+
+  account Account @relation(fields: [accountId], references: [id])
+
+  @@map("couriers")
 }
 
 enum RestaurantStatus {
