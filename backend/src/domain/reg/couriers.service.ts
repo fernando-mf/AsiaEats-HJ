@@ -6,6 +6,7 @@ import { Courier, CourierCreatedEvent, CourierStatus } from './couriers.models.j
 
 export abstract class CourierRepository {
   abstract create(courier: Courier): Promise<Courier>;
+  abstract getByAccountId(accountId: string): Promise<Courier>;
 }
 
 @Injectable()
@@ -16,6 +17,10 @@ export class CouriersService implements AccountCreationHandler {
     private readonly repository: CourierRepository,
     private readonly events: EventsService,
   ) {}
+
+  getById(id: string): Promise<Courier> {
+    return this.repository.getByAccountId(id);
+  }
 
   // handleAccountCreation creates a default Courier entry linked to the given Account.
   async handleAccountCreation(account: Account): Promise<void> {

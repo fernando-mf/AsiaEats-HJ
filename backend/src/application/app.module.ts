@@ -6,6 +6,7 @@ import { DomainModule } from '#domain/domain.module.js';
 import { InfrastructureModule } from '#infrastructure/infrastructure.module.js';
 import { StatusController } from '#application/controllers/status.controller.js';
 import { AuthController } from '#application/controllers/reg/auth.controller.js';
+import { CouriersController } from '#application/controllers/reg/couriers.controller.js';
 import { CustomersController } from '#application/controllers/reg/customers.controller.js';
 import { EnvController } from '#application/controllers/env/env.controller.js';
 import { EventsController } from '#application/controllers/events/events.controller.js';
@@ -36,6 +37,7 @@ import { JwtAuthGuard } from '#application/auth/jwt-auth.guard.js';
   controllers: [
     StatusController,
     AuthController,
+    CouriersController,
     CustomersController,
     EnvController,
     EventsController,

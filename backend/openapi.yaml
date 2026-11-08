@@ -100,6 +100,37 @@ paths:
       summary: Get current account
       tags:
         - auth
+  /api/couriers/me:
+    get:
+      description: "**Allowed roles:** `courier`"
+      operationId: CouriersController_get
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourierResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Get courier profile
+      tags:
+        - couriers
+      x-roles:
+        - courier
   /api/customers/me:
     put:
       description: "**Allowed roles:** `customer`"
@@ -1219,6 +1250,45 @@ components:
       required:
         - accessToken
         - account
+    Position:
+      type: object
+      properties:
+        latitude:
+          type: number
+        longitude:
+          type: number
+      required:
+        - latitude
+        - longitude
+    CourierResponse:
+      type: object
+      properties:
+        position:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/Position"
+        status:
+          enum:
+            - offline
+            - idle
+            - assigned
+            - carrying
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+        account:
+          $ref: "#/components/schemas/AccountResponse"
+      required:
+        - position
+        - status
+        - createdAt
+        - updatedAt
+        - account
     AddressRequest:
       type: object
       properties:
@@ -1416,16 +1486,6 @@ components:
           maxLength: 500
       required:
         - reason
-    Position:
-      type: object
-      properties:
-        latitude:
-          type: number
-        longitude:
-          type: number
-      required:
-        - latitude
-        - longitude
     RestaurantCreationRequest:
       type: object
       properties:
