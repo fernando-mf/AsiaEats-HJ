@@ -1,0 +1,32 @@
+name: UI CI
+
+on:
+  pull_request:
+    paths:
+      - ui/**
+      - .github/workflows/ui.yml
+
+concurrency:
+  group: ui-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm --filter ui lint
+
+      - name: Build
+        run: pnpm --filter ui build
