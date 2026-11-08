@@ -41,6 +41,10 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<Record<string, number>>(restoredCart?.items ?? {});
   const [pendingRestaurantId, setPendingRestaurantId] = useState<string | null>(null);
+  // A dish waiting to be added once the customer confirms switching restaurants.
+  const [pendingDish, setPendingDish] = useState<MenuItem | null>(null);
+  // Every restaurant's menu, keyed by restaurant id, for the home page's dish search and rows.
+  const [menus, setMenus] = useState<Record<string, MenuItem[]>>({});
   const [orders, setOrders] = useState<Order[]>([]);
   // undefined while loading, null when the customer has not set an address.
   const [address, setAddress] = useState<Address | null | undefined>(undefined);
@@ -52,10 +56,19 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
   const loadRestaurants = useCallback(async () => {
     const from = address ? `?lat=${address.latitude}&lon=${address.longitude}` : '';
     const result = await run(() => requestJson<Restaurant[]>(`/restaurants${from}`));
-    if (result) {
-      setRestaurants(result);
-      setSelectedRestaurant(current => current || result[0]?.id || '');
-    }
+    if (!result) return;
+    setRestaurants(result);
+    setSelectedRestaurant(current => current || result[0]?.id || '');
+
+    const entries = await run(() =>
+      Promise.all(
+        result.map(
+          async restaurant =>
+            [restaurant.id, await requestJson<MenuItem[]>(`/restaurants/${restaurant.id}/menu`)] as const,
+        ),
+      ),
+    );
+    if (entries) setMenus(Object.fromEntries(entries));
   }, [address, run]);
 
   const loadMenu = useCallback(
@@ -148,12 +161,34 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
     setCustomerPage('menu');
   }
 
+  // addDish adds a dish from any restaurant (e.g. from the home page). A cart holds one
+  // restaurant's items, so a dish from another restaurant asks to switch first.
+  function addDish(item: MenuItem) {
+    const otherRestaurant = item.restaurantId !== selectedRestaurant;
+    if (otherRestaurant && Object.keys(cart).length > 0) {
+      setPendingDish(item);
+      setPendingRestaurantId(item.restaurantId);
+      return;
+    }
+    if (otherRestaurant) setSelectedRestaurant(item.restaurantId);
+    addToCart(item);
+  }
+
   function cancelRestaurantSwitch() {
     setPendingRestaurantId(null);
+    setPendingDish(null);
   }
 
   function confirmRestaurantSwitch() {
     if (!pendingRestaurantId) return;
+    if (pendingDish) {
+      setCart({ [pendingDish.id]: 1 });
+      setSelectedRestaurant(pendingRestaurantId);
+      setPendingRestaurantId(null);
+      setPendingDish(null);
+      showToast(`Cart cleared. ${pendingDish.name} added to cart.`);
+      return;
+    }
     const restaurantName = pendingRestaurant?.name ?? 'the selected restaurant';
     setCart({});
     setSelectedRestaurant(pendingRestaurantId);
@@ -233,11 +268,13 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
         {customerPage === 'restaurants' ? (
           <CustomerHome
             restaurants={restaurants}
+            menus={menus}
             hasAddress={Boolean(address)}
             recentOrders={orders.slice(0, 3)}
             busy={busy}
             onRefresh={() => void loadRestaurants()}
             onOpenRestaurant={selectRestaurant}
+            onAddDish={addDish}
             onViewAllOrders={() => setCustomerPage('orders')}
           />
         ) : null}

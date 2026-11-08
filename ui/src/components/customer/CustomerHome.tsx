@@ -1,28 +1,45 @@
 import { useState } from 'react';
 import { DishArt } from '../food/DishArt';
 import { dishKind } from '../food/dishKind';
-import { IconSearch } from '../icons/Icons';
-import type { Order, Restaurant } from '../dashboard/dashboard.types';
+import { IconPlus, IconSearch } from '../icons/Icons';
+import type { MenuItem, Order, Restaurant } from '../dashboard/dashboard.types';
+import { formatMoney } from '../dashboard/dashboard.utils';
 import { OrderHistory } from './OrderHistory';
 import './home.css';
 
 type CustomerHomeProps = {
   restaurants: Restaurant[];
+  menus: Record<string, MenuItem[]>;
   hasAddress: boolean;
   recentOrders: Order[];
   busy: string | null;
   onRefresh: () => void;
   onOpenRestaurant: (restaurantId: string) => void;
+  onAddDish: (item: MenuItem) => void;
   onViewAllOrders: () => void;
 };
 
+type Dish = {
+  item: MenuItem;
+  restaurant: Restaurant;
+};
+
 const NEARBY_KM = 3;
+const QUICK_PICKS = 5;
 
 function formatDistance(km: number) {
   return `${km < 10 ? km.toFixed(1) : Math.round(km)} km`;
 }
 
-function RestaurantCard({ restaurant, onOpen }: { restaurant: Restaurant; onOpen: () => void }) {
+function RestaurantCard({
+  restaurant,
+  dishCount,
+  onOpen,
+}: {
+  restaurant: Restaurant;
+  dishCount: number | undefined;
+  onOpen: () => void;
+}) {
   const open = restaurant.status === 'open';
 
   return (
@@ -36,6 +53,7 @@ function RestaurantCard({ restaurant, onOpen }: { restaurant: Restaurant; onOpen
       <span className="restaurant-tile-name">{restaurant.name}</span>
       <span className="restaurant-tile-meta">
         {open ? 'Taking orders now' : 'Not taking orders right now'}
+        {dishCount !== undefined ? ` · ${dishCount} ${dishCount === 1 ? 'dish' : 'dishes'}` : null}
         {restaurant.distanceKm !== undefined ? (
           <span className="mono"> · {formatDistance(restaurant.distanceKm)}</span>
         ) : null}
@@ -44,13 +62,51 @@ function RestaurantCard({ restaurant, onOpen }: { restaurant: Restaurant; onOpen
   );
 }
 
+function DishCard({
+  dish,
+  onAdd,
+  onOpenRestaurant,
+}: {
+  dish: Dish;
+  onAdd: () => void;
+  onOpenRestaurant: () => void;
+}) {
+  const { item, restaurant } = dish;
+
+  return (
+    <article className="card dish-card">
+      <DishArt kind={dishKind(item.name)} className="dish-card-art" iconSize={44} />
+      <div className="dish-card-body">
+        <strong>{item.name}</strong>
+        <button className="dish-card-restaurant" type="button" onClick={onOpenRestaurant}>
+          {restaurant.name}
+          {restaurant.distanceKm !== undefined ? ` · ${formatDistance(restaurant.distanceKm)}` : ''}
+        </button>
+        <div className="dish-card-foot">
+          <span className="mono">{formatMoney(item.price)}</span>
+          <button
+            className="primary-button icon-button"
+            type="button"
+            aria-label={`Add ${item.name} to cart`}
+            onClick={onAdd}
+          >
+            <IconPlus size={17} />
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export function CustomerHome({
   restaurants,
+  menus,
   hasAddress,
   recentOrders,
   busy,
   onRefresh,
   onOpenRestaurant,
+  onAddDish,
   onViewAllOrders,
 }: CustomerHomeProps) {
   const [query, setQuery] = useState('');
@@ -58,9 +114,25 @@ export function CustomerHome({
   const [nearbyOnly, setNearbyOnly] = useState(false);
 
   const search = query.trim().toLowerCase();
-  const visible = restaurants.filter(
+  const matches = (text: string) => text.toLowerCase().includes(search);
+
+  // Orderable dishes: available items of open restaurants, nearest restaurant first.
+  const dishes: Dish[] = restaurants
+    .filter(restaurant => restaurant.status === 'open')
+    .flatMap(restaurant =>
+      (menus[restaurant.id] ?? [])
+        .filter(item => item.status === 'available')
+        .map(item => ({ item, restaurant })),
+    );
+  const pick = dishes[0];
+  const quickPicks = [...new Set(dishes.map(dish => dish.item.name))].slice(0, QUICK_PICKS);
+  const matchingDishes = search
+    ? dishes.filter(dish => matches(dish.item.name) || matches(dish.restaurant.name))
+    : dishes;
+
+  const visibleRestaurants = restaurants.filter(
     restaurant =>
-      (!search || restaurant.name.toLowerCase().includes(search)) &&
+      (!search || matches(restaurant.name) || (menus[restaurant.id] ?? []).some(item => matches(item.name))) &&
       (!openOnly || restaurant.status === 'open') &&
       (!nearbyOnly || (restaurant.distanceKm ?? Infinity) <= NEARBY_KM),
   );
@@ -68,22 +140,83 @@ export function CustomerHome({
   return (
     <div className="home">
       <section className="home-hero">
-        <p className="eyebrow">Chinese food · Montréal</p>
-        <h1>
-          Find the dish first.
-          <span>Then the kitchen that does it best.</span>
-        </h1>
-        <div className="home-search">
-          <IconSearch size={20} />
-          <input
-            type="search"
-            aria-label="Search restaurants"
-            placeholder="Search a restaurant, e.g. “Golden Dragon”"
-            value={query}
-            onChange={event => setQuery(event.target.value)}
-          />
+        <div className="home-hero-copy">
+          <p className="eyebrow">Chinese food · Montréal</p>
+          <h1>
+            Find the dish first.
+            <span>Then the kitchen that does it best.</span>
+          </h1>
+          <div className="home-search">
+            <IconSearch size={20} />
+            <input
+              type="search"
+              aria-label="Search dishes or restaurants"
+              placeholder="Try “dan dan noodles” or “Golden Dragon”"
+              value={query}
+              onChange={event => setQuery(event.target.value)}
+            />
+          </div>
+          {quickPicks.length ? (
+            <div className="home-quick-picks">
+              <span className="mono">TRY</span>
+              {quickPicks.map(name => (
+                <button className="chip" type="button" key={name} onClick={() => setQuery(name)}>
+                  {name}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
+
+        {pick ? (
+          <article className="home-pick">
+            <DishArt kind={dishKind(pick.item.name)} className="home-pick-art" iconSize={72} />
+            <div className="home-pick-card">
+              <div className="home-pick-text">
+                <p className="eyebrow">Tonight’s pick</p>
+                <strong>{pick.item.name}</strong>
+                <span>
+                  {pick.restaurant.name}
+                  {pick.restaurant.distanceKm !== undefined ? ` · ${formatDistance(pick.restaurant.distanceKm)}` : ''}
+                </span>
+              </div>
+              <span className="mono">{formatMoney(pick.item.price)}</span>
+              <button
+                className="primary-button icon-button"
+                type="button"
+                aria-label={`Add ${pick.item.name} to cart`}
+                onClick={() => onAddDish(pick.item)}
+              >
+                <IconPlus size={17} />
+              </button>
+            </div>
+          </article>
+        ) : null}
       </section>
+
+      {dishes.length ? (
+        <section className="home-section" aria-labelledby="home-dishes-title">
+          <div className="home-section-head">
+            <h2 id="home-dishes-title">
+              {search ? `Dishes matching “${query.trim()}”` : hasAddress ? 'Dishes near you' : 'Dishes to try'}
+            </h2>
+          </div>
+          {matchingDishes.length ? (
+            <div className="dish-card-grid">
+              {matchingDishes.slice(0, search ? 8 : 4).map(dish => (
+                <DishCard
+                  key={dish.item.id}
+                  dish={dish}
+                  onAdd={() => onAddDish(dish.item)}
+                  onOpenRestaurant={() => onOpenRestaurant(dish.restaurant.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="empty">No dishes match your search.</p>
+          )}
+        </section>
+      ) : null}
 
       <section className="home-section" aria-labelledby="home-restaurants-title">
         <div className="home-section-head">
@@ -109,12 +242,13 @@ export function CustomerHome({
             </button>
           ) : null}
         </div>
-        {visible.length ? (
+        {visibleRestaurants.length ? (
           <div className="restaurant-tile-grid">
-            {visible.map(restaurant => (
+            {visibleRestaurants.map(restaurant => (
               <RestaurantCard
                 key={restaurant.id}
                 restaurant={restaurant}
+                dishCount={menus[restaurant.id]?.length}
                 onOpen={() => onOpenRestaurant(restaurant.id)}
               />
             ))}
