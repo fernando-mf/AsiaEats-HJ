@@ -3,6 +3,7 @@ import { findNeighbourhood } from '../../shared/locations/montrealNeighbourhoods
 import { IconHome } from '../icons/Icons';
 import type { Account, Address, Order, Restaurant } from '../dashboard/dashboard.types';
 import { initials } from '../dashboard/dashboard.utils';
+import { PasswordSection, PersonalInfoForm } from './AccountForms';
 import { AddressForm } from './AddressForm';
 import './profile.css';
 
@@ -13,6 +14,8 @@ type CustomerProfileProps = {
   restaurants: Restaurant[];
   busy: string | null;
   onSaveAddress: (address: Address) => Promise<boolean>;
+  onSaveName: (name: string) => Promise<boolean>;
+  onChangePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
 };
 
 // Cancelled and rejected orders never reached the customer, so they don't count as "ordered from".
@@ -38,7 +41,16 @@ function orderStats(orders: Order[], restaurants: Restaurant[]) {
   };
 }
 
-export function CustomerProfile({ account, address, orders, restaurants, busy, onSaveAddress }: CustomerProfileProps) {
+export function CustomerProfile({
+  account,
+  address,
+  orders,
+  restaurants,
+  busy,
+  onSaveAddress,
+  onSaveName,
+  onChangePassword,
+}: CustomerProfileProps) {
   const [editing, setEditing] = useState(false);
   const roleLabel = account.role.charAt(0).toUpperCase() + account.role.slice(1);
   const memberSince = account.createdAt ? memberSinceFormat.format(new Date(account.createdAt)) : undefined;
@@ -87,72 +99,62 @@ export function CustomerProfile({ account, address, orders, restaurants, busy, o
       </section>
 
       <div className="profile-grid">
-        <section className="card profile-card" aria-labelledby="profile-address-title">
-          <div className="profile-card-head">
-            <h2 id="profile-address-title">Delivery address</h2>
-            <p>
-              {address === null
-                ? 'Add an address to start ordering. Restaurant distances are measured from it.'
-                : 'Orders are delivered here, and restaurant distances are measured from it.'}
-            </p>
-          </div>
+        <div className="profile-column">
+          <section className="card profile-card" aria-labelledby="profile-personal-title">
+            <div className="profile-card-head">
+              <h2 id="profile-personal-title">Personal information</h2>
+              <p>Your name as it appears in the header and on this page.</p>
+            </div>
+            <PersonalInfoForm key={account.name} account={account} busy={busy} onSaveName={onSaveName} />
+          </section>
 
-          {address === undefined ? <p className="muted">Loading your address…</p> : null}
+          <section className="card profile-card" aria-labelledby="profile-address-title">
+            <div className="profile-card-head">
+              <h2 id="profile-address-title">Delivery address</h2>
+              <p>
+                {address === null
+                  ? 'Add an address to start ordering. Restaurant distances are measured from it.'
+                  : 'Orders are delivered here, and restaurant distances are measured from it.'}
+              </p>
+            </div>
 
-          {address && !editing ? (
-            <div className="profile-address">
-              <span className="profile-address-icon">
-                <IconHome size={17} />
-              </span>
-              <div className="profile-address-text">
-                <strong>{address.street}</strong>
-                <span>
-                  {address.city}, {address.postalCode}
-                  {neighbourhoodLabel(address) ? ` · ${neighbourhoodLabel(address)}` : ''}
+            {address === undefined ? <p className="muted">Loading your address…</p> : null}
+
+            {address && !editing ? (
+              <div className="profile-row">
+                <span className="profile-row-icon">
+                  <IconHome size={17} />
                 </span>
-              </div>
-              <button className="ghost-button" type="button" onClick={() => setEditing(true)}>
-                Edit
-              </button>
-            </div>
-          ) : null}
-
-          {showForm ? (
-            <AddressForm
-              key={formKey}
-              address={address}
-              busy={busy}
-              onSave={save}
-              onCancel={address ? () => setEditing(false) : undefined}
-            />
-          ) : null}
-        </section>
-
-        <section className="card profile-card" aria-labelledby="profile-account-title">
-          <div className="profile-card-head">
-            <h2 id="profile-account-title">Account details</h2>
-            <p>Set when the account was created.</p>
-          </div>
-          <dl className="profile-facts">
-            <div>
-              <dt>Full name</dt>
-              <dd>{account.name}</dd>
-            </div>
-            <div>
-              <dt>Username</dt>
-              <dd className="mono">@{account.username}</dd>
-            </div>
-            <div>
-              <dt>Account type</dt>
-              <dd>{roleLabel}</dd>
-            </div>
-            {memberSince ? (
-              <div>
-                <dt>Member since</dt>
-                <dd>{memberSince}</dd>
+                <div className="profile-row-text">
+                  <strong>{address.street}</strong>
+                  <span>
+                    {address.city}, {address.postalCode}
+                    {neighbourhoodLabel(address) ? ` · ${neighbourhoodLabel(address)}` : ''}
+                  </span>
+                </div>
+                <button className="ghost-button" type="button" onClick={() => setEditing(true)}>
+                  Edit
+                </button>
               </div>
             ) : null}
-          </dl>
+
+            {showForm ? (
+              <AddressForm
+                key={formKey}
+                address={address}
+                busy={busy}
+                onSave={save}
+                onCancel={address ? () => setEditing(false) : undefined}
+              />
+            ) : null}
+          </section>
+        </div>
+
+        <section className="card profile-card" aria-labelledby="profile-security-title">
+          <div className="profile-card-head">
+            <h2 id="profile-security-title">Account &amp; security</h2>
+          </div>
+          <PasswordSection account={account} busy={busy} onChangePassword={onChangePassword} />
         </section>
       </div>
     </div>

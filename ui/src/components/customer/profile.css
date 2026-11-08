@@ -117,13 +117,20 @@
   font-size: 13px;
 }
 
-.profile-address {
+.profile-column {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+
+/* An icon, two lines of text and an action, e.g. the saved address or the password. */
+.profile-row {
   display: flex;
   align-items: center;
   gap: 14px;
 }
 
-.profile-address-icon {
+.profile-row-icon {
   display: grid;
   flex-shrink: 0;
   place-items: center;
@@ -134,53 +141,66 @@
   border-radius: 10px;
 }
 
-.profile-address-text {
+.profile-row-text {
   display: grid;
   flex: 1;
   gap: 2px;
   min-width: 0;
 }
 
-.profile-address-text strong {
+.profile-row-text strong {
   font-size: 14px;
   font-weight: 580;
   overflow-wrap: anywhere;
 }
 
-.profile-address-text span {
+.profile-row-text span {
   color: var(--text-2);
   font-size: 12.5px;
 }
 
-.profile-facts {
+/* ---------- Name and password forms ---------- */
+.account-form {
   display: grid;
-  margin: 0;
-}
-
-.profile-facts > div {
-  display: flex;
-  justify-content: space-between;
   gap: 16px;
-  padding: 12px 0;
-  border-top: 1px solid var(--border);
 }
 
-.profile-facts > div:first-child {
-  padding-top: 0;
-  border-top: 0;
+/* align-items: start keeps both inputs level when only one column has a hint or error below it. */
+.account-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 14px;
 }
 
-.profile-facts dt {
-  color: var(--text-3);
-  font-size: 13px;
+.account-form input[readonly] {
+  color: var(--text-2);
+  background: var(--surface-2);
+  cursor: default;
 }
 
-.profile-facts dd {
+.account-form input[readonly]:hover,
+.account-form input[readonly]:focus {
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+
+.account-form-hint {
   margin: 0;
-  font-size: 14px;
-  font-weight: 560;
-  text-align: right;
-  overflow-wrap: anywhere;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+.account-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.password-section {
+  display: grid;
+  gap: 18px;
 }
 
 /* ---------- Address form ---------- */
@@ -192,6 +212,7 @@
 .address-form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: 14px;
 }
 
@@ -236,7 +257,8 @@
     padding: 0 14px;
   }
 
-  .address-form-row {
+  .address-form-row,
+  .account-form-row {
     grid-template-columns: 1fr;
   }
 

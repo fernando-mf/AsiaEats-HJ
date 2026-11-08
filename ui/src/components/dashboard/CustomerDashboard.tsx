@@ -29,10 +29,19 @@ type CustomerDashboardProps = {
   busy: string | null;
   run: RunAction;
   showToast: ShowToast;
+  // Replaces the signed-in account after it is edited, so the header shows the new name.
+  onAccountChange: (account: Account) => void;
   onLogout: () => void;
 };
 
-export function CustomerDashboard({ account, busy, run, showToast, onLogout }: CustomerDashboardProps) {
+export function CustomerDashboard({
+  account,
+  busy,
+  run,
+  showToast,
+  onAccountChange,
+  onLogout,
+}: CustomerDashboardProps) {
   const [restoredDashboard] = useState(readDashboardSession);
   const [restoredCart] = useState(readStoredCart);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -210,6 +219,23 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
     return true;
   }
 
+  async function saveName(name: string): Promise<boolean> {
+    const result = await run(() => requestJson<Account>('/accounts/me', { method: 'PUT', body: { name } }));
+    if (!result) return false;
+    onAccountChange(result);
+    showToast('Name saved.');
+    return true;
+  }
+
+  async function changePassword(currentPassword: string, newPassword: string): Promise<boolean> {
+    const result = await run(() =>
+      requestJson<Account>('/accounts/me/password', { method: 'PUT', body: { currentPassword, newPassword } }),
+    );
+    if (!result) return false;
+    showToast('Password changed.');
+    return true;
+  }
+
   async function cancelOrder(order: Order) {
     if (!window.confirm(`Cancel order #${order.id.slice(0, 8)}?`)) return;
     const result = await run(() => requestJson<Order>(`/orders/${order.id}/cancel`, { method: 'POST' }));
@@ -338,6 +364,8 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
             restaurants={restaurants}
             busy={busy}
             onSaveAddress={saveAddress}
+            onSaveName={saveName}
+            onChangePassword={changePassword}
           />
         ) : null}
       </div>

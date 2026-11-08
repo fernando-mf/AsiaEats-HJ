@@ -5,6 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { DomainModule } from '#domain/domain.module.js';
 import { InfrastructureModule } from '#infrastructure/infrastructure.module.js';
 import { StatusController } from '#application/controllers/status.controller.js';
+import { AccountsController } from '#application/controllers/reg/accounts.controller.js';
 import { AuthController } from '#application/controllers/reg/auth.controller.js';
 import { CustomersController } from '#application/controllers/reg/customers.controller.js';
 import { EnvController } from '#application/controllers/env/env.controller.js';
@@ -36,6 +37,7 @@ import { JwtAuthGuard } from '#application/auth/jwt-auth.guard.js';
   controllers: [
     StatusController,
     AuthController,
+    AccountsController,
     CustomersController,
     EnvController,
     EventsController,

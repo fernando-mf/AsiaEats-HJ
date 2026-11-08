@@ -1,5 +1,5 @@
-import { plainToInstance } from 'class-transformer';
-import { IsEnum, IsString, MinLength } from 'class-validator';
+import { plainToInstance, Transform } from 'class-transformer';
+import { IsEnum, IsString, MaxLength, MinLength } from 'class-validator';
 import { Event } from '#domain/events/index.js';
 
 export enum AccountRole {
@@ -41,6 +41,32 @@ export class LoginRequest {
   }
 }
 
+export class AccountUpdateRequest {
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString()
+  @MinLength(3)
+  @MaxLength(100)
+  name: string;
+
+  static initialize(raw: AccountUpdateRequest): AccountUpdateRequest {
+    return plainToInstance(AccountUpdateRequest, raw);
+  }
+}
+
+export class PasswordChangeRequest {
+  @IsString()
+  currentPassword: string;
+
+  // Same rule as registration.
+  @IsString()
+  @MinLength(8)
+  newPassword: string;
+
+  static initialize(raw: PasswordChangeRequest): PasswordChangeRequest {
+    return plainToInstance(PasswordChangeRequest, raw);
+  }
+}
+
 export class Account {
   id: string;
   name: string;
@@ -69,4 +95,15 @@ export type Actor = Pick<Account, 'id' | 'role'>;
 export class AccountCreatedEvent extends Event<ReturnType<Account['toJSON']>> {
   readonly entityType = 'account';
   readonly eventType = 'account.created';
+}
+
+export class AccountUpdatedEvent extends Event<ReturnType<Account['toJSON']>> {
+  readonly entityType = 'account';
+  readonly eventType = 'account.updated';
+}
+
+// The payload is empty on purpose: the event records that the password changed, never the hash.
+export class AccountPasswordChangedEvent extends Event<Record<string, never>> {
+  readonly entityType = 'account';
+  readonly eventType = 'account.password_changed';
 }

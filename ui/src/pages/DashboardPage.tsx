@@ -70,7 +70,14 @@ export function DashboardPage() {
       <ToastRegion toast={toast} onDismiss={dismissToast} />
 
       {account?.role === 'customer' ? (
-        <CustomerDashboard account={account} busy={busy} run={run} showToast={showToast} onLogout={logout} />
+        <CustomerDashboard
+          account={account}
+          busy={busy}
+          run={run}
+          showToast={showToast}
+          onAccountChange={setAccount}
+          onLogout={logout}
+        />
       ) : account?.role === 'restaurant' ? (
         <RestaurantDashboard account={account} busy={busy} run={run} showToast={showToast} onLogout={logout} />
       ) : (

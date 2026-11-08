@@ -8,6 +8,8 @@ const routes: Array<[Method, RegExp, string]> = [
   ['POST', /^\/auth\/login$/, 'LoginCommand'],
   ['POST', /^\/auth\/register$/, 'CreateAccountCommand'],
   ['GET', /^\/auth\/me$/, 'GetMeCommand'],
+  ['PUT', /^\/accounts\/me$/, 'UpdateAccountCommand'],
+  ['PUT', /^\/accounts\/me\/password$/, 'ChangePasswordCommand'],
   ['GET', /^\/customers\/me$/, 'GetCustomerCommand'],
   ['PUT', /^\/customers\/me$/, 'UpdateCustomerCommand'],
   ['GET', /^\/restaurants$/, 'FindRestaurantsCommand'],
