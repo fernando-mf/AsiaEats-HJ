@@ -199,6 +199,17 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
     showToast(`Cart cleared. Now browsing ${restaurantName}.`);
   }
 
+  // Saving the address also refreshes restaurant distances, since they are loaded from it.
+  async function saveAddress(next: Address): Promise<boolean> {
+    const result = await run(() =>
+      requestJson<CustomerProfileResponse>('/customers/me', { method: 'PUT', body: { address: next } }),
+    );
+    if (!result) return false;
+    setAddress(result.address);
+    showToast('Delivery address saved.');
+    return true;
+  }
+
   async function cancelOrder(order: Order) {
     if (!window.confirm(`Cancel order #${order.id.slice(0, 8)}?`)) return;
     const result = await run(() => requestJson<Order>(`/orders/${order.id}/cancel`, { method: 'POST' }));
@@ -320,7 +331,9 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
           />
         ) : null}
 
-        {customerPage === 'profile' ? <CustomerProfile account={account} /> : null}
+        {customerPage === 'profile' ? (
+          <CustomerProfile account={account} address={address} busy={busy} onSaveAddress={saveAddress} />
+        ) : null}
       </div>
     </>
   );

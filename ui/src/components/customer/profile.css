@@ -1,0 +1,90 @@
+/* Customer Profile page: account details and the delivery address form. */
+.profile-page {
+  display: grid;
+  gap: 28px;
+}
+
+.profile-page-head h1 {
+  margin: 6px 0 0;
+  font-size: 32px;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.profile-card {
+  display: grid;
+  gap: 18px;
+}
+
+.profile-card h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 620;
+}
+
+.profile-facts {
+  display: grid;
+  margin: 0;
+}
+
+.profile-facts > div {
+  display: grid;
+  gap: 2px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+
+.profile-facts dt {
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+.profile-facts dd {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 560;
+  overflow-wrap: anywhere;
+}
+
+.address-form {
+  display: grid;
+  gap: 16px;
+}
+
+.address-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.address-form-hint {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+.address-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+@media (max-width: 800px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .address-form-row {
+    grid-template-columns: 1fr;
+  }
+}
