@@ -24,6 +24,6 @@ import { CustomersService } from './reg/customers.service.js';
       inject: [CustomersService, CouriersService],
     },
   ],
-  exports: [AccountsService, CustomersService, EnvService, EventsService, OrdersService, RestaurantsService],
+  exports: [AccountsService, CouriersService, CustomersService, EnvService, EventsService, OrdersService, RestaurantsService],
 })
 export class DomainModule {}

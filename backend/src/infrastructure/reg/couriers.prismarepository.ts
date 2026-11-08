@@ -35,6 +35,15 @@ export class PrismaCourierRepository extends CourierRepository {
       throw new InternalError(err as Error);
     }
   }
+
+  async getByAccountId(accountId: string): Promise<Courier> {
+    const row = await this.db.courier.findUnique({ where: { accountId }, include: { account: true } });
+    if (!row) {
+      throw new NotFoundError('courier');
+    }
+
+    return toCourier(row);
+  }
 }
 
 function toCourier(row: {
