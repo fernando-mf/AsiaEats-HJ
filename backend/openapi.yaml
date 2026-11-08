@@ -131,6 +131,55 @@ paths:
         - couriers
       x-roles:
         - courier
+  /api/couriers:
+    get:
+      description: "**Allowed roles:** `operator`"
+      operationId: CouriersController_find
+      parameters:
+        - name: status
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - offline
+              - idle
+              - assigned
+              - carrying
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CourierSummary"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: List couriers
+      tags:
+        - couriers
+      x-roles:
+        - operator
   /api/customers/me:
     put:
       description: "**Allowed roles:** `customer`"
@@ -1289,6 +1338,27 @@ components:
         - createdAt
         - updatedAt
         - account
+    CourierSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        position:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/Position"
+        status:
+          type: string
+          enum:
+            - offline
+            - idle
+            - assigned
+            - carrying
+      required:
+        - id
+        - position
+        - status
     AddressRequest:
       type: object
       properties:

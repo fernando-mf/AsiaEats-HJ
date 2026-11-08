@@ -1,12 +1,22 @@
 import { Injectable } from '@nestjs/common';
+import { validate } from 'class-validator';
+import { InvalidParamsError } from '#domain/errors.js';
 import { EventsService } from '#domain/events/index.js';
 import { type Account, AccountRole } from './accounts.models.js';
 import type { AccountCreationHandler } from './accounts.handlers.js';
-import { Courier, CourierCreatedEvent, CourierStatus } from './couriers.models.js';
+import {
+  Courier,
+  CourierCreatedEvent,
+  type CourierFilter,
+  CourierSearchRequest,
+  CourierStatus,
+  type CourierSummary,
+} from './couriers.models.js';
 
 export abstract class CourierRepository {
   abstract create(courier: Courier): Promise<Courier>;
   abstract getByAccountId(accountId: string): Promise<Courier>;
+  abstract list(filter?: CourierFilter): Promise<Courier[]>;
 }
 
 @Injectable()
@@ -20,6 +30,16 @@ export class CouriersService implements AccountCreationHandler {
 
   getById(id: string): Promise<Courier> {
     return this.repository.getByAccountId(id);
+  }
+
+  async find(request: CourierSearchRequest): Promise<CourierSummary[]> {
+    const errors = await validate(request);
+    if (errors.length > 0) {
+      throw InvalidParamsError.fromClassValidator(errors);
+    }
+
+    const couriers = await this.repository.list({ status: request.status });
+    return couriers.map(c => ({ id: c.account.id, position: c.position, status: c.status }));
   }
 
   // handleAccountCreation creates a default Courier entry linked to the given Account.

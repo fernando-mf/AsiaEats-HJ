@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { AccountRole } from '#domain/reg/index.js';
+import { AccountRole, CourierStatus } from '#domain/reg/index.js';
 import { Client } from '../client/client.ts';
-import { purgeDatabase } from './helpers.ts';
+import { createCourier, openSessionAsOperator, purgeDatabase } from './helpers.ts';
 import { CourierResponse } from '#application/controllers/responses.dto.js';
 
 describe('couriers', () => {
@@ -47,6 +47,25 @@ describe('couriers', () => {
 
       const courier = await client.couriers.me();
       expect(normalizeCourier(courier)).toMatchSnapshot();
+    });
+  });
+
+  describe('list', () => {
+    it('operator lists couriers, optionally filtered by status', async () => {
+      await purgeDatabase();
+
+      const client = new Client();
+
+      await createCourier(client, 'courier1');
+      await createCourier(client, 'courier2');
+      await createCourier(client, 'courier3');
+      await createCourier(client, 'courier4');
+
+      await openSessionAsOperator(client);
+
+      const all = await client.couriers.list();
+      expect(all).toHaveLength(4);
+      expect(all.every(c => c.status === CourierStatus.Offline)).toBe(true);
     });
   });
 });

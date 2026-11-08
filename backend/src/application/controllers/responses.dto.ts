@@ -1,5 +1,5 @@
 import { OmitType } from '@nestjs/swagger';
-import { Account, Courier, Customer } from '#domain/reg/index.js';
+import { Account, Courier, CourierSummary, Customer } from '#domain/reg/index.js';
 
 export class FieldErrorResponse {
   field: string;
@@ -34,3 +34,5 @@ export class StatusResponse {
   status: string;
   datetime: string;
 }
+
+export type CourierSummaryResponse = CourierSummary;

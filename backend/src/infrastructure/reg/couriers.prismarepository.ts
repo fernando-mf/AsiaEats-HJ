@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DuplicateEntityError, InternalError, NotFoundError } from '#domain/errors.js';
-import { Courier, CourierRepository, CourierStatus, Position } from '#domain/reg/index.js';
+import { Courier, type CourierFilter, CourierRepository, CourierStatus, Position } from '#domain/reg/index.js';
 import { PrismaService } from '#infrastructure/prisma.service.js';
 import { type AccountRow, toAccountModel } from './accounts.prismarepository.js';
 
@@ -43,6 +43,19 @@ export class PrismaCourierRepository extends CourierRepository {
     }
 
     return toCourier(row);
+  }
+
+  async list(filter?: CourierFilter): Promise<Courier[]> {
+    try {
+      const rows = await this.db.courier.findMany({
+        where: { status: filter?.status },
+        include: { account: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      return rows.map(toCourier);
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
   }
 }
 
