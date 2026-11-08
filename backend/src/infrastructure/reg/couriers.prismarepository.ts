@@ -57,6 +57,27 @@ export class PrismaCourierRepository extends CourierRepository {
       throw new InternalError(err as Error);
     }
   }
+
+  async update(courier: Courier): Promise<Courier> {
+    try {
+      const row = await this.db.courier.update({
+        where: { accountId: courier.account.id },
+        data: {
+          latitude: courier.position?.latitude ?? null,
+          longitude: courier.position?.longitude ?? null,
+          status: courier.status,
+          updatedAt: courier.updatedAt,
+        },
+        include: { account: true },
+      });
+      return toCourier(row);
+    } catch (err) {
+      if (this.db.isRecordNotFound(err)) {
+        throw new NotFoundError('courier');
+      }
+      throw new InternalError(err as Error);
+    }
+  }
 }
 
 function toCourier(row: {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { AccountRole, CourierStatus } from '#domain/reg/index.js';
 import { Client } from '../client/client.ts';
-import { createCourier, openSessionAsOperator, purgeDatabase } from './helpers.ts';
+import { createCourier, openSessionAsCourier, openSessionAsOperator, purgeDatabase } from './helpers.ts';
 import { CourierResponse } from '#application/controllers/responses.dto.js';
 
 describe('couriers', () => {
@@ -66,6 +66,19 @@ describe('couriers', () => {
       const all = await client.couriers.list();
       expect(all).toHaveLength(4);
       expect(all.every(c => c.status === CourierStatus.Offline)).toBe(true);
+    });
+  });
+
+  describe('updatePosition', () => {
+    it('success', async () => {
+      await purgeDatabase();
+
+      const client = new Client();
+      await openSessionAsCourier(client);
+
+      const courier = await client.couriers.updatePosition({ position: { latitude: 45.5, longitude: -73.5 } });
+
+      expect(courier.position).toEqual({ latitude: 45.5, longitude: -73.5 });
     });
   });
 });

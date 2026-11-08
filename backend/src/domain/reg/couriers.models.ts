@@ -1,5 +1,5 @@
-import { plainToInstance } from 'class-transformer';
-import { IsEnum, IsOptional } from 'class-validator';
+import { plainToInstance, Type } from 'class-transformer';
+import { IsDefined, IsEnum, IsLatitude, IsLongitude, IsOptional, ValidateNested } from 'class-validator';
 import { Event } from '#domain/events/index.js';
 import type { Account } from './accounts.models.js';
 
@@ -11,8 +11,22 @@ export enum CourierStatus {
 }
 
 export class Position {
+  @IsLatitude()
   latitude: number;
+
+  @IsLongitude()
   longitude: number;
+}
+
+export class CourierPositionUpdateRequest {
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => Position)
+  position: Position;
+
+  static initialize(raw: CourierPositionUpdateRequest): CourierPositionUpdateRequest {
+    return plainToInstance(CourierPositionUpdateRequest, raw);
+  }
 }
 
 export class Courier {
