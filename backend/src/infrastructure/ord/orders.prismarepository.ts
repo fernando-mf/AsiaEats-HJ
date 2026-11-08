@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConflictError, InternalError, NotFoundError } from '#domain/errors.js';
 import { Order, OrderFilter, OrderRepository, OrderStatus } from '#domain/ord/index.js';
+import type { Address } from '#domain/reg/index.js';
 import { PrismaService } from '#infrastructure/prisma.service.js';
 
 @Injectable()
@@ -16,6 +17,11 @@ export class PrismaOrderRepository extends OrderRepository {
           customerId: order.customerId,
           restaurantId: order.restaurantId,
           status: order.status,
+          deliveryStreet: order.deliveryAddress?.street ?? null,
+          deliveryCity: order.deliveryAddress?.city ?? null,
+          deliveryPostalCode: order.deliveryAddress?.postalCode ?? null,
+          deliveryLatitude: order.deliveryAddress?.latitude ?? null,
+          deliveryLongitude: order.deliveryAddress?.longitude ?? null,
           createdAt: order.createdAt,
           updatedAt: order.updatedAt,
           lines: {
@@ -129,6 +135,11 @@ function toOrderModel(row: {
   restaurantId: string;
   status: string;
   rejectionReason: string | null;
+  deliveryStreet: string | null;
+  deliveryCity: string | null;
+  deliveryPostalCode: string | null;
+  deliveryLatitude: number | null;
+  deliveryLongitude: number | null;
   createdAt: Date;
   updatedAt: Date;
   lines: {
@@ -146,6 +157,7 @@ function toOrderModel(row: {
     restaurantId: row.restaurantId,
     status: row.status as OrderStatus,
     rejectionReason: row.rejectionReason ?? undefined,
+    deliveryAddress: toDeliveryAddress(row),
     lines: row.lines.map(line => ({
       id: line.id,
       orderId: line.orderId,
@@ -156,5 +168,32 @@ function toOrderModel(row: {
     })),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+  };
+}
+
+// The five columns are written together, so one missing means the order has no address.
+function toDeliveryAddress(row: {
+  deliveryStreet: string | null;
+  deliveryCity: string | null;
+  deliveryPostalCode: string | null;
+  deliveryLatitude: number | null;
+  deliveryLongitude: number | null;
+}): Address | null {
+  if (
+    row.deliveryStreet === null ||
+    row.deliveryCity === null ||
+    row.deliveryPostalCode === null ||
+    row.deliveryLatitude === null ||
+    row.deliveryLongitude === null
+  ) {
+    return null;
+  }
+
+  return {
+    street: row.deliveryStreet,
+    city: row.deliveryCity,
+    postalCode: row.deliveryPostalCode,
+    latitude: row.deliveryLatitude,
+    longitude: row.deliveryLongitude,
   };
 }

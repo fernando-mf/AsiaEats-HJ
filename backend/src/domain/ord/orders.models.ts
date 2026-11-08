@@ -12,6 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Event } from '#domain/events/index.js';
+import { Address } from '#domain/reg/index.js';
 
 export enum OrderStatus {
   Placed = 'placed',
@@ -89,6 +90,9 @@ export class Order {
   restaurantId: string;
   status: OrderStatus;
   rejectionReason?: string;
+  // Copy of the customer's address when the order was placed, so later profile changes
+  // don't move it. Null only for old orders whose customer had no address.
+  deliveryAddress: Address | null;
   lines: OrderLine[];
   createdAt: Date;
   updatedAt: Date;

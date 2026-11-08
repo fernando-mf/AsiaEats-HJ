@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { DishArt } from '../food/DishArt';
 import { dishKind } from '../food/dishKind';
 import { IconCheck, IconChevronRight, IconClock, IconPin, IconSearch } from '../icons/Icons';
-import type { Address, Order, Restaurant } from '../dashboard/dashboard.types';
+import type { Order, Restaurant } from '../dashboard/dashboard.types';
 import { formatMoney, orderTotal } from '../dashboard/dashboard.utils';
 import './orders.css';
 
 type OrdersPageProps = {
   orders: Order[];
   restaurants: Restaurant[];
-  address: Address | null | undefined;
   busy: string | null;
   onRefreshOrders: () => void;
   onFindRestaurants: () => void;
@@ -117,10 +116,11 @@ function OrderSteps({ order }: { order: Order }) {
 function LiveOrder({
   order,
   restaurantName,
-  address,
   busy,
   onCancel,
-}: CancelProps & { order: Order; restaurantName: string; address: Address | null | undefined }) {
+}: CancelProps & { order: Order; restaurantName: string }) {
+  const address = order.deliveryAddress;
+
   return (
     <article className="card order-live">
       <div className="order-live-head">
@@ -241,7 +241,6 @@ function PastOrderRow({ order, restaurantName }: { order: Order; restaurantName:
 export function OrdersPage({
   orders,
   restaurants,
-  address,
   busy,
   onRefreshOrders,
   onFindRestaurants,
@@ -298,7 +297,6 @@ export function OrdersPage({
           <LiveOrder
             order={featured}
             restaurantName={restaurantName(featured.restaurantId)}
-            address={address}
             busy={busy}
             onCancel={onCancelOrder}
           />

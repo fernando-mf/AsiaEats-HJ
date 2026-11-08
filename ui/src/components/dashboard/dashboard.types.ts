@@ -55,6 +55,8 @@ export type Order = {
   restaurantId: string;
   status: string;
   rejectionReason?: string;
+  // Where this order goes, copied when it was placed. Null for old orders without one.
+  deliveryAddress?: Address | null;
   lines: OrderLine[];
   createdAt: string;
   updatedAt?: string;

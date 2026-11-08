@@ -90,6 +90,7 @@ export class OrdersService {
     order.customerId = actor.id;
     order.restaurantId = restaurant.id;
     order.status = OrderStatus.Placed;
+    order.deliveryAddress = { ...customer.address };
     order.lines = lines;
     order.createdAt = now;
     order.updatedAt = now;
