@@ -1,3 +1,5 @@
+import { plainToInstance } from 'class-transformer';
+import { IsEnum, IsOptional } from 'class-validator';
 import { Event } from '#domain/events/index.js';
 import type { Account } from './accounts.models.js';
 
@@ -30,6 +32,26 @@ export class Courier {
     };
   }
 }
+
+export class CourierSummary {
+  id: string;
+  position: Position | null;
+  status: CourierStatus;
+}
+
+export class CourierSearchRequest {
+  @IsOptional()
+  @IsEnum(CourierStatus)
+  status?: CourierStatus;
+
+  static initialize(raw: CourierSearchRequest): CourierSearchRequest {
+    return plainToInstance(CourierSearchRequest, raw);
+  }
+}
+
+export type CourierFilter = {
+  status?: CourierStatus;
+};
 
 export class CourierCreatedEvent extends Event<ReturnType<Courier['toJSON']>> {
   readonly entityType = 'courier';
