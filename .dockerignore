@@ -1,0 +1,16 @@
+.git
+.github
+.vscode
+.vercel
+.claude
+.cursor
+
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+**/*.log
+
+ui/*
+!ui/package.json
+backend/src/infrastructure/generated

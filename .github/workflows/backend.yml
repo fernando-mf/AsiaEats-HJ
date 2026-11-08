@@ -30,3 +30,13 @@ jobs:
 
       - name: Test
         run: pnpm --filter backend test
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Run integration tests
+        run: pnpm --filter backend test:e2e
