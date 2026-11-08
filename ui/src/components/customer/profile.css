@@ -1,19 +1,99 @@
-/* Customer Profile page: account details and the delivery address form. */
+/* Customer Profile page: summary banner, delivery address and account details. */
 .profile-page {
   display: grid;
-  gap: 28px;
+  gap: 24px;
 }
 
-.profile-page-head h1 {
-  margin: 6px 0 0;
-  font-size: 32px;
+.profile-page > .eyebrow {
+  margin: 0;
+}
+
+/* ---------- Summary banner ---------- */
+.profile-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 22px;
+  padding: 24px 28px;
+  border-radius: 20px;
+}
+
+.profile-avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--border);
+  font-size: 26px;
+  font-weight: 640;
+  letter-spacing: -0.02em;
+}
+
+.profile-hero-main {
+  display: grid;
+  flex: 1 1 220px;
+  gap: 6px;
+  min-width: 0;
+}
+
+.profile-hero-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-hero-title h1 {
+  margin: 0;
+  font-size: 28px;
   font-weight: 650;
   letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
 }
 
+.profile-hero-meta {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.profile-stats {
+  display: flex;
+  margin: 0;
+}
+
+.profile-stats > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 0 22px;
+  border-left: 1px solid var(--border);
+}
+
+.profile-stats dd {
+  order: -1;
+  max-width: 180px;
+  margin: 0;
+  overflow: hidden;
+  font-size: 20px;
+  font-weight: 640;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-stats dt {
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+/* ---------- Cards ---------- */
 .profile-grid {
   display: grid;
-  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
 }
@@ -21,12 +101,55 @@
 .profile-card {
   display: grid;
   gap: 18px;
+  padding: 22px 24px;
 }
 
-.profile-card h2 {
+.profile-card-head h2 {
   margin: 0;
-  font-size: 17px;
-  font-weight: 620;
+  font-size: 16.5px;
+  font-weight: 630;
+  letter-spacing: -0.01em;
+}
+
+.profile-card-head p {
+  margin: 2px 0 0;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+.profile-address {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.profile-address-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: 10px;
+}
+
+.profile-address-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.profile-address-text strong {
+  font-size: 14px;
+  font-weight: 580;
+  overflow-wrap: anywhere;
+}
+
+.profile-address-text span {
+  color: var(--text-2);
+  font-size: 12.5px;
 }
 
 .profile-facts {
@@ -35,24 +158,32 @@
 }
 
 .profile-facts > div {
-  display: grid;
-  gap: 2px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
   padding: 12px 0;
   border-top: 1px solid var(--border);
 }
 
+.profile-facts > div:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
 .profile-facts dt {
   color: var(--text-3);
-  font-size: 12.5px;
+  font-size: 13px;
 }
 
 .profile-facts dd {
   margin: 0;
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 560;
+  text-align: right;
   overflow-wrap: anywhere;
 }
 
+/* ---------- Address form ---------- */
 .address-form {
   display: grid;
   gap: 16px;
@@ -74,17 +205,42 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
-@media (max-width: 800px) {
+.address-form-toggle {
+  margin-left: auto;
+}
+
+@media (max-width: 900px) {
   .profile-grid {
     grid-template-columns: 1fr;
+  }
+
+  .profile-stats {
+    flex-basis: 100%;
+  }
+
+  .profile-stats > div:first-child {
+    padding-left: 0;
+    border-left: 0;
   }
 }
 
 @media (max-width: 520px) {
+  .profile-hero {
+    padding: 20px;
+  }
+
+  .profile-stats > div {
+    padding: 0 14px;
+  }
+
   .address-form-row {
     grid-template-columns: 1fr;
+  }
+
+  .address-form-toggle {
+    margin-left: 0;
   }
 }

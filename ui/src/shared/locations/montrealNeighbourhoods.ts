@@ -21,3 +21,8 @@ export const montrealNeighbourhoods: Neighbourhood[] = [
   { id: 'verdun', name: 'Verdun', latitude: 45.458, longitude: -73.57 },
   { id: 'rosemont', name: 'Rosemont–La Petite-Patrie', latitude: 45.546, longitude: -73.588 },
 ];
+
+// The neighbourhood whose centre is exactly these coordinates, if the address was saved from one.
+export function findNeighbourhood(latitude: number, longitude: number) {
+  return montrealNeighbourhoods.find(item => item.latitude === latitude && item.longitude === longitude);
+}

@@ -1,28 +1,23 @@
 import { useState, type FormEvent } from 'react';
 import { logError } from '../../shared/console/outputConsole';
-import { montrealNeighbourhoods } from '../../shared/locations/montrealNeighbourhoods';
+import { findNeighbourhood, montrealNeighbourhoods } from '../../shared/locations/montrealNeighbourhoods';
 import type { Address } from '../dashboard/dashboard.types';
 
 type AddressFormProps = {
   address: Address | null | undefined;
   busy: string | null;
   onSave: (address: Address) => Promise<boolean>;
+  // Shows a Cancel button when the form can be closed without saving.
+  onCancel?: () => void;
 };
 
 type Field = 'street' | 'city' | 'postalCode' | 'neighbourhood' | 'latitude' | 'longitude';
 
-function presetFor(address: Address | null | undefined) {
-  if (!address) return undefined;
-  return montrealNeighbourhoods.find(
-    preset => preset.latitude === address.latitude && preset.longitude === address.longitude,
-  );
-}
-
 // AddressForm edits the customer's delivery address. Coordinates come from a neighbourhood
 // preset, or are typed exactly when "Enter exact coordinates" is on. Limits mirror the
 // backend's AddressRequest validation.
-export function AddressForm({ address, busy, onSave }: AddressFormProps) {
-  const preset = presetFor(address);
+export function AddressForm({ address, busy, onSave, onCancel }: AddressFormProps) {
+  const preset = address ? findNeighbourhood(address.latitude, address.longitude) : undefined;
   const [street, setStreet] = useState(address?.street ?? '');
   const [city, setCity] = useState(address?.city ?? 'Montréal');
   const [postalCode, setPostalCode] = useState(address?.postalCode ?? '');
@@ -194,7 +189,12 @@ export function AddressForm({ address, busy, onSave }: AddressFormProps) {
         <button className="primary-button" type="submit" disabled={busy !== null}>
           Save address
         </button>
-        <button className="text-button" type="button" onClick={toggleExact}>
+        {onCancel ? (
+          <button className="ghost-button" type="button" onClick={onCancel}>
+            Cancel
+          </button>
+        ) : null}
+        <button className="text-button address-form-toggle" type="button" onClick={toggleExact}>
           {exact ? 'Choose a neighbourhood instead' : 'Enter exact coordinates'}
         </button>
       </div>

@@ -331,7 +331,14 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
         ) : null}
 
         {customerPage === 'profile' ? (
-          <CustomerProfile account={account} address={address} busy={busy} onSaveAddress={saveAddress} />
+          <CustomerProfile
+            account={account}
+            address={address}
+            orders={orders}
+            restaurants={restaurants}
+            busy={busy}
+            onSaveAddress={saveAddress}
+          />
         ) : null}
       </div>
     </>

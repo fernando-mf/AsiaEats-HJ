@@ -3,7 +3,7 @@ import type { CustomerPage } from '../../shared/dashboard/dashboardSession';
 import { BrandMark } from '../brand/BrandMark';
 import { IconBag, IconGrid, IconPin, IconReceipt } from '../icons/Icons';
 import type { Account } from './dashboard.types';
-import { formatMoney } from './dashboard.utils';
+import { formatMoney, initials } from './dashboard.utils';
 
 type DashboardHeaderProps = {
   account: Account | null;
@@ -15,16 +15,6 @@ type DashboardHeaderProps = {
   onCustomerPageChange?: (page: CustomerPage) => void;
   onLogout: () => void;
 };
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map(part => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 const supportsAnchorPositioning = typeof CSS !== 'undefined' && CSS.supports('position-area: block-end');
 

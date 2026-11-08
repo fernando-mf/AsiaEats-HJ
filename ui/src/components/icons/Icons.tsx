@@ -105,6 +105,24 @@ export function IconChevronRight(props: IconProps) {
   );
 }
 
+export function IconHome(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 11 12 4l8 7v9H4z" />
+      <path d="M10 20v-5h4v5" />
+    </Icon>
+  );
+}
+
+export function IconUser(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+    </Icon>
+  );
+}
+
 export function IconArrowRight(props: IconProps) {
   return (
     <Icon {...props}>
