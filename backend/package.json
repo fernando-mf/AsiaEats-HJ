@@ -24,14 +24,16 @@
     "start": "node dist/application/main.js",
     "seed": "pnpm build && node integration/seed.ts",
     "openapi": "pnpm build && node --env-file-if-exists=.env dist/application/openapi.js",
-    "deps:up": "docker compose -f integration/docker-compose.yml up",
+    "deps:up": "docker compose -f integration/docker-compose.yml up postgres",
     "deps:down": "docker compose -f integration/docker-compose.yml down",
     "db:generate": "prisma generate --config integration/prisma/prisma.config.ts",
     "db:migrate": "prisma migrate dev --config integration/prisma/prisma.config.ts",
     "db:deploy": "prisma migrate deploy --config integration/prisma/prisma.config.ts",
     "postinstall": "pnpm db:generate",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "./scripts/run-tests.sh",
+    "test:e2e:local": "vitest run -c vitest.e2e.config.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
