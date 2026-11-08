@@ -5,6 +5,7 @@ import {
   writeDashboardSession,
   type CustomerPage,
 } from '../../shared/dashboard/dashboardSession';
+import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
 import { requestJson } from '../../shared/api/client';
 import { CartView } from '../customer/CartView';
 import { CustomerProfile } from '../customer/CustomerProfile';
@@ -51,6 +52,7 @@ export function CustomerDashboard({ account, busy, run, showToast, onLogout }: C
   const [customerPage, setCustomerPage] = useState<CustomerPage>(restoredDashboard?.customerPage ?? 'restaurants');
   const restaurantPage = restoredDashboard?.restaurantPage ?? 'orders';
   const restaurantSwitchDialogRef = useRef<HTMLDialogElement>(null);
+  useScrollToTop(customerPage);
 
   // Searching from the customer's address makes the backend return distances, nearest first.
   const loadRestaurants = useCallback(async () => {

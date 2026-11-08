@@ -6,6 +6,7 @@ import {
   writeDashboardSession,
   type RestaurantPage,
 } from '../../shared/dashboard/dashboardSession';
+import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
 import { MenuManager } from '../restaurant/MenuManager';
 import { RestaurantOrders } from '../restaurant/RestaurantOrders';
 import { RestaurantProfile } from '../restaurant/RestaurantProfile';
@@ -38,6 +39,7 @@ export function RestaurantDashboard({ account, busy, run, showToast, onLogout }:
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [restaurantPage, setRestaurantPage] = useState<RestaurantPage>(restoredDashboard?.restaurantPage ?? 'orders');
+  useScrollToTop(restaurantPage);
   const customerPage = restoredDashboard?.customerPage ?? 'restaurants';
   const [menuDraft, setMenuDraft] = useState<MenuDraft>(emptyMenuDraft);
   const [editingMenuItem, setEditingMenuItem] = useState<string | null>(null);
