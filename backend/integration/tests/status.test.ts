@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { api } from './support/api.js';
+import { api } from '../client/api.ts';
 
 describe('GET /status', () => {
   it('reports the API is up', async () => {
-    const res = await api.get('/status');
+    const body = await api.request('GET', '/status');
 
-    expect(res.status).toBe(200);
-    expect(res.body.status).toBe('ok');
-    expect(Number.isNaN(Date.parse(res.body.datetime))).toBe(false);
+    expect(body.status).toBe('ok');
+    expect(body.datetime).not.toBeNaN();
   });
 });
