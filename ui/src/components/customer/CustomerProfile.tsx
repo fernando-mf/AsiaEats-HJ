@@ -3,9 +3,9 @@ import { findNeighbourhood } from '../../shared/locations/montrealNeighbourhoods
 import { IconHome } from '../icons/Icons';
 import type { Account, Address, Order, Restaurant } from '../dashboard/dashboard.types';
 import { initials } from '../dashboard/dashboard.utils';
-import { PasswordSection, PersonalInfoForm } from './AccountForms';
+import { PasswordSection, PersonalInfoForm } from '../account/AccountForms';
 import { AddressForm } from './AddressForm';
-import './profile.css';
+import '../account/profile.css';
 
 type CustomerProfileProps = {
   account: Account;

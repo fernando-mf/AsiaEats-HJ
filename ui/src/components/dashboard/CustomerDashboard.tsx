@@ -7,6 +7,7 @@ import {
 } from '../../shared/dashboard/dashboardSession';
 import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
 import { requestJson } from '../../shared/api/client';
+import { useAccountActions } from '../account/useAccountActions';
 import { CartView } from '../customer/CartView';
 import { CustomerProfile } from '../customer/CustomerProfile';
 import { OrdersPage } from '../customer/OrdersPage';
@@ -61,6 +62,7 @@ export function CustomerDashboard({
   const [customerPage, setCustomerPage] = useState<CustomerPage>(restoredDashboard?.customerPage ?? 'restaurants');
   const restaurantPage = restoredDashboard?.restaurantPage ?? 'orders';
   const restaurantSwitchDialogRef = useRef<HTMLDialogElement>(null);
+  const { saveName, changePassword } = useAccountActions(run, showToast, onAccountChange);
   useScrollToTop(customerPage);
 
   // Searching from the customer's address makes the backend return distances, nearest first.
@@ -216,23 +218,6 @@ export function CustomerDashboard({
     if (!result) return false;
     setAddress(result.address);
     showToast('Delivery address saved.');
-    return true;
-  }
-
-  async function saveName(name: string): Promise<boolean> {
-    const result = await run(() => requestJson<Account>('/accounts/me', { method: 'PUT', body: { name } }));
-    if (!result) return false;
-    onAccountChange(result);
-    showToast('Name saved.');
-    return true;
-  }
-
-  async function changePassword(currentPassword: string, newPassword: string): Promise<boolean> {
-    const result = await run(() =>
-      requestJson<Account>('/accounts/me/password', { method: 'PUT', body: { currentPassword, newPassword } }),
-    );
-    if (!result) return false;
-    showToast('Password changed.');
     return true;
   }
 

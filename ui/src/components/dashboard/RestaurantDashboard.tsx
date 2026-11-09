@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { requestJson } from '../../shared/api/client';
+import { useAccountActions } from '../account/useAccountActions';
 import { logError } from '../../shared/console/outputConsole';
 import {
   readDashboardSession,
@@ -17,7 +18,9 @@ import type {
   MenuItem,
   Order,
   OrderAction,
+  Position,
   Restaurant,
+  RestaurantStatus,
   RunAction,
   ShowToast,
 } from './dashboard.types';
@@ -27,12 +30,27 @@ type RestaurantDashboardProps = {
   busy: string | null;
   run: RunAction;
   showToast: ShowToast;
+  // Replaces the signed-in account after it is edited, so the header shows the new name.
+  onAccountChange: (account: Account) => void;
   onLogout: () => void;
 };
 
 const emptyMenuDraft: MenuDraft = { name: '', price: '', quantity: '0', status: 'available' };
 
-export function RestaurantDashboard({ account, busy, run, showToast, onLogout }: RestaurantDashboardProps) {
+const statusToasts: Record<RestaurantStatus, string> = {
+  open: 'Restaurant is open and taking orders.',
+  paused: 'Restaurant paused. New orders are stopped.',
+  closed: 'Restaurant closed.',
+};
+
+export function RestaurantDashboard({
+  account,
+  busy,
+  run,
+  showToast,
+  onAccountChange,
+  onLogout,
+}: RestaurantDashboardProps) {
   const [restoredDashboard] = useState(readDashboardSession);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState(restoredDashboard?.selectedRestaurantId ?? '');
@@ -43,8 +61,8 @@ export function RestaurantDashboard({ account, busy, run, showToast, onLogout }:
   const customerPage = restoredDashboard?.customerPage ?? 'restaurants';
   const [menuDraft, setMenuDraft] = useState<MenuDraft>(emptyMenuDraft);
   const [editingMenuItem, setEditingMenuItem] = useState<string | null>(null);
-  const [restaurantEmail, setRestaurantEmail] = useState('');
   const [menuQuantities, setMenuQuantities] = useState<Record<string, number>>({});
+  const { saveName, changePassword } = useAccountActions(run, showToast, onAccountChange);
 
   const loadRestaurants = useCallback(async () => {
     const result = await run(() => requestJson<Restaurant[]>('/restaurants'));
@@ -95,7 +113,6 @@ export function RestaurantDashboard({ account, busy, run, showToast, onLogout }:
     try {
       const saved = window.localStorage.getItem(`asiaeats-menu-quantities-${ownedRestaurantId}`);
       setMenuQuantities(saved ? (JSON.parse(saved) as Record<string, number>) : {});
-      setRestaurantEmail(window.localStorage.getItem(`asiaeats-restaurant-email-${ownedRestaurantId}`) ?? '');
     } catch {
       setMenuQuantities({});
     }
@@ -188,11 +205,31 @@ export function RestaurantDashboard({ account, busy, run, showToast, onLogout }:
     }
   }
 
-  function saveRestaurantEmail(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  // Swap the saved restaurant into the list, so the banner and status update without a reload.
+  function replaceRestaurant(updated: Restaurant) {
+    setRestaurants(current => current.map(restaurant => (restaurant.id === updated.id ? updated : restaurant)));
+  }
+
+  async function saveDetails(name: string, position: Position): Promise<boolean> {
+    if (!ownedRestaurant) return false;
+    const result = await run(() =>
+      requestJson<Restaurant>(`/restaurants/${ownedRestaurant.id}`, { method: 'PUT', body: { name, position } }),
+    );
+    if (!result) return false;
+    replaceRestaurant(result);
+    showToast('Restaurant details saved.');
+    return true;
+  }
+
+  async function changeStatus(status: RestaurantStatus) {
     if (!ownedRestaurant) return;
-    window.localStorage.setItem(`asiaeats-restaurant-email-${ownedRestaurant.id}`, restaurantEmail.trim());
-    showToast('Contact email saved on this device.');
+    const result = await run(() =>
+      requestJson<Restaurant>(`/restaurants/${ownedRestaurant.id}/status`, { method: 'PUT', body: { status } }),
+    );
+    if (result) {
+      replaceRestaurant(result);
+      showToast(statusToasts[status]);
+    }
   }
 
   return (
@@ -255,9 +292,13 @@ export function RestaurantDashboard({ account, busy, run, showToast, onLogout }:
           <RestaurantProfile
             account={account}
             restaurant={ownedRestaurant}
-            email={restaurantEmail}
-            onEmailChange={setRestaurantEmail}
-            onSaveEmail={saveRestaurantEmail}
+            menu={menu}
+            orders={orders}
+            busy={busy}
+            onSaveDetails={saveDetails}
+            onChangeStatus={status => void changeStatus(status)}
+            onSaveName={saveName}
+            onChangePassword={changePassword}
           />
         ) : null}
       </div>

@@ -1,4 +1,4 @@
-/* Customer Profile page: summary banner, delivery address and account details. */
+/* Profile pages (customer and restaurant): banner, cards, rows and the account forms. */
 .profile-page {
   display: grid;
   gap: 24px;
@@ -198,9 +198,21 @@
   gap: 8px;
 }
 
+/* A text button in the actions row (e.g. "Enter exact coordinates") sits on the left. */
+.account-form-actions > .text-button {
+  margin-right: auto;
+}
+
 .password-section {
   display: grid;
   gap: 18px;
+}
+
+.profile-divider {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--border);
 }
 
 /* ---------- Address form ---------- */

@@ -79,7 +79,14 @@ export function DashboardPage() {
           onLogout={logout}
         />
       ) : account?.role === 'restaurant' ? (
-        <RestaurantDashboard account={account} busy={busy} run={run} showToast={showToast} onLogout={logout} />
+        <RestaurantDashboard
+          account={account}
+          busy={busy}
+          run={run}
+          showToast={showToast}
+          onAccountChange={setAccount}
+          onLogout={logout}
+        />
       ) : (
         <>
           <DashboardHeader account={account} onLogout={logout} />

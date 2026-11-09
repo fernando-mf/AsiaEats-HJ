@@ -24,11 +24,19 @@ export type CustomerProfileResponse = {
   address: Address | null;
 };
 
+export type RestaurantStatus = 'open' | 'paused' | 'closed';
+
+export type Position = {
+  latitude: number;
+  longitude: number;
+};
+
 export type Restaurant = {
   id: string;
   ownerId: string;
   name: string;
-  status: 'open' | 'paused' | 'closed';
+  status: RestaurantStatus;
+  position: Position;
   // Present when restaurants are searched from a position (the customer's address).
   distanceKm?: number;
 };
