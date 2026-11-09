@@ -180,6 +180,49 @@ paths:
         - couriers
       x-roles:
         - operator
+  /api/couriers/me/position:
+    put:
+      description: "**Allowed roles:** `courier`"
+      operationId: CouriersController_updatePosition
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CourierPositionUpdateRequest"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourierResponse"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Update courier position
+      tags:
+        - couriers
+      x-roles:
+        - courier
   /api/customers/me:
     put:
       description: "**Allowed roles:** `customer`"
@@ -1359,6 +1402,13 @@ components:
         - id
         - position
         - status
+    CourierPositionUpdateRequest:
+      type: object
+      properties:
+        position:
+          $ref: "#/components/schemas/Position"
+      required:
+        - position
     AddressRequest:
       type: object
       properties:
