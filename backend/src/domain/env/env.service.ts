@@ -10,6 +10,8 @@ import {
   AccountCreationRequest,
   AccountRole,
   AccountsService,
+  CourierPositionUpdateRequest,
+  CouriersService,
   CustomersService,
   CustomerUpdateRequest,
 } from '#domain/reg/index.js';
@@ -26,6 +28,7 @@ export class EnvService {
     private readonly environment: EnvironmentRepository,
     private readonly seedSource: SeedSource,
     private readonly accounts: AccountsService,
+    private readonly couriers: CouriersService,
     private readonly customers: CustomersService,
     private readonly restaurants: RestaurantsService,
     private readonly orders: OrdersService,
@@ -56,8 +59,15 @@ export class EnvService {
       await this.accounts.create(account(AccountRole.Operator, operator));
     }
 
+    // Creating a courier account also creates its courier, offline and without a position.
     for (const courier of seed.couriers) {
-      await this.accounts.create(account(AccountRole.Courier, courier));
+      const created = await this.accounts.create(account(AccountRole.Courier, courier));
+      if (courier.position) {
+        await this.couriers.updatePosition(
+          { id: created.id, role: created.role },
+          CourierPositionUpdateRequest.initialize({ position: courier.position }),
+        );
+      }
     }
 
     for (const customer of seed.customers) {

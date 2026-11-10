@@ -14,6 +14,11 @@ export type SeedCustomer = SeedAccount & {
   address?: Address;
 };
 
+// Couriers start offline; going on duty belongs to the delivery module (DLV).
+export type SeedCourier = SeedAccount & {
+  position?: { latitude: number; longitude: number };
+};
+
 export type SeedMenuItem = {
   name: string;
   price: number;
@@ -33,7 +38,7 @@ export type EnvSeed = {
   // The same password for every seeded account, for demo purposes only.
   password: string;
   operators: SeedAccount[];
-  couriers: SeedAccount[];
+  couriers: SeedCourier[];
   customers: SeedCustomer[];
   restaurants: SeedRestaurant[];
 };

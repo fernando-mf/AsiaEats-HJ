@@ -1,7 +1,13 @@
 {
   "password": "password123",
   "operators": [{ "username": "operator1", "name": "Jon Doe" }],
-  "couriers": [{ "username": "courier", "name": "Patrick Courier" }],
+  "couriers": [
+    {
+      "username": "courier",
+      "name": "Patrick Courier",
+      "position": { "latitude": 45.5017, "longitude": -73.5673 }
+    }
+  ],
   "customers": [
     {
       "username": "alice",

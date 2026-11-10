@@ -97,7 +97,7 @@ from the repository root; `pnpm --filter backend <script>` runs a backend script
 ## Seeded accounts
 
 The initial state comes from [`backend/config/seed.json`](./backend/config/seed.json): every account, restaurant,
-menu and customer address. Every seeded account uses the password **`password123`**.
+menu, customer address and courier position. Every seeded account uses the password **`password123`**.
 
 | Username        | Role       | What it shows                                                  |
 | --------------- | ---------- | -------------------------------------------------------------- |

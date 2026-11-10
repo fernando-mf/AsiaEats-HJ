@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { InvalidParamsError } from '#domain/errors.js';
 import type { OrdersService, RestaurantsService } from '#domain/ord/index.js';
-import { AccountRole, type AccountsService, type CustomersService } from '#domain/reg/index.js';
+import { AccountRole, type AccountsService, type CouriersService, type CustomersService } from '#domain/reg/index.js';
 import { TransactionRunner } from '#domain/transactions.js';
 import type { EnvSeed } from './env.seed.js';
 import { type EnvironmentRepository, EnvService } from './env.service.js';
@@ -9,7 +9,10 @@ import { type EnvironmentRepository, EnvService } from './env.service.js';
 const seed: EnvSeed = {
   password: 'password123',
   operators: [{ username: 'operator1', name: 'Jon Doe' }],
-  couriers: [{ username: 'courier', name: 'Patrick Courier' }],
+  couriers: [
+    { username: 'courier', name: 'Patrick Courier', position: { latitude: 45.5017, longitude: -73.5673 } },
+    { username: 'courier-2', name: 'Second Courier' },
+  ],
   customers: [
     {
       username: 'alice',
@@ -61,6 +64,7 @@ function newService(loaded: EnvSeed, options: { failOn?: string } = {}) {
       return { id: `id-${request.username}`, role: request.role };
     }),
   } as unknown as AccountsService;
+  const couriers = { updatePosition: vi.fn() } as unknown as CouriersService;
   const customers = { update: vi.fn() } as unknown as CustomersService;
   const restaurants = {
     create: vi.fn(async () => ({ id: 'restaurant-1' })),
@@ -70,13 +74,14 @@ function newService(loaded: EnvSeed, options: { failOn?: string } = {}) {
     environment,
     { load: vi.fn(async () => loaded) },
     accounts,
+    couriers,
     customers,
     restaurants,
     {} as OrdersService,
     transactions,
   );
 
-  return { service, environment, created, customers, restaurants, transactions, insideTransaction };
+  return { service, environment, created, couriers, customers, restaurants, transactions, insideTransaction };
 }
 
 describe('EnvService.reset', () => {
@@ -89,12 +94,25 @@ describe('EnvService.reset', () => {
     expect(created).toEqual([
       { role: AccountRole.Operator, username: 'operator1' },
       { role: AccountRole.Courier, username: 'courier' },
+      { role: AccountRole.Courier, username: 'courier-2' },
       { role: AccountRole.Customer, username: 'alice' },
       { role: AccountRole.Restaurant, username: 'golden-dragon' },
     ]);
     expect(customers.update).toHaveBeenCalledOnce();
     expect(restaurants.create).toHaveBeenCalledOnce();
     expect(restaurants.createMenuItem).toHaveBeenCalledOnce();
+  });
+
+  it("places a seeded courier at the seed's position, and leaves one without a position unplaced", async () => {
+    const { service, couriers } = newService(seed);
+
+    await service.reset();
+
+    expect(couriers.updatePosition).toHaveBeenCalledOnce();
+    expect(couriers.updatePosition).toHaveBeenCalledWith(
+      { id: 'id-courier', role: AccountRole.Courier },
+      expect.objectContaining({ position: { latitude: 45.5017, longitude: -73.5673 } }),
+    );
   });
 
   it('empties and seeds the database inside one transaction', async () => {
@@ -111,9 +129,9 @@ describe('EnvService.reset', () => {
     const { service, environment, created } = newService(seed, { failOn: 'alice' });
 
     await expect(service.reset()).rejects.toBeInstanceOf(InvalidParamsError);
-    // The tables were emptied and two accounts created inside the transaction that now fails.
+    // The tables were emptied and three accounts created inside the transaction that now fails.
     expect(environment.reset).toHaveBeenCalledOnce();
-    expect(created).toHaveLength(2);
+    expect(created).toHaveLength(3);
   });
 
   it('refuses a seed without an account for every role, before touching the database', async () => {

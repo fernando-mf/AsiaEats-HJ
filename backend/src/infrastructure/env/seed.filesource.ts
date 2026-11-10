@@ -18,7 +18,7 @@ const position = z.object({ latitude: z.number(), longitude: z.number() });
 export const seedFileSchema = z.object({
   password: z.string(),
   operators: z.array(account),
-  couriers: z.array(account),
+  couriers: z.array(account.extend({ position: position.optional() })),
   customers: z.array(
     account.extend({
       address: position.extend({ street: z.string(), city: z.string(), postalCode: z.string() }).optional(),
