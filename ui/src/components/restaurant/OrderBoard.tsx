@@ -274,7 +274,7 @@ function OrderCard({ order, queuePosition, now, busy, onAction, onReject }: Orde
           </button>
         ) : null}
         {order.status === 'accepted' && queuePosition !== undefined && queuePosition > 1 ? (
-          <span className="board-card-note" title="Orders are prepared in the order they were accepted.">
+          <span className="board-card-note" title="Orders are prepared in the order they were placed.">
             In queue · #{queuePosition}
           </span>
         ) : null}

@@ -4,6 +4,11 @@ import { Order, OrderFilter, OrderRepository, OrderStatus } from '#domain/ord/in
 import type { Address } from '#domain/reg/index.js';
 import { PrismaService } from '#infrastructure/prisma.service.js';
 
+// R-ORD-03: accepted orders are prepared in arrival order, first in, first out. An order
+// arrives when it is placed (createdAt), not when it is accepted, so accepting orders out of
+// turn does not reorder the queue. The id (UUIDv7, time-ordered) breaks ties.
+const preparationQueueOrder = [{ createdAt: 'asc' as const }, { id: 'asc' as const }];
+
 @Injectable()
 export class PrismaOrderRepository extends OrderRepository {
   constructor(private readonly db: PrismaService) {
@@ -84,7 +89,7 @@ export class PrismaOrderRepository extends OrderRepository {
       const rows = await this.db.order.findMany({
         where: { restaurantId, status: OrderStatus.Accepted },
         include: { lines: { orderBy: [{ id: 'asc' }] } },
-        orderBy: [{ updatedAt: 'asc' }, { id: 'asc' }],
+        orderBy: preparationQueueOrder,
       });
 
       return rows.map(toOrderModel);
@@ -98,7 +103,7 @@ export class PrismaOrderRepository extends OrderRepository {
       const row = await this.db.order.findFirst({
         where: { restaurantId, status: OrderStatus.Accepted },
         include: { lines: { orderBy: [{ id: 'asc' }] } },
-        orderBy: [{ updatedAt: 'asc' }, { id: 'asc' }],
+        orderBy: preparationQueueOrder,
       });
 
       return row ? toOrderModel(row) : undefined;
