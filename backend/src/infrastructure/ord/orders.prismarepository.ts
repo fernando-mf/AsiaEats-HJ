@@ -9,6 +9,12 @@ import { PrismaService } from '#infrastructure/prisma.service.js';
 // turn does not reorder the queue. The id (UUIDv7, time-ordered) breaks ties.
 const preparationQueueOrder = [{ createdAt: 'asc' as const }, { id: 'asc' as const }];
 
+// Every order is read with its lines and the name on the customer's account.
+const orderInclude = {
+  lines: { orderBy: [{ id: 'asc' as const }] },
+  customer: { select: { name: true } },
+};
+
 @Injectable()
 export class PrismaOrderRepository extends OrderRepository {
   constructor(private readonly db: PrismaService) {
@@ -38,7 +44,7 @@ export class PrismaOrderRepository extends OrderRepository {
             })),
           },
         },
-        include: { lines: { orderBy: [{ id: 'asc' }] } },
+        include: orderInclude,
       });
 
       return toOrderModel(row);
@@ -57,7 +63,7 @@ export class PrismaOrderRepository extends OrderRepository {
         customerId: filter.customerId,
         restaurant: filter.restaurantOwnerId ? { ownerId: filter.restaurantOwnerId } : undefined,
       },
-      include: { lines: { orderBy: [{ id: 'asc' }] } },
+      include: orderInclude,
     });
     if (!row) {
       throw new NotFoundError('order');
@@ -74,7 +80,7 @@ export class PrismaOrderRepository extends OrderRepository {
           restaurantId: filter.restaurantId,
           restaurant: filter.restaurantOwnerId ? { ownerId: filter.restaurantOwnerId } : undefined,
         },
-        include: { lines: { orderBy: [{ id: 'asc' }] } },
+        include: orderInclude,
         orderBy: [{ createdAt: 'desc' }],
       });
 
@@ -88,7 +94,7 @@ export class PrismaOrderRepository extends OrderRepository {
     try {
       const rows = await this.db.client().order.findMany({
         where: { restaurantId, status: OrderStatus.Accepted },
-        include: { lines: { orderBy: [{ id: 'asc' }] } },
+        include: orderInclude,
         orderBy: preparationQueueOrder,
       });
 
@@ -102,7 +108,7 @@ export class PrismaOrderRepository extends OrderRepository {
     try {
       const row = await this.db.client().order.findFirst({
         where: { restaurantId, status: OrderStatus.Accepted },
-        include: { lines: { orderBy: [{ id: 'asc' }] } },
+        include: orderInclude,
         orderBy: preparationQueueOrder,
       });
 
@@ -121,7 +127,7 @@ export class PrismaOrderRepository extends OrderRepository {
           rejectionReason: order.rejectionReason ?? null,
           updatedAt: order.updatedAt,
         },
-        include: { lines: { orderBy: [{ id: 'asc' }] } },
+        include: orderInclude,
       });
 
       return toOrderModel(row);
@@ -147,6 +153,7 @@ function toOrderModel(row: {
   deliveryLongitude: number | null;
   createdAt: Date;
   updatedAt: Date;
+  customer: { name: string };
   lines: {
     id: string;
     orderId: string;
@@ -159,6 +166,7 @@ function toOrderModel(row: {
   return {
     id: row.id,
     customerId: row.customerId,
+    customerName: row.customer.name,
     restaurantId: row.restaurantId,
     status: row.status as OrderStatus,
     rejectionReason: row.rejectionReason ?? undefined,

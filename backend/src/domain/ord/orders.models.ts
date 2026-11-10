@@ -87,6 +87,8 @@ export class OrderLine {
 export class Order {
   id: string;
   customerId: string;
+  // Read from the customer's account, so the restaurant and the operator can tell who ordered.
+  customerName: string;
   restaurantId: string;
   status: OrderStatus;
   rejectionReason?: string;

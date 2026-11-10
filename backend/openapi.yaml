@@ -1486,6 +1486,8 @@ components:
           type: string
         customerId:
           type: string
+        customerName:
+          type: string
         restaurantId:
           type: string
         status:
@@ -1519,6 +1521,7 @@ components:
       required:
         - id
         - customerId
+        - customerName
         - restaurantId
         - status
         - deliveryAddress

@@ -13,7 +13,7 @@ const restaurantId = '0190f0a0-0000-7000-8000-000000000002';
 const menuItemId = '0190f0a0-0000-7000-8000-000000000003';
 
 function newService(address: Address | null) {
-  const customer = { address } as Customer;
+  const customer = { address, account: { name: 'Alice Chen' } } as Customer;
   const repository = {
     create: vi.fn(async (order: Order) => ({ ...order, id: 'order-1' })),
   } as unknown as OrderRepository;
@@ -51,6 +51,21 @@ describe('OrdersService.place', () => {
     expect(order.deliveryAddress).toEqual(address);
   });
 
+  it('records who placed the order by their account name', async () => {
+    const { service } = newService({
+      street: '1455 De Maisonneuve Blvd W',
+      city: 'Montréal',
+      postalCode: 'H3G 1M8',
+      latitude: 45.4972,
+      longitude: -73.579,
+    });
+
+    const order = await service.place(actor, request());
+
+    expect(order.customerId).toBe(actor.id);
+    expect(order.customerName).toBe('Alice Chen');
+  });
+
   it('refuses an order from a customer without an address', async () => {
     const { service } = newService(null);
 
@@ -66,6 +81,7 @@ function kitchenOrder(id: string, status: OrderStatus): Order {
   return {
     id,
     customerId: actor.id,
+    customerName: 'Alice Chen',
     restaurantId,
     status,
     deliveryAddress: null,
