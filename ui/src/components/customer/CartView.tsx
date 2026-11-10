@@ -1,11 +1,15 @@
 import type { CartLine, MenuItem, Restaurant } from '../dashboard/dashboard.types';
 import { formatMoney } from '../dashboard/dashboard.utils';
+import { AddressPrompt } from './AddressPrompt';
 
 type CartViewProps = {
   restaurant?: Restaurant;
   lines: CartLine[];
   total: number;
   busy: string | null;
+  // undefined while the profile loads, false when the customer has no delivery address.
+  hasAddress: boolean | undefined;
+  onAddAddress: () => void;
   onChangeQuantity: (item: MenuItem, delta: number) => void;
   onPlaceOrder: () => void;
   onContinueBrowsing: () => void;
@@ -17,6 +21,8 @@ export function CartView({
   lines,
   total,
   busy,
+  hasAddress,
+  onAddAddress,
   onChangeQuantity,
   onPlaceOrder,
   onContinueBrowsing,
@@ -61,7 +67,17 @@ export function CartView({
             <strong>{formatMoney(total)}</strong>
           </div>
           <p className="muted checkout-note">Delivery fees, if applicable, are not included in this demo.</p>
-          <button className="primary-button checkout-button" disabled={busy !== null} onClick={onPlaceOrder}>
+          {hasAddress === false ? (
+            <AddressPrompt
+              message="Orders are delivered to it, so add one before placing this order."
+              onAddAddress={onAddAddress}
+            />
+          ) : null}
+          <button
+            className="primary-button checkout-button"
+            disabled={busy !== null || !hasAddress}
+            onClick={onPlaceOrder}
+          >
             {busy ? 'Placing order…' : `Place order · ${formatMoney(total)}`}
           </button>
           <button className="back-link centered-link" onClick={onContinueBrowsing}>

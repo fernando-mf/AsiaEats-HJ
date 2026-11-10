@@ -378,6 +378,22 @@
 .deliver-to > span { display: grid; line-height: 1.15; }
 .deliver-to small { color: var(--text-3); font-size: 11px; }
 .deliver-to strong { max-width: 220px; overflow: hidden; color: var(--text); font-size: 13.5px; font-weight: 560; text-overflow: ellipsis; white-space: nowrap; }
+button.deliver-to { font: inherit; text-align: left; cursor: pointer; }
+button.deliver-to:hover { background: var(--surface-2); border-color: var(--border-strong); }
+.deliver-to--missing { background: var(--primary-soft); border-color: var(--primary); }
+.deliver-to--missing strong { color: var(--primary-ink); }
+button.deliver-to--missing:hover { background: var(--primary-soft); border-color: var(--primary-ink); }
+/* Prompt to add a delivery address, on Discover and in the cart. */
+.address-prompt { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--primary-soft); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); }
+.address-prompt-icon { display: grid; flex: none; place-items: center; width: 36px; height: 36px; color: var(--primary-ink); background: var(--surface); border-radius: 50%; }
+.address-prompt p { display: grid; flex: 1; gap: 2px; margin: 0; }
+.address-prompt strong { color: var(--text); font-size: 14.5px; }
+.address-prompt p span { color: var(--text-2); font-size: 13.5px; }
+.address-prompt .primary-button { flex: none; }
+@media (max-width: 600px) {
+  .address-prompt { flex-wrap: wrap; }
+  .address-prompt .primary-button { width: 100%; }
+}
 .header-nav { display: flex; gap: 6px; margin-right: 8px; }
 .header-nav-link { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; color: var(--text-2); background: transparent; border: 0; border-radius: 9px; font-size: 14px; font-weight: 540; cursor: pointer; }
 .header-nav-link:hover, .header-nav-link.active { color: var(--text); background: var(--surface-2); }

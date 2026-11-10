@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { neighbourhoodShortName } from '../../shared/locations/montrealNeighbourhoods';
 import { IconHome } from '../icons/Icons';
 import type { Account, Address, Order, Restaurant } from '../dashboard/dashboard.types';
@@ -16,6 +16,11 @@ type CustomerProfileProps = {
   onSaveAddress: (address: Address) => Promise<boolean>;
   onSaveName: (name: string) => Promise<boolean>;
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
+  // Set when the customer asked to change their address from elsewhere ("Deliver to", the
+  // address prompt): the page opens the address form and scrolls to it.
+  focusAddress?: boolean;
+  // Called when the customer cancels that form.
+  onAddressClosed?: () => void;
 };
 
 // Cancelled and rejected orders never reached the customer, so they don't count as "ordered from".
@@ -49,8 +54,28 @@ export function CustomerProfile({
   onSaveAddress,
   onSaveName,
   onChangePassword,
+  focusAddress = false,
+  onAddressClosed,
 }: CustomerProfileProps) {
-  const [editing, setEditing] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(false);
+  const editing = editingAddress || focusAddress;
+  const addressCardRef = useRef<HTMLElement>(null);
+  const addressLoaded = address !== undefined;
+
+  // Scroll once the address has loaded, so the card has its final height. The scroll waits a
+  // frame because the dashboard scrolls a newly opened page to the top after this runs.
+  useEffect(() => {
+    if (!focusAddress || !addressLoaded) return;
+    const frame = requestAnimationFrame(() =>
+      addressCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [focusAddress, addressLoaded]);
+
+  function closeAddressForm() {
+    setEditingAddress(false);
+    onAddressClosed?.();
+  }
   const roleLabel = account.role.charAt(0).toUpperCase() + account.role.slice(1);
   const memberSince = account.createdAt ? memberSinceFormat.format(new Date(account.createdAt)) : undefined;
   const place = address ? (neighbourhoodLabel(address) ?? address.city) : undefined;
@@ -62,7 +87,7 @@ export function CustomerProfile({
 
   async function save(next: Address) {
     const saved = await onSaveAddress(next);
-    if (saved) setEditing(false);
+    if (saved) setEditingAddress(false);
     return saved;
   }
 
@@ -107,7 +132,7 @@ export function CustomerProfile({
             <PersonalInfoForm key={account.name} account={account} busy={busy} onSaveName={onSaveName} />
           </section>
 
-          <section className="card profile-card" aria-labelledby="profile-address-title">
+          <section ref={addressCardRef} className="card profile-card" aria-labelledby="profile-address-title">
             <div className="profile-card-head">
               <h2 id="profile-address-title">Delivery address</h2>
               <p>
@@ -131,7 +156,7 @@ export function CustomerProfile({
                     {neighbourhoodLabel(address) ? ` · ${neighbourhoodLabel(address)}` : ''}
                   </span>
                 </div>
-                <button className="ghost-button" type="button" onClick={() => setEditing(true)}>
+                <button className="ghost-button" type="button" onClick={() => setEditingAddress(true)}>
                   Edit
                 </button>
               </div>
@@ -143,7 +168,7 @@ export function CustomerProfile({
                 address={address}
                 busy={busy}
                 onSave={save}
-                onCancel={address ? () => setEditing(false) : undefined}
+                onCancel={address ? closeAddressForm : undefined}
               />
             ) : null}
           </section>

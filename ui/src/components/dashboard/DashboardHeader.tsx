@@ -13,6 +13,8 @@ type DashboardHeaderProps = {
   deliveryAddress?: string | null;
   customerPage?: CustomerPage;
   onCustomerPageChange?: (page: CustomerPage) => void;
+  // Opens the delivery address form on the profile page.
+  onEditAddress?: () => void;
   onLogout: () => void;
 };
 
@@ -25,6 +27,7 @@ export function DashboardHeader({
   deliveryAddress,
   customerPage,
   onCustomerPageChange,
+  onEditAddress,
   onLogout,
 }: DashboardHeaderProps) {
   const avatarRef = useRef<HTMLButtonElement>(null);
@@ -60,13 +63,18 @@ export function DashboardHeader({
         </button>
 
         {showCustomerNav && deliveryAddress !== undefined ? (
-          <div className="deliver-to">
+          <button
+            className={`deliver-to${deliveryAddress === null ? ' deliver-to--missing' : ''}`}
+            type="button"
+            aria-label={deliveryAddress ? `Deliver to ${deliveryAddress}. Change address` : 'Add a delivery address'}
+            onClick={onEditAddress}
+          >
             <IconPin size={17} />
             <span>
               <small>Deliver to</small>
-              <strong>{deliveryAddress ?? 'No address yet'}</strong>
+              <strong>{deliveryAddress ?? 'Add address'}</strong>
             </span>
-          </div>
+          </button>
         ) : null}
 
         <span className="header-spacer" />

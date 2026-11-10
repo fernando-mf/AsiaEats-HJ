@@ -4,6 +4,7 @@ import { dishKind } from '../food/dishKind';
 import { IconArrowRight, IconPlus, IconSearch } from '../icons/Icons';
 import type { MenuItem, Order, Restaurant } from '../dashboard/dashboard.types';
 import { formatMoney } from '../dashboard/dashboard.utils';
+import { AddressPrompt } from './AddressPrompt';
 import { OrderHistory } from './OrderHistory';
 import './home.css';
 
@@ -17,6 +18,8 @@ type CustomerHomeProps = {
   onOpenRestaurant: (restaurantId: string) => void;
   onAddDish: (item: MenuItem) => void;
   onViewAllOrders: () => void;
+  // Set only when the customer has no delivery address; shows a prompt to add one.
+  onAddAddress?: () => void;
 };
 
 type Dish = {
@@ -148,6 +151,7 @@ export function CustomerHome({
   onOpenRestaurant,
   onAddDish,
   onViewAllOrders,
+  onAddAddress,
 }: CustomerHomeProps) {
   const [query, setQuery] = useState('');
   const [openOnly, setOpenOnly] = useState(false);
@@ -185,6 +189,13 @@ export function CustomerHome({
 
   return (
     <div className="home">
+      {onAddAddress ? (
+        <AddressPrompt
+          message="You need one to place an order, and restaurant distances are measured from it."
+          onAddAddress={onAddAddress}
+        />
+      ) : null}
+
       <section className="home-hero">
         <div className="home-hero-copy">
           <p className="eyebrow">Chinese food · Montréal</p>

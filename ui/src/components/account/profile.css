@@ -102,6 +102,8 @@
   display: grid;
   gap: 18px;
   padding: 22px 24px;
+  /* Clears the sticky customer header when a card is scrolled into view. */
+  scroll-margin-top: 88px;
 }
 
 .profile-card-head h2 {
