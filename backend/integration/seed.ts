@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { NestFactory } from '@nestjs/core';
 import { EnvService } from '#domain/env/index.js';
 
-// Resets the database and seeds it with default data.
+// Resets the database and seeds it from backend/config/seed.json, in one transaction.
 // This script is run once during the initial env setup, afterwards the env can be
 // reset and seeded using the POST /api/env/reset endpoint using an `operator` role.
 async function seed() {
