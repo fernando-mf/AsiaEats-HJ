@@ -2,16 +2,18 @@ import type { ReactNode } from 'react';
 import { BrandMark } from '../brand/BrandMark';
 import type { Account } from '../dashboard/dashboard.types';
 import { initials } from '../dashboard/dashboard.utils';
-import { IconGrid, IconRestore, IconSignOut } from '../icons/Icons';
+import { IconGrid, IconReceipt, IconRestore, IconSignOut } from '../icons/Icons';
 // The operator portal shares the restaurant portal's sidebar layout and styles.
 import '../restaurant/restaurant-shell.css';
 import './operator.css';
 
-export type OperatorPage = 'overview';
+export type OperatorPage = 'overview' | 'orders';
 
 type OperatorSidebarProps = {
   account: Account;
   page: OperatorPage;
+  // Orders still waiting for a restaurant to accept or reject them.
+  waitingCount: number;
   busy: string | null;
   onPageChange: (page: OperatorPage) => void;
   onRestore: () => void;
@@ -20,11 +22,20 @@ type OperatorSidebarProps = {
 
 const links: Array<{ page: OperatorPage; label: string; icon: ReactNode }> = [
   { page: 'overview', label: 'Overview', icon: <IconGrid size={17} /> },
+  { page: 'orders', label: 'Orders', icon: <IconReceipt size={17} /> },
 ];
 
 // OperatorSidebar is the operator console's navigation: its pages, the demo controls that
 // restore the seeded state, and the signed-in operator.
-export function OperatorSidebar({ account, page, busy, onPageChange, onRestore, onLogout }: OperatorSidebarProps) {
+export function OperatorSidebar({
+  account,
+  page,
+  waitingCount,
+  busy,
+  onPageChange,
+  onRestore,
+  onLogout,
+}: OperatorSidebarProps) {
   return (
     <aside className="restaurant-sidebar">
       <BrandMark />
@@ -45,6 +56,11 @@ export function OperatorSidebar({ account, page, busy, onPageChange, onRestore, 
           >
             {link.icon}
             {link.label}
+            {link.page === 'orders' && waitingCount > 0 ? (
+              <span className="sidebar-badge mono" aria-label={`${waitingCount} waiting`}>
+                {waitingCount}
+              </span>
+            ) : null}
           </button>
         ))}
       </nav>

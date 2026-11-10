@@ -72,6 +72,17 @@ export type Order = {
   updatedAt?: string;
 };
 
+// One entry of the event log (GET /events): a state change and who made it.
+export type StoredEvent = {
+  id: string;
+  entityType: string;
+  entityId: string;
+  eventType: string;
+  payload: Record<string, unknown>;
+  actor: { id: string; role: Role } | null;
+  occurredAt: string;
+};
+
 export type CartLine = {
   item: MenuItem;
   quantity: number;

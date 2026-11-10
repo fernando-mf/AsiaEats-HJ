@@ -1,10 +1,21 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { ApiError, requestJson } from '../../shared/api/client';
+import { ApiError, apiErrorMessage, requestJson } from '../../shared/api/client';
 import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
+import { ConfirmDialog } from '../feedback/ConfirmDialog';
+import { OperatorOrders } from '../operator/OperatorOrders';
 import { OperatorOverview } from '../operator/OperatorOverview';
+import { orderNumber } from '../restaurant/orderTime';
 import { OperatorSidebar, type OperatorPage } from '../operator/OperatorSidebar';
 import { RestoreDialog } from '../operator/RestoreDialog';
-import type { Account, Order, Restaurant, RestaurantStatus, RunAction, ShowToast } from './dashboard.types';
+import type {
+  Account,
+  Order,
+  Restaurant,
+  RestaurantStatus,
+  RunAction,
+  ShowToast,
+  StoredEvent,
+} from './dashboard.types';
 
 type OperatorDashboardProps = {
   account: Account;
@@ -30,6 +41,11 @@ export function OperatorDashboard({ account, busy, run, showToast, onLogout, chi
   const [orders, setOrders] = useState<Order[]>([]);
   const [updatedAt, setUpdatedAt] = useState<Date>();
   const [restoreOpen, setRestoreOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  // The order waiting for the operator to confirm its cancellation.
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
+  // The selected order's events: null when they could not be loaded.
+  const [orderEvents, setOrderEvents] = useState<{ orderId: string; events: StoredEvent[] | null }>();
   // The background refresh reads busy through a ref so the timer isn't restarted on every action.
   const busyRef = useRef(busy);
   useEffect(() => {
@@ -72,6 +88,43 @@ export function OperatorDashboard({ account, busy, run, showToast, onLogout, chi
     return () => window.clearInterval(timer);
   }, [apply, fetchAll]);
 
+  // Load the selected order's event history, and load it again whenever the order changes
+  // (its updatedAt moves), so a new state change shows up with its event id.
+  const selectedUpdatedAt = orders.find(order => order.id === selectedOrderId)?.updatedAt;
+  useEffect(() => {
+    if (!selectedOrderId) return;
+    let current = true;
+    requestJson<StoredEvent[]>(`/events?entityType=order&entityId=${encodeURIComponent(selectedOrderId)}`)
+      .then(events => {
+        if (current) setOrderEvents({ orderId: selectedOrderId, events });
+      })
+      .catch((error: unknown) => {
+        if (!current) return;
+        setOrderEvents({ orderId: selectedOrderId, events: null });
+        showToast(apiErrorMessage(error), 'error');
+      });
+    return () => {
+      current = false;
+    };
+  }, [selectedOrderId, selectedUpdatedAt, showToast]);
+
+  // Keep showing the previous history of the same order while it reloads.
+  const events = orderEvents?.orderId === selectedOrderId ? orderEvents.events : undefined;
+
+  function openOrder(orderId: string) {
+    setSelectedOrderId(orderId);
+    setPage('orders');
+  }
+
+  // Operators may cancel an order at any stage until it is finished, after confirming.
+  async function cancelOrder(order: Order) {
+    const result = await run(() => requestJson<Order>(`/orders/${order.id}/cancel`, { method: 'POST' }));
+    setCancelTarget(null);
+    if (!result) return;
+    setOrders(current => current.map(item => (item.id === result.id ? result : item)));
+    showToast(`Order ${orderNumber(order)} cancelled.`);
+  }
+
   async function changeStatus(restaurant: Restaurant, status: RestaurantStatus) {
     const result = await run(() =>
       requestJson<Restaurant>(`/restaurants/${restaurant.id}/status`, { method: 'PUT', body: { status } }),
@@ -109,6 +162,7 @@ export function OperatorDashboard({ account, busy, run, showToast, onLogout, chi
       <OperatorSidebar
         account={account}
         page={page}
+        waitingCount={orders.filter(order => order.status === 'placed').length}
         busy={busy}
         onPageChange={setPage}
         onRestore={() => setRestoreOpen(true)}
@@ -124,11 +178,47 @@ export function OperatorDashboard({ account, busy, run, showToast, onLogout, chi
             busy={busy}
             onRefresh={() => void load()}
             onChangeStatus={(restaurant, status) => void changeStatus(restaurant, status)}
+            onOpenOrder={openOrder}
+          />
+        ) : null}
+
+        {page === 'orders' ? (
+          <OperatorOrders
+            orders={orders}
+            restaurants={restaurants}
+            selectedId={selectedOrderId}
+            events={events}
+            updatedAt={updatedAt}
+            busy={busy}
+            onSelect={setSelectedOrderId}
+            onRefresh={() => void load()}
+            onCancel={setCancelTarget}
           />
         ) : null}
 
         {children}
       </div>
+
+      <ConfirmDialog
+        open={cancelTarget !== null}
+        title={cancelTarget ? `Cancel order ${orderNumber(cancelTarget)}?` : 'Cancel order?'}
+        confirmLabel="Cancel order"
+        busyLabel="Cancelling…"
+        cancelLabel="Keep order"
+        busy={busy !== null}
+        onCancel={() => setCancelTarget(null)}
+        onConfirm={() => {
+          if (cancelTarget) void cancelOrder(cancelTarget);
+        }}
+      >
+        {cancelTarget ? (
+          <p>
+            {cancelTarget.customerName}’s order from{' '}
+            {restaurants.find(restaurant => restaurant.id === cancelTarget.restaurantId)?.name ?? 'the restaurant'} is
+            cancelled and leaves the restaurant’s board. This can’t be undone.
+          </p>
+        ) : null}
+      </ConfirmDialog>
 
       <RestoreDialog
         open={restoreOpen}

@@ -15,6 +15,8 @@ type OperatorOverviewProps = {
   busy: string | null;
   onRefresh: () => void;
   onChangeStatus: (restaurant: Restaurant, status: RestaurantStatus) => void;
+  // Opens the order on the Orders page.
+  onOpenOrder: (orderId: string) => void;
 };
 
 // Orders the restaurant still has to work on; picked-up orders belong to delivery (DLV).
@@ -83,6 +85,7 @@ export function OperatorOverview({
   busy,
   onRefresh,
   onChangeStatus,
+  onOpenOrder,
 }: OperatorOverviewProps) {
   const now = useNow();
   const today = new Date(now);
@@ -224,6 +227,13 @@ export function OperatorOverview({
                       {restaurantName(order.restaurantId)} hasn’t accepted {order.customerName}’s order yet
                     </span>
                   </span>
+                  <button
+                    className="secondary-button operator-row-button"
+                    type="button"
+                    onClick={() => onOpenOrder(order.id)}
+                  >
+                    View
+                  </button>
                 </li>
               ))}
               {notOpen.map(restaurant => (
