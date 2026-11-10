@@ -507,3 +507,13 @@ input:-webkit-autofill:focus {
 .zh {
   font-family: var(--font-zh);
 }
+
+/* Read by screen readers but not shown, e.g. a label for a column of buttons. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

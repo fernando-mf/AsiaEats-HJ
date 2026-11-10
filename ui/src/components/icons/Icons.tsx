@@ -190,6 +190,24 @@ export function IconPlay(props: IconProps) {
   );
 }
 
+export function IconRestore(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M20 12a8 8 0 1 1-2.3-5.7L20 8" />
+      <path d="M20 4v4h-4" />
+    </Icon>
+  );
+}
+
+export function IconAlert(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 4 2.5 20h19z" />
+      <path d="M12 10v4M12 17h.01" />
+    </Icon>
+  );
+}
+
 export function IconArrowLeft(props: IconProps) {
   return (
     <Icon {...props}>

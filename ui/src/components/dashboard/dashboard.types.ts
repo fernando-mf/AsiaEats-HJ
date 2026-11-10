@@ -60,6 +60,8 @@ export type OrderLine = {
 export type Order = {
   id: string;
   customerId: string;
+  // The name on the customer's account.
+  customerName: string;
   restaurantId: string;
   status: string;
   rejectionReason?: string;

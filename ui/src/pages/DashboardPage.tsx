@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CustomerDashboard } from '../components/dashboard/CustomerDashboard';
 import { DashboardHeader } from '../components/dashboard/DashboardHeader';
+import { OperatorDashboard } from '../components/dashboard/OperatorDashboard';
 import { RestaurantDashboard } from '../components/dashboard/RestaurantDashboard';
 import type { Account } from '../components/dashboard/dashboard.types';
 import { OutputConsole } from '../components/feedback/OutputConsole';
@@ -65,9 +66,10 @@ export function DashboardPage() {
 
   const roleLabel = account?.role ? account.role.charAt(0).toUpperCase() + account.role.slice(1) : 'Account';
   const isRestaurant = account?.role === 'restaurant';
+  const isOperator = account?.role === 'operator';
 
-  // The console and footer close every page. The restaurant layout places them in its content
-  // column, beside the sidebar; other roles show them full width under the page.
+  // The console and footer close every page. The restaurant and operator layouts place them in
+  // their content column, beside the sidebar; other roles show them full width under the page.
   const pageEnd = (
     <>
       <OutputConsole />
@@ -103,6 +105,10 @@ export function DashboardPage() {
         >
           {pageEnd}
         </RestaurantDashboard>
+      ) : isOperator ? (
+        <OperatorDashboard account={account} busy={busy} run={run} showToast={showToast} onLogout={logout}>
+          {pageEnd}
+        </OperatorDashboard>
       ) : (
         <>
           <DashboardHeader account={account} onLogout={logout} />
@@ -123,7 +129,7 @@ export function DashboardPage() {
         </>
       )}
 
-      {isRestaurant ? null : pageEnd}
+      {isRestaurant || isOperator ? null : pageEnd}
     </main>
   );
 }

@@ -1,0 +1,141 @@
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { ApiError, requestJson } from '../../shared/api/client';
+import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
+import { OperatorOverview } from '../operator/OperatorOverview';
+import { OperatorSidebar, type OperatorPage } from '../operator/OperatorSidebar';
+import { RestoreDialog } from '../operator/RestoreDialog';
+import type { Account, Order, Restaurant, RestaurantStatus, RunAction, ShowToast } from './dashboard.types';
+
+type OperatorDashboardProps = {
+  account: Account;
+  busy: string | null;
+  run: RunAction;
+  showToast: ShowToast;
+  onLogout: () => void;
+  // Shown at the end of the content column, beside the sidebar (the console and footer).
+  children?: ReactNode;
+};
+
+const statusToasts: Record<RestaurantStatus, string> = {
+  open: 'reopened and taking orders.',
+  paused: 'paused. New orders are stopped.',
+  closed: 'closed.',
+};
+
+// OperatorDashboard is the platform operator's console. Operators see every restaurant and
+// every order, and may pause or reopen any restaurant.
+export function OperatorDashboard({ account, busy, run, showToast, onLogout, children }: OperatorDashboardProps) {
+  const [page, setPage] = useState<OperatorPage>('overview');
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [updatedAt, setUpdatedAt] = useState<Date>();
+  const [restoreOpen, setRestoreOpen] = useState(false);
+  // The background refresh reads busy through a ref so the timer isn't restarted on every action.
+  const busyRef = useRef(busy);
+  useEffect(() => {
+    busyRef.current = busy;
+  }, [busy]);
+  useScrollToTop(page);
+
+  const fetchAll = useCallback(async () => {
+    const [allRestaurants, allOrders] = await Promise.all([
+      requestJson<Restaurant[]>('/restaurants'),
+      requestJson<Order[]>('/orders'),
+    ]);
+    return { restaurants: allRestaurants, orders: allOrders };
+  }, []);
+
+  const apply = useCallback((result: { restaurants: Restaurant[]; orders: Order[] }) => {
+    setRestaurants(result.restaurants);
+    setOrders(result.orders);
+    setUpdatedAt(new Date());
+  }, []);
+
+  const load = useCallback(async () => {
+    const result = await run(fetchAll);
+    if (result) apply(result);
+  }, [apply, fetchAll, run]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  // Orders change without the operator doing anything: refresh quietly every 15 s, skipping
+  // while an action runs. Failures are left to the next manual action, which reports them.
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (busyRef.current !== null) return;
+      fetchAll()
+        .then(apply)
+        .catch(() => undefined);
+    }, 15_000);
+    return () => window.clearInterval(timer);
+  }, [apply, fetchAll]);
+
+  async function changeStatus(restaurant: Restaurant, status: RestaurantStatus) {
+    const result = await run(() =>
+      requestJson<Restaurant>(`/restaurants/${restaurant.id}/status`, { method: 'PUT', body: { status } }),
+    );
+    if (!result) return;
+    setRestaurants(current => current.map(item => (item.id === result.id ? result : item)));
+    showToast(`${result.name} ${statusToasts[result.status]}`);
+  }
+
+  // Restoring re-creates every account with a new id, so this session's token no longer names
+  // an account: sign out once it succeeds. The operator may always call it, so a "forbidden"
+  // answer means the server has it switched off.
+  async function restore() {
+    const outcome = await run(async () => {
+      try {
+        await requestJson<void>('/env/reset', { method: 'POST' });
+        return 'restored' as const;
+      } catch (error) {
+        if (error instanceof ApiError && error.code === 'forbidden') return 'disabled' as const;
+        throw error;
+      }
+    });
+    setRestoreOpen(false);
+    if (outcome === 'restored') onLogout();
+    if (outcome === 'disabled') {
+      showToast(
+        'Restoring is turned off on this server. Set ENV_MANAGER_ENABLED=true and restart the backend.',
+        'error',
+      );
+    }
+  }
+
+  return (
+    <div className="restaurant-shell">
+      <OperatorSidebar
+        account={account}
+        page={page}
+        busy={busy}
+        onPageChange={setPage}
+        onRestore={() => setRestoreOpen(true)}
+        onLogout={onLogout}
+      />
+
+      <div className="restaurant-main">
+        {page === 'overview' ? (
+          <OperatorOverview
+            restaurants={restaurants}
+            orders={orders}
+            updatedAt={updatedAt}
+            busy={busy}
+            onRefresh={() => void load()}
+            onChangeStatus={(restaurant, status) => void changeStatus(restaurant, status)}
+          />
+        ) : null}
+
+        {children}
+      </div>
+
+      <RestoreDialog
+        open={restoreOpen}
+        busy={busy !== null}
+        onCancel={() => setRestoreOpen(false)}
+        onConfirm={() => void restore()}
+      />
+    </div>
+  );
+}
