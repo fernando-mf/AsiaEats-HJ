@@ -1,7 +1,7 @@
 const DASHBOARD_SESSION_KEY = 'eatchinese.dashboard.v1';
 
 export type CustomerPage = 'restaurants' | 'menu' | 'cart' | 'orders' | 'profile';
-export type RestaurantPage = 'orders' | 'menu' | 'profile';
+export type RestaurantPage = 'overview' | 'orders' | 'menu' | 'profile';
 
 export type DashboardSession = {
   customerPage: CustomerPage;
@@ -10,7 +10,7 @@ export type DashboardSession = {
 };
 
 const customerPages: CustomerPage[] = ['restaurants', 'menu', 'cart', 'orders', 'profile'];
-const restaurantPages: RestaurantPage[] = ['orders', 'menu', 'profile'];
+const restaurantPages: RestaurantPage[] = ['overview', 'orders', 'menu', 'profile'];
 
 function isDashboardSession(value: unknown): value is DashboardSession {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;

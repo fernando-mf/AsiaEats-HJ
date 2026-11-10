@@ -17,6 +17,16 @@
   padding-top: 28px;
 }
 
+/* Amber notice shown on restaurant pages while new orders are paused or the restaurant is closed. */
+.restaurant-notice {
+  margin: 0;
+  padding: 12px 14px;
+  color: var(--amber-ink);
+  background: var(--amber-soft);
+  border-radius: 12px;
+  font-size: 13px;
+}
+
 /* ---------- Sidebar ---------- */
 .restaurant-sidebar {
   position: sticky;

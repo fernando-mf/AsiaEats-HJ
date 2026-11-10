@@ -1,10 +1,9 @@
-import { useState } from 'react';
 import { neighbourhoodShortName } from '../../shared/locations/montrealNeighbourhoods';
 import { PasswordSection, PersonalInfoForm } from '../account/AccountForms';
 import { DishArt } from '../food/DishArt';
 import { dishKind } from '../food/dishKind';
 import { IconPin } from '../icons/Icons';
-import type { Account, MenuItem, Order, Position, Restaurant, RestaurantStatus } from '../dashboard/dashboard.types';
+import type { Account, MenuItem, Position, Restaurant, RestaurantStatus } from '../dashboard/dashboard.types';
 import { RestaurantDetailsForm } from './RestaurantDetailsForm';
 import '../account/profile.css';
 import './restaurant-profile.css';
@@ -12,8 +11,8 @@ import './restaurant-profile.css';
 type RestaurantProfileProps = {
   account: Account;
   restaurant?: Restaurant;
+  // Its first dish picks the banner's illustration.
   menu: MenuItem[];
-  orders: Order[];
   busy: string | null;
   onSaveDetails: (name: string, position: Position) => Promise<boolean>;
   onChangeStatus: (status: RestaurantStatus) => void;
@@ -37,29 +36,16 @@ function locationLabel(position: Position) {
   );
 }
 
-function isToday(date: string, today: Date) {
-  const created = new Date(date);
-  return (
-    created.getFullYear() === today.getFullYear() &&
-    created.getMonth() === today.getMonth() &&
-    created.getDate() === today.getDate()
-  );
-}
-
 export function RestaurantProfile({
   account,
   restaurant,
   menu,
-  orders,
   busy,
   onSaveDetails,
   onChangeStatus,
   onSaveName,
   onChangePassword,
 }: RestaurantProfileProps) {
-  // Taken once on mount: used to pick out today's orders.
-  const [today] = useState(() => new Date());
-
   if (!restaurant) {
     return (
       <section className="card profile-card">
@@ -68,12 +54,6 @@ export function RestaurantProfile({
     );
   }
 
-  const stats = [
-    { label: 'orders today', value: orders.filter(order => isToday(order.createdAt, today)).length },
-    { label: 'waiting to accept', value: orders.filter(order => order.status === 'placed').length },
-    { label: 'dishes on the menu', value: menu.length },
-    { label: 'sold out', value: menu.filter(item => item.status === 'sold_out').length },
-  ];
   // Remount the details form when the saved values change so its fields start from them.
   const detailsKey = `${restaurant.name}|${restaurant.position.latitude}|${restaurant.position.longitude}`;
 
@@ -143,20 +123,6 @@ export function RestaurantProfile({
               ))}
             </div>
             <p className="restaurant-status-note">{statusNotes[restaurant.status]}</p>
-          </section>
-
-          <section className="card profile-card" aria-labelledby="restaurant-today-title">
-            <div className="profile-card-head">
-              <h2 id="restaurant-today-title">At a glance</h2>
-            </div>
-            <dl className="restaurant-stats">
-              {stats.map(stat => (
-                <div key={stat.label}>
-                  <dt>{stat.label}</dt>
-                  <dd>{stat.value}</dd>
-                </div>
-              ))}
-            </dl>
           </section>
         </div>
       </div>

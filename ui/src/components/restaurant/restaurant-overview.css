@@ -1,0 +1,368 @@
+/* Restaurant Overview page: today's numbers, order columns, orders by hour and menu switches. */
+.overview {
+  display: grid;
+  gap: 22px;
+}
+
+.overview-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.overview-head h1 {
+  margin: 6px 0 0;
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.overview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.overview-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.overview-card-head h2,
+.overview-column-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 620;
+}
+
+.overview-empty {
+  margin: 0;
+  padding: 14px 4px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+/* ---------- Stat cards ---------- */
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.overview-stat {
+  display: grid;
+  gap: 10px;
+  padding: 18px 20px;
+}
+
+.overview-stat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 520;
+}
+
+.overview-stat-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: 9px;
+}
+
+.overview-stat > strong {
+  font-size: 28px;
+  font-weight: 620;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.overview-stat-note {
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+/* ---------- Order columns ---------- */
+.overview-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.overview-column {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.overview-column-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.overview-column-note {
+  margin-left: auto;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.overview-order {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.overview-order-number {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.overview-order-meta {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+
+.overview-order-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.overview-order-actions > .primary-button {
+  flex: 1;
+}
+
+.overview-order-actions > .secondary-button {
+  min-height: 32px;
+  font-size: 12.5px;
+}
+
+.overview-order-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+.overview-more-button {
+  justify-self: start;
+  font-size: 13px;
+}
+
+/* ---------- Orders by hour and menu availability ---------- */
+.overview-bottom {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.overview-chart,
+.overview-menu {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.overview-chart-total {
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+
+.hour-chart {
+  display: flex;
+  gap: 6px;
+  height: 180px;
+  /* Room for the hover label above the tallest bar. */
+  padding-top: 24px;
+}
+
+.hour-bar {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  border-radius: 6px;
+  outline: none;
+}
+
+.hour-bar:focus-visible {
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.hour-bar-track {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  width: 100%;
+  min-height: 0;
+}
+
+/* Bars rise from the baseline with rounded tops; an empty hour keeps a thin baseline tick. */
+.hour-bar-fill {
+  width: 100%;
+  max-width: 28px;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 4px 4px 0 0;
+}
+
+.hour-bar.is-empty .hour-bar-fill {
+  background: var(--border);
+  border-radius: 1px;
+}
+
+.hour-bar.is-now .hour-bar-fill {
+  background: var(--primary-ink);
+}
+
+.hour-bar-value {
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.hour-bar-label {
+  color: var(--text-3);
+  font-size: 10.5px;
+}
+
+.hour-bar.is-now .hour-bar-label {
+  color: var(--text);
+}
+
+.hour-bar-tooltip {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  z-index: 2;
+  padding: 4px 8px;
+  color: var(--bg);
+  background: var(--text);
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.hour-bar:hover .hour-bar-tooltip,
+.hour-bar:focus-visible .hour-bar-tooltip {
+  opacity: 1;
+}
+
+.hour-table summary {
+  color: var(--text-2);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.hour-table table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.hour-table th,
+.hour-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.hour-table th {
+  color: var(--text-3);
+  font-weight: 520;
+}
+
+.overview-menu-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px 96px 38px;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.overview-card-head + .overview-menu-row {
+  border-top: 0;
+}
+
+.overview-menu-name {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 540;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overview-menu-row.is-sold-out .overview-menu-name {
+  color: var(--text-3);
+}
+
+.overview-menu-price {
+  color: var(--text-2);
+  font-size: 13px;
+  text-align: right;
+}
+
+.overview-menu-row .restaurant-status {
+  justify-self: end;
+}
+
+.overview-more {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+/* ---------- Narrow screens ---------- */
+@media (max-width: 1200px) {
+  .overview-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .overview-columns,
+  .overview-bottom {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .overview-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hour-chart {
+    gap: 3px;
+  }
+
+  .overview-menu-row {
+    grid-template-columns: minmax(0, 1fr) auto 38px;
+  }
+
+  .overview-menu-price {
+    display: none;
+  }
+}

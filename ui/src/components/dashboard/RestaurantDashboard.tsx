@@ -9,6 +9,7 @@ import {
 import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
 import { MenuPage } from '../restaurant/MenuPage';
 import { OrderBoard } from '../restaurant/OrderBoard';
+import { Overview } from '../restaurant/Overview';
 import { RestaurantProfile } from '../restaurant/RestaurantProfile';
 import { RestaurantSidebar } from '../restaurant/RestaurantSidebar';
 import type {
@@ -63,7 +64,7 @@ export function RestaurantDashboard({
   useEffect(() => {
     busyRef.current = busy;
   }, [busy]);
-  const [restaurantPage, setRestaurantPage] = useState<RestaurantPage>(restoredDashboard?.restaurantPage ?? 'orders');
+  const [restaurantPage, setRestaurantPage] = useState<RestaurantPage>(restoredDashboard?.restaurantPage ?? 'overview');
   useScrollToTop(restaurantPage);
   const customerPage = restoredDashboard?.customerPage ?? 'restaurants';
   const { saveName, changePassword } = useAccountActions(run, showToast, onAccountChange);
@@ -244,6 +245,19 @@ export function RestaurantDashboard({
         onLogout={onLogout}
       />
       <div className="restaurant-main">
+        {restaurantPage === 'overview' ? (
+          <Overview
+            account={account}
+            restaurant={ownedRestaurant}
+            orders={orders}
+            menu={menu}
+            busy={busy}
+            onAction={orderAction}
+            onSetAvailability={(item, available) => void setAvailability(item, available)}
+            onNavigate={setRestaurantPage}
+          />
+        ) : null}
+
         {restaurantPage === 'orders' ? (
           <OrderBoard
             restaurant={ownedRestaurant}
@@ -272,7 +286,6 @@ export function RestaurantDashboard({
             account={account}
             restaurant={ownedRestaurant}
             menu={menu}
-            orders={orders}
             busy={busy}
             onSaveDetails={saveDetails}
             onChangeStatus={status => void changeStatus(status)}

@@ -1,4 +1,4 @@
-/* Restaurant Orders page: live board in four columns, history tabs and the reject dialog. */
+/* Restaurant Orders page: live board in four columns and the history tabs. */
 .order-board {
   display: grid;
   gap: 18px;
@@ -53,15 +53,6 @@
   background: transparent;
   border: 0;
   box-shadow: none;
-}
-
-.board-notice {
-  margin: 0;
-  padding: 12px 14px;
-  color: var(--amber-ink);
-  background: var(--amber-soft);
-  border-radius: 12px;
-  font-size: 13px;
 }
 
 /* ---------- Tabs ---------- */
@@ -272,45 +263,6 @@
 .board-history-total.is-uncharged {
   color: var(--text-3);
   font-size: 12px;
-}
-
-/* ---------- Reject dialog ---------- */
-.reject-dialog {
-  width: min(92vw, 460px);
-  padding: 0;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: 16px;
-  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.48);
-}
-
-.reject-dialog::backdrop {
-  background: rgba(3, 8, 7, 0.78);
-}
-
-.reject-dialog-content {
-  display: grid;
-  gap: 16px;
-  padding: clamp(20px, 4vw, 28px);
-}
-
-.reject-dialog h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 640;
-}
-
-.reject-dialog p:not(.field-error) {
-  margin: -8px 0 0;
-  color: var(--text-2);
-  font-size: 13.5px;
-}
-
-.reject-dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
 }
 
 /* ---------- Narrow screens ---------- */

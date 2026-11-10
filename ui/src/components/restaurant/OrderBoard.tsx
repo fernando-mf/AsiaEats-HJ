@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { logError } from '../../shared/console/outputConsole';
+import { useState } from 'react';
 import { IconCheck, IconClock, IconPause, IconPlay, IconSearch } from '../icons/Icons';
 import type { Order, OrderAction, Restaurant } from '../dashboard/dashboard.types';
 import { formatMoney, orderTotal } from '../dashboard/dashboard.utils';
+import { orderNumber, timeInStatus, useNow } from './orderTime';
+import { RejectDialog } from './RejectDialog';
 import './restaurant-orders.css';
 
 type OrderBoardProps = {
@@ -40,20 +41,6 @@ const dayTimeFormat = new Intl.DateTimeFormat('en-CA', {
   hour12: false,
 });
 
-function orderNumber(order: Order) {
-  return `#${order.id.slice(0, 8)}`;
-}
-
-// Time in the current status: placed orders count from when they were placed, others from
-// their last status change.
-function elapsed(order: Order, now: number) {
-  const since = new Date(order.status === 'placed' ? order.createdAt : (order.updatedAt ?? order.createdAt));
-  const minutes = Math.max(0, Math.floor((now - since.getTime()) / 60_000));
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes} min`;
-  return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
-}
-
 function matches(order: Order, search: string) {
   if (!search) return true;
   const number = search.replace(/^#/, '');
@@ -74,12 +61,7 @@ export function OrderBoard({
   const [tab, setTab] = useState<Tab>('active');
   const [query, setQuery] = useState('');
   const [rejecting, setRejecting] = useState<Order | null>(null);
-  // Ticks every 30 s so the time on each card stays current.
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
-    return () => window.clearInterval(timer);
-  }, []);
+  const now = useNow();
 
   const search = query.trim().toLowerCase();
   const counts: Record<Tab, number> = {
@@ -141,7 +123,7 @@ export function OrderBoard({
       </div>
 
       {status && status !== 'open' ? (
-        <p className="board-notice" role="status">
+        <p className="restaurant-notice" role="status">
           {status === 'paused' ? 'New orders are paused.' : 'Your restaurant is closed.'} Orders already on the board
           still need to be finished.
         </p>
@@ -250,7 +232,7 @@ function OrderCard({ order, queuePosition, now, busy, onAction, onReject }: Orde
         <span className="mono board-card-number">{orderNumber(order)}</span>
         <span className="mono board-card-time" title="Time in this status">
           <IconClock size={13} />
-          {elapsed(order, now)}
+          {timeInStatus(order, now)}
         </span>
       </div>
 
@@ -330,90 +312,5 @@ function HistoryRow({ order }: { order: Order }) {
         {uncharged ? 'Not charged' : formatMoney(orderTotal(order))}
       </span>
     </div>
-  );
-}
-
-type RejectDialogProps = {
-  order: Order | null;
-  busy: string | null;
-  onClose: () => void;
-  onReject: (order: Order, reason: string) => Promise<void>;
-};
-
-// RejectDialog asks why an order is rejected; the customer sees the reason on their order.
-// Limits mirror the backend's OrderRejectionRequest (3 to 500 characters).
-function RejectDialog({ order, busy, onClose, onReject }: RejectDialogProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const [reason, setReason] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (order && !dialog.open) dialog.showModal();
-    if (!order && dialog.open) dialog.close();
-  }, [order]);
-
-  function close() {
-    setReason('');
-    setError(null);
-    onClose();
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!order) return;
-    const trimmed = reason.trim();
-    if (trimmed.length < 3 || trimmed.length > 500) {
-      const message = 'Give a reason between 3 and 500 characters.';
-      setError(message);
-      logError('RejectOrderCommand', message);
-      return;
-    }
-    await onReject(order, trimmed);
-    setReason('');
-    setError(null);
-  }
-
-  return (
-    <dialog
-      ref={dialogRef}
-      className="reject-dialog"
-      aria-labelledby="reject-dialog-title"
-      onCancel={event => {
-        event.preventDefault();
-        close();
-      }}
-    >
-      <form className="reject-dialog-content" onSubmit={handleSubmit} noValidate>
-        <h2 id="reject-dialog-title">Reject {order ? orderNumber(order) : 'order'}?</h2>
-        <p>The customer sees this reason on their order. Rejected orders aren’t charged.</p>
-        <div className="field-group">
-          <label htmlFor="reject-reason">Reason</label>
-          <textarea
-            id="reject-reason"
-            rows={3}
-            value={reason}
-            onChange={event => setReason(event.target.value)}
-            placeholder="e.g. We’re out of an ingredient for this dish."
-            aria-invalid={Boolean(error)}
-            aria-describedby={error ? 'reject-reason-error' : undefined}
-          />
-          {error ? (
-            <p className="field-error" id="reject-reason-error">
-              {error}
-            </p>
-          ) : null}
-        </div>
-        <div className="reject-dialog-actions">
-          <button className="secondary-button" type="button" onClick={close}>
-            Keep order
-          </button>
-          <button className="danger-button" type="submit" disabled={busy !== null}>
-            Reject order
-          </button>
-        </div>
-      </form>
-    </dialog>
   );
 }

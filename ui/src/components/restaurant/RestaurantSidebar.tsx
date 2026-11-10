@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { RestaurantPage } from '../../shared/dashboard/dashboardSession';
 import { neighbourhoodShortName } from '../../shared/locations/montrealNeighbourhoods';
 import { BrandMark } from '../brand/BrandMark';
-import { IconMenuBook, IconReceipt, IconSignOut, IconStore } from '../icons/Icons';
+import { IconGrid, IconMenuBook, IconReceipt, IconSignOut, IconStore } from '../icons/Icons';
 import type { Account, Restaurant } from '../dashboard/dashboard.types';
 import { initials } from '../dashboard/dashboard.utils';
 import './restaurant-shell.css';
@@ -20,6 +20,7 @@ type RestaurantSidebarProps = {
 };
 
 const links: Array<{ page: RestaurantPage; label: string; icon: ReactNode }> = [
+  { page: 'overview', label: 'Overview', icon: <IconGrid size={17} /> },
   { page: 'orders', label: 'Orders', icon: <IconReceipt size={17} /> },
   { page: 'menu', label: 'Menu', icon: <IconMenuBook size={17} /> },
   { page: 'profile', label: 'Profile', icon: <IconStore size={17} /> },

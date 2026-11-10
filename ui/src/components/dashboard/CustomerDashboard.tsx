@@ -60,7 +60,7 @@ export function CustomerDashboard({
   // undefined while loading, null when the customer has not set an address.
   const [address, setAddress] = useState<Address | null | undefined>(undefined);
   const [customerPage, setCustomerPage] = useState<CustomerPage>(restoredDashboard?.customerPage ?? 'restaurants');
-  const restaurantPage = restoredDashboard?.restaurantPage ?? 'orders';
+  const restaurantPage = restoredDashboard?.restaurantPage ?? 'overview';
   const restaurantSwitchDialogRef = useRef<HTMLDialogElement>(null);
   const { saveName, changePassword } = useAccountActions(run, showToast, onAccountChange);
   useScrollToTop(customerPage);
