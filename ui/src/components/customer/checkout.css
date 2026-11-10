@@ -1,0 +1,311 @@
+/* Customer checkout (cart): delivery address and items on the left, order summary on the right.
+   The back link and the "not taking orders" notice reuse .storefront-crumb and .storefront-notice
+   from storefront.css. */
+.checkout {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+
+.checkout-heading {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+
+.checkout-title {
+  margin: 0;
+  font-size: clamp(26px, 4vw, 32px);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.checkout-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 28px;
+  align-items: start;
+}
+
+.checkout-steps {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* ---------- Steps ---------- */
+.card.checkout-step {
+  display: grid;
+  gap: 16px;
+  padding: 22px 24px;
+}
+
+.checkout-step-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkout-step-head h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 620;
+}
+
+.checkout-step-number {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: 7px;
+  font-size: 12px;
+}
+
+.checkout-step-meta {
+  margin-left: auto;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.checkout-address {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--primary-soft);
+  border: 1.5px solid var(--primary);
+  border-radius: 12px;
+}
+
+.checkout-address-icon {
+  display: flex;
+  color: var(--primary-ink);
+}
+
+.checkout-address-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.checkout-address-text strong {
+  font-size: 14px;
+  font-weight: 580;
+}
+
+.checkout-address-text span {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+
+.checkout-lines {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checkout-lines li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.checkout-line-art {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+}
+
+.checkout-line-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.checkout-line-text strong {
+  font-size: 14px;
+  font-weight: 570;
+}
+
+.checkout-line-text .mono {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+
+.checkout-line-total {
+  min-width: 72px;
+  font-size: 14px;
+  font-weight: 550;
+  text-align: right;
+}
+
+.text-button.checkout-add-more {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 13.5px;
+}
+
+/* ---------- Summary ---------- */
+/* Stays in view while the steps scroll; top clears the sticky customer header. */
+.card.checkout-summary {
+  position: sticky;
+  top: 88px;
+  display: grid;
+  gap: 18px;
+  padding: 22px 24px;
+}
+
+.checkout-restaurant {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.checkout-restaurant-tile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: var(--primary-ink);
+  background: var(--primary-soft);
+  border-radius: 11px;
+  font-size: 15px;
+  font-weight: 620;
+}
+
+.checkout-restaurant > span:last-child {
+  display: grid;
+  min-width: 0;
+}
+
+.checkout-restaurant strong {
+  font-size: 15px;
+  font-weight: 610;
+}
+
+.checkout-restaurant strong + span {
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+.checkout-totals {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.checkout-totals > div {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.checkout-totals dd {
+  margin: 0;
+  color: var(--text);
+}
+
+.checkout-totals > .checkout-grand-total {
+  padding-top: 14px;
+  color: var(--text);
+  border-top: 1px solid var(--border);
+  font-size: 16px;
+  font-weight: 640;
+}
+
+.primary-button.checkout-place {
+  width: 100%;
+  min-height: 50px;
+  font-size: 15.5px;
+}
+
+.checkout-fineprint {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ---------- Empty cart ---------- */
+.card.checkout-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.checkout-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 6px;
+  color: var(--primary-ink);
+  background: var(--primary-soft);
+  border-radius: 16px;
+}
+
+.checkout-empty h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 620;
+}
+
+.checkout-empty p {
+  max-width: 360px;
+  margin: 0 0 14px;
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .checkout-body {
+    grid-template-columns: 1fr;
+  }
+
+  .card.checkout-summary {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .card.checkout-step,
+  .card.checkout-summary {
+    padding: 18px;
+  }
+
+  /* Price under the name, stepper and total on one row beneath. */
+  .checkout-lines li {
+    flex-wrap: wrap;
+  }
+
+  .checkout-line-text {
+    flex-basis: calc(100% - 60px);
+  }
+
+  .checkout-lines .quantity-stepper {
+    margin-left: 60px;
+  }
+
+  .checkout-line-total {
+    margin-left: auto;
+  }
+}

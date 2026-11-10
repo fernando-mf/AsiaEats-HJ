@@ -354,8 +354,8 @@ export function CustomerDashboard({
             lines={cartLines}
             total={cartTotal}
             busy={busy}
-            hasAddress={address === undefined ? undefined : address !== null}
-            onAddAddress={() => openAddressForm('cart')}
+            address={address}
+            onEditAddress={() => openAddressForm('cart')}
             onChangeQuantity={changeQuantity}
             onPlaceOrder={() => void placeOrder()}
             onContinueBrowsing={() => setCustomerPage('menu')}

@@ -246,46 +246,6 @@
   font-weight: 550;
 }
 
-/* − quantity + on a dish already in the cart. */
-.quantity-stepper {
-  display: inline-flex;
-  align-items: center;
-  height: 34px;
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-}
-
-.quantity-stepper button {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 100%;
-  padding: 0;
-  color: var(--text-2);
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-
-.quantity-stepper button:hover:not(:disabled) {
-  color: var(--text);
-  background: var(--surface-2);
-}
-
-.quantity-stepper button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.quantity-stepper .mono {
-  min-width: 22px;
-  font-size: 13px;
-  font-weight: 550;
-  text-align: center;
-}
-
 /* Stays in view while the menu scrolls; top clears the sticky customer header. */
 .card.storefront-order {
   position: sticky;

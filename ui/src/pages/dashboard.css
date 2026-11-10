@@ -46,7 +46,6 @@
   box-shadow: var(--shadow);
 }
 
-.panel-heading,
 .console-heading {
   display: flex;
   align-items: flex-start;
@@ -55,7 +54,6 @@
   margin-bottom: 20px;
 }
 
-.panel-heading h2,
 .console-heading h2 {
   margin: 3px 0 0;
   font-family: var(--font-display);
@@ -63,42 +61,14 @@
   letter-spacing: -0.02em;
 }
 
-.menu-list,
-.cart-list {
+.menu-list {
   display: grid;
   gap: 8px;
-}
-
-.cart-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 16px;
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 11px;
 }
 
 .empty {
   color: var(--color-text-secondary);
   font-size: 13px;
-}
-
-.cart-list {
-  margin-bottom: 14px;
-}
-
-.cart-row {
-  padding-block: 10px;
-}
-
-.cart-total {
-  display: flex;
-  justify-content: space-between;
-  margin: 16px 0;
-  padding-top: 14px;
-  border-top: 1px solid var(--color-border);
 }
 
 .empty {
@@ -349,23 +319,6 @@ button.deliver-to--missing:hover { background: var(--primary-soft); border-color
 .account-menu-item { display: flex; width: 100%; padding: 9px 10px; color: var(--text); background: transparent; border: 0; border-radius: var(--radius-sm); font-size: 14px; text-align: start; cursor: pointer; }
 .account-menu-item:hover, .account-menu-item:focus-visible { background: var(--surface-2); }
 .customer-main { max-width: 1240px; margin: 28px auto 0; }
-.storefront-panel { margin-top: 20px; }
-.back-link { padding: 0; border: 0; background: transparent; color: var(--color-primary); cursor: pointer; font-weight: 750; }
-.cart-row small { color: var(--color-text-secondary); font-size: 12px; }
-.narrow-panel { max-width: 820px; margin-right: auto; margin-left: auto; }
-.cart-restaurant-note { margin: 0 0 10px; padding: 12px 14px; border-radius: 10px; background: var(--color-background); color: var(--color-text-secondary); font-size: 13px; }
-.cart-restaurant-note strong { color: var(--color-text); }
-.storefront-cart-row { grid-template-columns: minmax(0, 1fr) auto auto; gap: 16px; padding: 18px 0; }
-.storefront-cart-row > div:first-child { display: grid; }
-.quantity-control { display: flex; align-items: center; gap: 12px; }
-.quantity-control button { width: 30px; height: 30px; border: 1px solid var(--color-border); border-radius: 9px; color: var(--color-text); background: var(--color-background); cursor: pointer; }
-.checkout-note { font-size: 12px; }
-.checkout-button { width: 100%; margin-top: 12px; }
-.centered-link { display: block; margin: 18px auto 0; }
-.empty-cart { display: grid; justify-items: center; padding: 48px 20px; text-align: center; }
-.empty-cart > span { font-size: 44px; }
-.empty-cart h2 { margin: 14px 0 4px; }
-.empty-cart p { max-width: 360px; margin: 0 0 20px; color: var(--color-text-secondary); }
 .restaurant-switch-dialog { width: min(92vw, 500px); padding: 0; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: 16px; box-shadow: 0 28px 70px rgba(0,0,0,.48); }
 .restaurant-switch-dialog::backdrop { background: rgba(3,8,7,.78); backdrop-filter: blur(5px); }
 .restaurant-switch-dialog-content { padding: clamp(24px, 4vw, 32px); }
@@ -386,8 +339,6 @@ button.deliver-to--missing:hover { background: var(--primary-soft); border-color
   .header-actions { gap: 8px; }
   .header-nav { margin-right: 0; }
   .header-nav-link { padding: 0 9px; font-size: 13px; }
-  .storefront-cart-row { grid-template-columns: minmax(0, 1fr) auto; }
-  .storefront-cart-row > strong { grid-column: 1 / -1; text-align: right; }
   .restaurant-switch-dialog-actions { align-items: stretch; flex-direction: column; }
   .restaurant-switch-dialog-actions button { width: 100%; }
   .site-footer { flex-direction: column; align-items: center; gap: 2px; }

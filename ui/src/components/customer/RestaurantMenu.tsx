@@ -4,7 +4,8 @@ import type { CartLine, MenuItem, Restaurant } from '../dashboard/dashboard.type
 import { formatDistance, formatMoney, initials } from '../dashboard/dashboard.utils';
 import { DishArt } from '../food/DishArt';
 import { dishKind } from '../food/dishKind';
-import { IconArrowLeft, IconArrowRight, IconMinus, IconPin, IconPlus, IconSearch } from '../icons/Icons';
+import { IconArrowLeft, IconArrowRight, IconPin, IconPlus, IconSearch } from '../icons/Icons';
+import { QuantityStepper } from './QuantityStepper';
 import './storefront.css';
 
 type RestaurantMenuProps = {
@@ -53,22 +54,7 @@ function DishTile({
           {soldOut ? (
             <span className="pill">Sold out</span>
           ) : quantity ? (
-            <div className="quantity-stepper" role="group" aria-label={`${item.name} quantity`}>
-              <button type="button" aria-label={`Remove one ${item.name}`} onClick={() => onChangeQuantity(-1)}>
-                <IconMinus size={15} />
-              </button>
-              <span className="mono" aria-live="polite">
-                {quantity}
-              </span>
-              <button
-                type="button"
-                aria-label={`Add one ${item.name}`}
-                disabled={!orderable}
-                onClick={() => onChangeQuantity(1)}
-              >
-                <IconPlus size={15} />
-              </button>
-            </div>
+            <QuantityStepper name={item.name} quantity={quantity} canIncrease={orderable} onChange={onChangeQuantity} />
           ) : (
             <button
               className="primary-button icon-button"
