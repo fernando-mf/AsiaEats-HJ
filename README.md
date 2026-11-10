@@ -1,62 +1,178 @@
 # EatChinese
 
-EatChinese is a SOEN 343 food-delivery simulator focused specifically on Chinese food. It models authenticated customers, restaurant staff, couriers, and platform operators while emphasizing clear architecture, enforceable business rules, and repeatable demonstrations.
+EatChinese is a SOEN 343 food-delivery simulator focused on Chinese food in Montréal. Customers order from
+restaurants, restaurant staff run their kitchen, and a platform operator watches over everything, with clear
+architecture, enforced business rules and repeatable demonstrations.
 
-## Technology stack
+**Live:** [eatchinese.vercel.app](https://eatchinese.vercel.app/)
 
-- Frontend: React, TypeScript, and Vite
-- Backend: Node.js, NestJS, and TypeScript
-- Database: PostgreSQL hosted on Neon
-- ORM: Prisma
-- Package manager: pnpm
+## Team
 
-## Prerequisites
+- Madona Beshara
+- Ramy Belhadj Bouchaib
+- Hadile Magramane
+- Fernando Mamani Feliciano
+- Saib Merabet
+- Neil Bryan Moukam-Tchuangou
 
-- Node.js 24 (the repository currently pins `24.15.0`)
-- pnpm 12
-- Git
-- Docker (with Docker Compose), used to run PostgreSQL locally
+## Phase II scope
 
-## Project setup
+Phase II implements two modules end to end, plus the part of the dashboard (DASH) that drives them:
 
-1. Clone this repository
+- **REG** (registration, login and profiles): accounts with exactly one role (customer, restaurant, courier,
+  operator), an authenticated session for every command except registration and login, including browsing a menu,
+  and seeded accounts loaded from a configuration file.
+- **ORD** (order and restaurant core): restaurants (`open`, `paused`, `closed`), menu items (`available`,
+  `sold_out`) and the order lifecycle (`placed → accepted → preparing → ready`, with `rejected` and `cancelled` as
+  terminal branches), a preparation queue per restaurant in arrival order, a permission check on every command, and an
+  event with its own id recorded for every state change.
+- **DASH**: customer, restaurant and operator consoles, and an output console that logs every command and every error.
 
-2. Install [nvm](https://github.com/nvm-sh/nvm)
+Courier delivery (DLV), pricing and billing (PRC), and the city map come in later phases. Couriers can sign in, but
+their console is a placeholder for now.
 
-   ```sh
-   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
-   ```
+## Platform requirements
 
-3. Use `nvm` to install and select this project's Node.js version
+| Tool                  | Version                                 | Notes                                                    |
+| --------------------- | --------------------------------------- | -------------------------------------------------------- |
+| Node.js               | 24 (`24.15.0`, pinned in `.nvmrc`)      | `nvm install && nvm use` selects it                      |
+| pnpm                  | 12                                      | the workspace package manager                            |
+| PostgreSQL            | 18                                      | run locally with Docker, or use a hosted database (Neon) |
+| Docker and Compose    | any recent version                      | only to run PostgreSQL locally                           |
+| Git                   | any recent version                      |                                                          |
 
-   ```sh
-   # Install node
-   nvm install # skip if already installed
+The commands below are for a Unix shell (macOS, Linux, or Git Bash on Windows). Every command in this section runs
+from the repository root; `pnpm --filter backend <script>` runs a backend script from there.
 
-   # Select correct node version
-   nvm use
-   ```
+## Getting started
 
-4. Install [pnpm](https://pnpm.io/)
-
-   ```sh
-   curl -fsSL https://get.pnpm.io/install.sh | sh -
-   ```
-
-5. Install [Docker](https://docs.docker.com/get-started/get-docker/). Then verify the installation (make sure Docker is running):
-
-   ```sh
-   docker --version
-   docker compose version
-   ```
-
-6. Then install dependencies from the repository root
+1. **Clone the repository and install the dependencies:**
 
    ```sh
-   pnpm install
+   git clone https://github.com/fernando-mf/AsiaEats-HJ.git
+   cd AsiaEats-HJ
+   nvm install && nvm use     # Node.js 24
+   pnpm install               # also generates the Prisma client
    ```
 
-7. Project setup is complete. To run each component, navigate to the `ui` or `backend` directories and follow the instructions in their README files.
+2. **Create the backend's environment file** from the example:
+
+   ```sh
+   cp backend/.env.example backend/.env
+   ```
+
+   | Variable                 | Required | Default | Purpose                                                                    |
+   | ------------------------ | -------- | ------- | -------------------------------------------------------------------------- |
+   | `DATABASE_URL`           | yes      |         | PostgreSQL connection string. The example points at the local Docker database |
+   | `JWT_SECRET`             | yes      |         | Secret that signs session tokens, at least 32 characters                   |
+   | `PORT`                   | no       | `3000`  | Port the API listens on                                                    |
+   | `JWT_EXPIRES_IN_SECONDS` | no       | `3600`  | How long a session lasts                                                   |
+   | `ENV_MANAGER_ENABLED`    | no       | `false` | Allows the operator to restore the initial state. The example sets `true`  |
+
+3. **Start PostgreSQL.** Either run it locally with Docker, in a terminal you keep open:
+
+   ```sh
+   pnpm --filter backend deps:up
+   ```
+
+   or set `DATABASE_URL` in `backend/.env` to a hosted database, such as a [Neon](https://neon.tech/) connection
+   string.
+
+4. **Create the tables and load the seed:**
+
+   ```sh
+   pnpm --filter backend db:deploy   # applies the migrations in backend/integration/prisma/migrations
+   pnpm --filter backend seed        # empties the database and loads backend/config/seed.json
+   ```
+
+5. **Run the app:**
+
+   ```sh
+   pnpm dev
+   ```
+
+   This starts the API on [localhost:3000](http://localhost:3000/api/status) and the UI on
+   [localhost:5173](http://localhost:5173). The UI sends `/api` requests to the API.
+
+## Seeded accounts
+
+The initial state comes from [`backend/config/seed.json`](./backend/config/seed.json): every account, restaurant,
+menu and customer address. Every seeded account uses the password **`password123`**.
+
+| Username        | Role       | What it shows                                                  |
+| --------------- | ---------- | -------------------------------------------------------------- |
+| `alice`         | customer   | Discover, ordering, checkout, order tracking, profile          |
+| `bob`           | customer   | A second customer, to check one cannot see the other's orders  |
+| `golden-dragon` | restaurant | Golden Dragon (open), with a sold-out dish                     |
+| `jade-garden`   | restaurant | Jade Garden (open)                                             |
+| `lotus-house`   | restaurant | Lotus House (closed), so orders to it are refused              |
+| `operator1`     | operator   | Platform overview, all orders with their event history         |
+| `courier`       | courier    | Sign in only; delivery comes in a later phase                  |
+
+To start a demo from this state again, sign in as `operator1` and press **Restore initial state**. It runs the same
+reset as `pnpm seed` and needs `ENV_MANAGER_ENABLED=true`. Editing `seed.json` changes the next restore; no rebuild is
+needed.
+
+## Building and checking
+
+```sh
+# Backend (from backend/)
+pnpm build        # generates the Prisma client and compiles to dist/
+pnpm start        # runs the compiled API
+pnpm test         # unit tests (Vitest)
+
+# UI (from ui/)
+pnpm build        # type-checks and builds to dist/
+pnpm typecheck
+pnpm lint
+
+# Whole repository (from the root)
+pnpm format:check
+```
+
+The API documentation is in [`backend/openapi.yaml`](./backend/openapi.yaml).
+
+## Deployment
+
+The app is deployed on [Vercel](https://vercel.com/) from this repository, as two services on one domain
+([`vercel.json`](./vercel.json)):
+
+- `web` builds `ui/` with Vite and serves it.
+- `api` builds `backend/` with `nest build` and runs it through `backend/server.js`.
+- Requests to `/api/*` go to the API; everything else goes to the UI.
+
+The API's environment variables (above) are set in the Vercel project, with `DATABASE_URL` pointing at the Neon
+database. After a schema change, apply the migrations to that database with `pnpm --filter backend db:deploy`, with
+`DATABASE_URL` in `backend/.env` set to it.
+
+## Repository layout
+
+The code is split by layer, and inside the backend layers by module (REG, ORD):
+
+```text
+ui/                         UI layer (DASH): React and Vite
+  src/pages/                login, registration and the dashboard page
+  src/components/           customer, restaurant and operator consoles, shared components
+  src/shared/               API client, output console, browser storage
+
+backend/                    NestJS API
+  src/application/          application layer: HTTP controllers, commands and their decorators, session guard
+    commands/reg, commands/ord
+    controllers/reg, controllers/ord
+  src/domain/               domain layer: services, business rules, the order state machine, ports
+    reg/                    accounts, roles, customer profiles
+    ord/                    restaurants, menus, orders, preparation queue
+    env/                    reset and seed of the initial state
+  src/infrastructure/       infrastructure layer: Prisma repositories, transactions, the seed file reader
+    reg/, ord/, env/, events/
+  config/seed.json          the initial demo state
+  integration/              Prisma schema and migrations, the seed script, Docker Compose for PostgreSQL
+  docs/                     design notes (layered design, validation, errors)
+```
+
+The application layer calls the domain. The domain defines ports (repositories, `TransactionRunner`, `SeedSource`)
+and the infrastructure layer implements them, so the domain never imports Prisma or the infrastructure layer. See
+[`backend/docs`](./backend/docs) for the reasoning.
 
 ---
 
@@ -104,130 +220,3 @@ Follow the following steps to work on new features or bug fixes:
 7. You can pick up another issue and repeat the process.
 
 See [AGENTS.md](./AGENTS.md) for detailed repository conventions.
-
----
-
-## Repository layout
-
-TODO: update this
-
-```text
-/
-  ui/                       # UI layer: React app
-  backend/                  # Backend: NestJS REST API
-  backend/application/      # Application layer: HTTP controllers, middlewares, session verifiers
-  backend/domain/           # Domain layer: business rules, models, invariants and provider ports
-  backend/infrastructure/   # Infrastructure layer: Prisma implementation, PostgresSQL integration
-  AGENTS.md                 # Repository conventions for contributors and agents
-  package.json              # Root npm workspace configuration
-```
-
-The finalized planned backend layout is:
-
-TODO: update this
-
-## Modules covered
-
-- `DASH` = the React frontend/dashboard surface
-- `REG` = registration, authentication, profiles, sessions, and roles across the backend layers
-- `ORD` = restaurant, menu, order lifecycle, state rules, and preparation queue across the backend layers
-
-<!--
-
-TODO: THIS COULD BE MOVED TO THE REPORT. SOME SECTIONS ARE OUTDATED, UPDATE AS WE MAKE PROGRESS.
-TODO: THIS COULD BE MOVED TO THE REPORT. SOME SECTIONS ARE OUTDATED, UPDATE AS WE MAKE PROGRESS.
-TODO: THIS COULD BE MOVED TO THE REPORT. SOME SECTIONS ARE OUTDATED, UPDATE AS WE MAKE PROGRESS.
-
-## Shared identity boundary
-
-`domain/shared/identity` will contain shared identity and role contracts such as `AuthenticatedUser` and `Role`. REG establishes and authenticates identities, while ORD may consume these shared contracts. ORD must not depend directly on REG services or controllers.
-
-## Phase II scope
-
-Phase II will implement the REG and ORD modules and only enough of the DASH module to demonstrate their use cases.
-
-Included:
-
-- Registration, login, profiles, and one role per user
-- Authenticated access for every command, including menu browsing
-- Seeded demo accounts and initial ORD data loaded from configuration
-- Menu browsing and order placement
-- Restaurant state: `OPEN` / `PAUSED` / `CLOSED`
-- Menu item state: `AVAILABLE` / `SOLD_OUT`
-- R-ORD-02: refuse placement at a `PAUSED` or `CLOSED` restaurant and refuse any order containing a `SOLD_OUT` item
-- Order acceptance, preparation, readiness, and cancellation while placed
-- Restaurant rejection requires a reason
-- `REJECTED` and `CANCELLED` are terminal order branches
-- FIFO restaurant preparation queues
-- Permission checking on every command
-- Persistent transition-event records for state changes to Order, Restaurant, and Menu Item
-- Output-console logging for every command and every error
-
-Deferred:
-
-- Courier dispatch, pickup, and delivery workflow
-- City map and queue-colour visualization
-- SSE and WebSockets
-- Payment integration
-- Full pricing and billing functionality
-
-## Architecture and design patterns
-
-The backend will use presentation, application, domain, and infrastructure layers with explicit REG and ORD separation. The repository structure must remain aligned with the finalized package diagram.
-
-The planned object-oriented patterns are:
-
-- State for order lifecycle rules and prevention of skipped transitions
-- Command for command execution, authorization, and logging
-- Observer for post-domain-change side effects, such as output-console and read-model updates
-
-## Command design intent
-
-`RegisterCommand` and `LoginCommand` are the only public entry commands because they establish authentication. Every other user-facing command, including `BrowseMenuCommand`, requires an authenticated identity. Commands execute through the shared `CommandRunner` so permission checking and command/error logging remain centralized.
-
-Expected future ORD commands are:
-
-- `BrowseMenuCommand`
-- `PlaceOrderCommand`
-- `AcceptOrderCommand`
-- `RejectOrderCommand`
-- `CancelOrderCommand`
-- `StartPreparingCommand`
-- `MarkReadyCommand`
-- `PauseRestaurantCommand`
-- `ReopenRestaurantCommand`
-- `MarkMenuItemSoldOutCommand`
-- `MarkMenuItemAvailableCommand`
-
-These commands are design intent only and have not been created. `ResetSystemCommand` may be a useful operator/demo command later, but it is not mandatory Phase II scope.
-
-## FIFO preparation behavior
-
-Each restaurant has a FIFO preparation queue. A future `PreparationQueue` domain object will own this invariant. `StartPreparingCommand` will succeed only for the order at the head of the queue; attempting to prepare a later order must fail and be logged. `MarkReadyCommand` completes the currently preparing order and allows the next accepted order to be prepared.
-
-## Transition-event persistence
-
-The design uses a generic `TransitionEvent` for state transitions of Order, Restaurant, and Menu Item. Every such transition must be recorded with an event ID under R-ORD-05; the ID generation mechanism is not fixed yet.
-
-The domain contract belongs under `domain/ord/events`, and its Prisma repository implementation belongs under `infrastructure/prisma/repositories/ord`. Expected event data may include:
-
-- `eventId`
-- `entityType`
-- `entityId`
-- `fromState`
-- `toState`
-- `occurredAt`
-- `actorId`
-- Optional `reason`
-
-The database model has not been implemented.
-
-## Seed and configuration behavior
-
-Seeded accounts and initial ORD data must be loaded from `backend/config/seed.json`. The initial demo state must not be hardcoded directly in TypeScript.
-
-## Observer intent
-
-Observer supports post-domain-change side effects such as updating the DASH output console or read model. Required transition-event persistence must remain reliable and must not depend solely on an Observer. SSE and WebSockets remain outside Phase II scope.
-
- -->
