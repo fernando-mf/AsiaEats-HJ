@@ -10,7 +10,7 @@ import { ToastRegion } from '../components/feedback/ToastRegion';
 import { useToast } from '../components/feedback/useToast';
 import { ApiError, apiErrorMessage, clearAccessToken, getAccessToken, requestJson } from '../shared/api/client';
 import { clearStoredCart } from '../shared/cart/cartStorage';
-import { setConsoleActor } from '../shared/console/outputConsole';
+import { clearConsole, setConsoleActor } from '../shared/console/outputConsole';
 import { clearDashboardSession } from '../shared/dashboard/dashboardSession';
 import './dashboard.css';
 
@@ -20,24 +20,46 @@ export function DashboardPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const { toast, showToast, dismissToast, pauseToast, resumeToast } = useToast();
 
+  // endSession forgets everything this browser kept for the signed-in user (token, cart, open
+  // page, output console) and returns to login. Signing out and an expired or invalid session
+  // both end here, so the next account to sign in on this tab inherits nothing from the previous
+  // one. The dashboard and its toasts unmount on the way out, so an explanation (`notice`) is
+  // handed to the login page instead.
+  const endSession = useCallback(
+    (notice?: string) => {
+      clearStoredCart();
+      clearDashboardSession();
+      clearConsole();
+      setConsoleActor(undefined);
+      clearAccessToken();
+      navigate('/login', { replace: true, state: notice ? { notice } : undefined });
+    },
+    [navigate],
+  );
+
   const run = useCallback(
     async <T,>(action: () => Promise<T>): Promise<T | undefined> => {
       setBusy('loading');
       try {
         return await action();
       } catch (error) {
-        showToast(apiErrorMessage(error), 'error');
-        if (error instanceof ApiError && error.code === 'unauthenticated') {
-          setConsoleActor(undefined);
-          clearAccessToken();
-          navigate('/login', { replace: true });
-        }
+        if (error instanceof ApiError && error.code === 'unauthenticated') endSession(apiErrorMessage(error));
+        else showToast(apiErrorMessage(error), 'error');
         return undefined;
       } finally {
         setBusy(null);
       }
     },
-    [navigate, showToast],
+    [endSession, showToast],
+  );
+
+  // Background refreshes stay quiet about failures, which the next click reports, except a
+  // session that is no longer valid (e.g. after the operator restored the initial state).
+  const handleBackgroundError = useCallback(
+    (error: unknown) => {
+      if (error instanceof ApiError && error.code === 'unauthenticated') endSession(apiErrorMessage(error));
+    },
+    [endSession],
   );
 
   const loadAccount = useCallback(async () => {
@@ -56,13 +78,7 @@ export function DashboardPage() {
     void loadAccount();
   }, [loadAccount, navigate]);
 
-  function logout() {
-    clearStoredCart();
-    clearDashboardSession();
-    setConsoleActor(undefined);
-    clearAccessToken();
-    navigate('/login', { replace: true });
-  }
+  const logout = () => endSession();
 
   const roleLabel = account?.role ? account.role.charAt(0).toUpperCase() + account.role.slice(1) : 'Account';
   const isRestaurant = account?.role === 'restaurant';
@@ -102,11 +118,19 @@ export function DashboardPage() {
           showToast={showToast}
           onAccountChange={setAccount}
           onLogout={logout}
+          onBackgroundError={handleBackgroundError}
         >
           {pageEnd}
         </RestaurantDashboard>
       ) : isOperator ? (
-        <OperatorDashboard account={account} busy={busy} run={run} showToast={showToast} onLogout={logout}>
+        <OperatorDashboard
+          account={account}
+          busy={busy}
+          run={run}
+          showToast={showToast}
+          onLogout={logout}
+          onBackgroundError={handleBackgroundError}
+        >
           {pageEnd}
         </OperatorDashboard>
       ) : (

@@ -33,6 +33,8 @@ type RestaurantDashboardProps = {
   // Replaces the signed-in account after it is edited, so the header shows the new name.
   onAccountChange: (account: Account) => void;
   onLogout: () => void;
+  // Receives a failed background refresh; it ends the session when the session is no longer valid.
+  onBackgroundError: (error: unknown) => void;
   // Shown at the end of the content column, beside the sidebar (the console and footer).
   children?: ReactNode;
 };
@@ -50,6 +52,7 @@ export function RestaurantDashboard({
   showToast,
   onAccountChange,
   onLogout,
+  onBackgroundError,
   children,
 }: RestaurantDashboardProps) {
   const [restoredDashboard] = useState(readDashboardSession);
@@ -109,7 +112,7 @@ export function RestaurantDashboard({
   }, [fetchOrders, run]);
 
   // New orders arrive without a click: refresh quietly every 15 s, skipping while an action runs.
-  // Failures are left to the next manual action, which reports them.
+  // Other failures are left to the next manual action; a session that is no longer valid ends.
   useEffect(() => {
     const timer = window.setInterval(() => {
       if (busyRef.current !== null) return;
@@ -118,10 +121,10 @@ export function RestaurantDashboard({
           setOrders(result.all);
           setQueue(result.queue);
         })
-        .catch(() => undefined);
+        .catch(onBackgroundError);
     }, 15_000);
     return () => window.clearInterval(timer);
-  }, [fetchOrders]);
+  }, [fetchOrders, onBackgroundError]);
 
   useEffect(() => {
     void loadRestaurants();

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../components/auth/AuthLayout';
 import { ApiError, postJson, setAccessToken } from '../shared/api/client';
 import { logError, setConsoleActor } from '../shared/console/outputConsole';
@@ -16,7 +16,8 @@ const demoAccounts = [
 ];
 
 type LoginFeedback = {
-  kind: 'error' | 'success';
+  // A notice explains something that happened (e.g. the session ended) without blaming the user.
+  kind: 'error' | 'notice';
   message: string;
 };
 
@@ -28,11 +29,22 @@ function getLoginError(error: unknown): string {
   return 'We could not sign you in right now. Please try again.';
 }
 
+// The dashboard sends a notice along when it ends a session the user did not end themselves,
+// e.g. "Your session is missing or expired".
+function sessionNotice(state: unknown): string | undefined {
+  if (typeof state !== 'object' || state === null || !('notice' in state)) return undefined;
+  return typeof state.notice === 'string' ? state.notice : undefined;
+}
+
 export function LoginPage() {
+  const location = useLocation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<LoginFeedback | null>(null);
+  const [feedback, setFeedback] = useState<LoginFeedback | null>(() => {
+    const notice = sessionNotice(location.state);
+    return notice ? { kind: 'notice', message: notice } : null;
+  });
   const navigate = useNavigate();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {

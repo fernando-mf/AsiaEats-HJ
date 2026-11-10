@@ -93,10 +93,25 @@ export function CustomerDashboard({
     if (entries) setMenus(Object.fromEntries(entries));
   }, [address, run]);
 
+  // Numbers each menu request. Responses can arrive out of order when the customer switches
+  // restaurants quickly (A → B → A included); only the latest request may replace the menu and
+  // prune the cart.
+  const menuRequestRef = useRef(0);
+
+  // The cart holds the selected restaurant's dishes, so once its menu loads, drop cart entries
+  // for dishes it no longer has (deleted by the restaurant, or from before a reset). Otherwise
+  // the header would count items that checkout can't show.
   const loadMenu = useCallback(
     async (restaurantId: string) => {
+      const requestId = ++menuRequestRef.current;
       const result = await run(() => requestJson<MenuItem[]>(`/restaurants/${restaurantId}/menu`));
-      if (result) setMenu(result);
+      if (!result || requestId !== menuRequestRef.current) return;
+      setMenu(result);
+      const onMenu = new Set(result.map(item => item.id));
+      setCart(current => {
+        const kept = Object.entries(current).filter(([id]) => onMenu.has(id));
+        return kept.length === Object.keys(current).length ? current : Object.fromEntries(kept);
+      });
     },
     [run],
   );

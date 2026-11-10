@@ -23,6 +23,8 @@ type OperatorDashboardProps = {
   run: RunAction;
   showToast: ShowToast;
   onLogout: () => void;
+  // Receives a failed background refresh; it ends the session when the session is no longer valid.
+  onBackgroundError: (error: unknown) => void;
   // Shown at the end of the content column, beside the sidebar (the console and footer).
   children?: ReactNode;
 };
@@ -35,7 +37,15 @@ const statusToasts: Record<RestaurantStatus, string> = {
 
 // OperatorDashboard is the platform operator's console. Operators see every restaurant and
 // every order, and may pause or reopen any restaurant.
-export function OperatorDashboard({ account, busy, run, showToast, onLogout, children }: OperatorDashboardProps) {
+export function OperatorDashboard({
+  account,
+  busy,
+  run,
+  showToast,
+  onLogout,
+  onBackgroundError,
+  children,
+}: OperatorDashboardProps) {
   const [page, setPage] = useState<OperatorPage>('overview');
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -77,16 +87,15 @@ export function OperatorDashboard({ account, busy, run, showToast, onLogout, chi
   }, [load]);
 
   // Orders change without the operator doing anything: refresh quietly every 15 s, skipping
-  // while an action runs. Failures are left to the next manual action, which reports them.
+  // while an action runs. Other failures are left to the next manual action; a session that is
+  // no longer valid ends.
   useEffect(() => {
     const timer = window.setInterval(() => {
       if (busyRef.current !== null) return;
-      fetchAll()
-        .then(apply)
-        .catch(() => undefined);
+      fetchAll().then(apply).catch(onBackgroundError);
     }, 15_000);
     return () => window.clearInterval(timer);
-  }, [apply, fetchAll]);
+  }, [apply, fetchAll, onBackgroundError]);
 
   // Load the selected order's event history, and load it again whenever the order changes
   // (its updatedAt moves), so a new state change shows up with its event id.
@@ -101,12 +110,14 @@ export function OperatorDashboard({ account, busy, run, showToast, onLogout, chi
       .catch((error: unknown) => {
         if (!current) return;
         setOrderEvents({ orderId: selectedOrderId, events: null });
-        showToast(apiErrorMessage(error), 'error');
+        // An invalid session ends the session; anything else is reported here.
+        if (error instanceof ApiError && error.code === 'unauthenticated') onBackgroundError(error);
+        else showToast(apiErrorMessage(error), 'error');
       });
     return () => {
       current = false;
     };
-  }, [selectedOrderId, selectedUpdatedAt, showToast]);
+  }, [onBackgroundError, selectedOrderId, selectedUpdatedAt, showToast]);
 
   // Keep showing the previous history of the same order while it reloads.
   const events = orderEvents?.orderId === selectedOrderId ? orderEvents.events : undefined;
