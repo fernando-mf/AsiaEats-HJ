@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { requestJson } from '../../shared/api/client';
 import { useAccountActions } from '../account/useAccountActions';
 import { logError } from '../../shared/console/outputConsole';
@@ -11,7 +11,7 @@ import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
 import { MenuManager } from '../restaurant/MenuManager';
 import { RestaurantOrders } from '../restaurant/RestaurantOrders';
 import { RestaurantProfile } from '../restaurant/RestaurantProfile';
-import { DashboardHeader } from './DashboardHeader';
+import { RestaurantSidebar } from '../restaurant/RestaurantSidebar';
 import type {
   Account,
   MenuDraft,
@@ -33,6 +33,8 @@ type RestaurantDashboardProps = {
   // Replaces the signed-in account after it is edited, so the header shows the new name.
   onAccountChange: (account: Account) => void;
   onLogout: () => void;
+  // Shown at the end of the content column, beside the sidebar (the console and footer).
+  children?: ReactNode;
 };
 
 const emptyMenuDraft: MenuDraft = { name: '', price: '', quantity: '0', status: 'available' };
@@ -50,6 +52,7 @@ export function RestaurantDashboard({
   showToast,
   onAccountChange,
   onLogout,
+  children,
 }: RestaurantDashboardProps) {
   const [restoredDashboard] = useState(readDashboardSession);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -232,35 +235,34 @@ export function RestaurantDashboard({
     }
   }
 
+  // The sidebar switch only moves between Open and Paused; a closed restaurant turns it on to open.
+  function toggleAccepting() {
+    if (!ownedRestaurant) return;
+    void changeStatus(ownedRestaurant.status === 'open' ? 'paused' : 'open');
+  }
+
+  const newOrderCount = orders.filter(order => order.status === 'placed').length;
+  const pageTitle = restaurantPage === 'orders' ? 'Orders' : restaurantPage === 'menu' ? 'Menu' : null;
+
   return (
-    <>
-      <DashboardHeader account={account} onLogout={onLogout} />
-      <div className="dashboard-main customer-main">
-        <section className="welcome-banner restaurant-welcome">
-          <p className="eyebrow">RESTAURANT PORTAL</p>
-          <h1>{ownedRestaurant?.name ?? 'Your restaurant'}</h1>
-          <p>Manage your restaurant profile, menu, and incoming orders.</p>
-          <div className="restaurant-tabs">
-            <button
-              className={`nav-button ${restaurantPage === 'orders' ? 'active' : ''}`}
-              onClick={() => setRestaurantPage('orders')}
-            >
-              Incoming orders
-            </button>
-            <button
-              className={`nav-button ${restaurantPage === 'menu' ? 'active' : ''}`}
-              onClick={() => setRestaurantPage('menu')}
-            >
-              Edit menu
-            </button>
-            <button
-              className={`nav-button ${restaurantPage === 'profile' ? 'active' : ''}`}
-              onClick={() => setRestaurantPage('profile')}
-            >
-              Restaurant profile
-            </button>
+    <div className="restaurant-shell">
+      <RestaurantSidebar
+        account={account}
+        restaurant={ownedRestaurant}
+        page={restaurantPage}
+        newOrderCount={newOrderCount}
+        busy={busy}
+        onPageChange={setRestaurantPage}
+        onToggleAccepting={toggleAccepting}
+        onLogout={onLogout}
+      />
+      <div className="restaurant-main">
+        {pageTitle ? (
+          <div className="restaurant-page-head">
+            <p className="eyebrow">{ownedRestaurant ? `${ownedRestaurant.name} · ${pageTitle}` : pageTitle}</p>
+            <h1>{pageTitle}</h1>
           </div>
-        </section>
+        ) : null}
 
         {restaurantPage === 'orders' ? (
           <RestaurantOrders
@@ -301,7 +303,9 @@ export function RestaurantDashboard({
             onChangePassword={changePassword}
           />
         ) : null}
+
+        {children}
       </div>
-    </>
+    </div>
   );
 }

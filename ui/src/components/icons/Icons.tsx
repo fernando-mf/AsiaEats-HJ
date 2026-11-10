@@ -132,6 +132,32 @@ export function IconLock(props: IconProps) {
   );
 }
 
+export function IconMenuBook(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z" />
+      <path d="M4 19V5M9 7h6" />
+    </Icon>
+  );
+}
+
+export function IconStore(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 9h16l-1-5H5z" />
+      <path d="M5 9v11h14V9M10 20v-5h4v5" />
+    </Icon>
+  );
+}
+
+export function IconSignOut(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" />
+    </Icon>
+  );
+}
+
 export function IconArrowRight(props: IconProps) {
   return (
     <Icon {...props}>

@@ -64,6 +64,20 @@ export function DashboardPage() {
   }
 
   const roleLabel = account?.role ? account.role.charAt(0).toUpperCase() + account.role.slice(1) : 'Account';
+  const isRestaurant = account?.role === 'restaurant';
+
+  // The console and footer close every page. The restaurant layout places them in its content
+  // column, beside the sidebar; other roles show them full width under the page.
+  const pageEnd = (
+    <>
+      <OutputConsole />
+
+      <footer className="site-footer">
+        <strong>EatChinese</strong>
+        <span>Chinese food, found locally in Montréal.</span>
+      </footer>
+    </>
+  );
 
   return (
     <main className="dashboard-shell">
@@ -78,7 +92,7 @@ export function DashboardPage() {
           onAccountChange={setAccount}
           onLogout={logout}
         />
-      ) : account?.role === 'restaurant' ? (
+      ) : isRestaurant ? (
         <RestaurantDashboard
           account={account}
           busy={busy}
@@ -86,7 +100,9 @@ export function DashboardPage() {
           showToast={showToast}
           onAccountChange={setAccount}
           onLogout={logout}
-        />
+        >
+          {pageEnd}
+        </RestaurantDashboard>
       ) : (
         <>
           <DashboardHeader account={account} onLogout={logout} />
@@ -107,12 +123,7 @@ export function DashboardPage() {
         </>
       )}
 
-      <OutputConsole />
-
-      <footer className="site-footer">
-        <strong>EatChinese</strong>
-        <span>Chinese food, found locally in Montréal.</span>
-      </footer>
+      {isRestaurant ? null : pageEnd}
     </main>
   );
 }

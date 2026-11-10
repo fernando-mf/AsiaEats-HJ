@@ -26,3 +26,8 @@ export const montrealNeighbourhoods: Neighbourhood[] = [
 export function findNeighbourhood(latitude: number, longitude: number) {
   return montrealNeighbourhoods.find(item => item.latitude === latitude && item.longitude === longitude);
 }
+
+// Short name for labels, e.g. "Downtown (Centre-ville)" -> "Downtown"; undefined off the presets.
+export function neighbourhoodShortName(latitude: number, longitude: number) {
+  return findNeighbourhood(latitude, longitude)?.name.split(' (')[0];
+}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { findNeighbourhood } from '../../shared/locations/montrealNeighbourhoods';
+import { neighbourhoodShortName } from '../../shared/locations/montrealNeighbourhoods';
 import { IconHome } from '../icons/Icons';
 import type { Account, Address, Order, Restaurant } from '../dashboard/dashboard.types';
 import { initials } from '../dashboard/dashboard.utils';
@@ -22,9 +22,8 @@ type CustomerProfileProps = {
 const unfulfilled = ['cancelled', 'rejected'];
 const memberSinceFormat = new Intl.DateTimeFormat('en-CA', { month: 'short', year: 'numeric' });
 
-// Short neighbourhood name for the summary line, e.g. "Downtown (Centre-ville)" -> "Downtown".
 function neighbourhoodLabel(address: Address) {
-  return findNeighbourhood(address.latitude, address.longitude)?.name.split(' (')[0];
+  return neighbourhoodShortName(address.latitude, address.longitude);
 }
 
 function orderStats(orders: Order[], restaurants: Restaurant[]) {

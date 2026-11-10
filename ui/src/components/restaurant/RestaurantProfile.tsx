@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { findNeighbourhood } from '../../shared/locations/montrealNeighbourhoods';
+import { neighbourhoodShortName } from '../../shared/locations/montrealNeighbourhoods';
 import { PasswordSection, PersonalInfoForm } from '../account/AccountForms';
 import { DishArt } from '../food/DishArt';
 import { dishKind } from '../food/dishKind';
@@ -31,10 +31,10 @@ const statusNotes: Record<RestaurantStatus, string> = {
 };
 
 function locationLabel(position: Position) {
-  const neighbourhood = findNeighbourhood(position.latitude, position.longitude);
-  return neighbourhood
-    ? neighbourhood.name.split(' (')[0]
-    : `${position.latitude.toFixed(4)}, ${position.longitude.toFixed(4)}`;
+  return (
+    neighbourhoodShortName(position.latitude, position.longitude) ??
+    `${position.latitude.toFixed(4)}, ${position.longitude.toFixed(4)}`
+  );
 }
 
 function isToday(date: string, today: Date) {
