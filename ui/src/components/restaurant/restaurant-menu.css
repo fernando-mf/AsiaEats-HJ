@@ -52,8 +52,11 @@
   box-shadow: none;
 }
 
+/* The search box shows focus with :focus-within, so the input draws no ring of its own. */
 .menu-search input:focus,
+.menu-search input:focus-visible,
 .menu-search input:hover {
+  outline: none;
   box-shadow: none;
 }
 
@@ -247,7 +250,9 @@
 }
 
 .menu-price-input input:focus,
+.menu-price-input input:focus-visible,
 .menu-price-input input:hover {
+  outline: none;
   box-shadow: none;
 }
 

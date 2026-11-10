@@ -44,9 +44,12 @@
   box-shadow: 0 0 0 4px var(--primary-soft);
 }
 
+/* The search box shows focus with :focus-within, so the input draws no ring of its own. */
 .board-search input,
 .board-search input:hover,
-.board-search input:focus {
+.board-search input:focus,
+.board-search input:focus-visible {
+  outline: none;
   min-height: 0;
   height: 100%;
   padding: 0;

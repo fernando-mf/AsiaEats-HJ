@@ -147,7 +147,10 @@
   font-size: 16px;
 }
 
-.home-search input:focus {
+/* The search box shows focus with :focus-within, so the input draws no ring of its own. */
+.home-search input:focus,
+.home-search input:focus-visible {
+  outline: none;
   box-shadow: none;
 }
 
