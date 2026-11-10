@@ -58,15 +58,7 @@ function RestaurantCard({
   );
 }
 
-function DishCard({
-  dish,
-  onAdd,
-  onOpenRestaurant,
-}: {
-  dish: Dish;
-  onAdd: () => void;
-  onOpenRestaurant: () => void;
-}) {
+function DishCard({ dish, onAdd, onOpenRestaurant }: { dish: Dish; onAdd: () => void; onOpenRestaurant: () => void }) {
   const { item, restaurant } = dish;
 
   return (
@@ -94,15 +86,7 @@ function DishCard({
   );
 }
 
-function Spotlight({
-  restaurant,
-  menu,
-  onOpen,
-}: {
-  restaurant: Restaurant;
-  menu: MenuItem[];
-  onOpen: () => void;
-}) {
+function Spotlight({ restaurant, menu, onOpen }: { restaurant: Restaurant; menu: MenuItem[]; onOpen: () => void }) {
   const available = menu.filter(item => item.status === 'available');
 
   return (
@@ -155,14 +139,13 @@ export function CustomerHome({
   const dishes: Dish[] = restaurants
     .filter(restaurant => restaurant.status === 'open')
     .flatMap(restaurant =>
-      (menus[restaurant.id] ?? [])
-        .filter(item => item.status === 'available')
-        .map(item => ({ item, restaurant })),
+      (menus[restaurant.id] ?? []).filter(item => item.status === 'available').map(item => ({ item, restaurant })),
     );
   const pick = dishes[0];
   // Spotlight an open restaurant with dishes, preferably not the one already in Tonight's pick.
   const spotlightCandidates = restaurants.filter(
-    restaurant => restaurant.status === 'open' && (menus[restaurant.id] ?? []).some(item => item.status === 'available'),
+    restaurant =>
+      restaurant.status === 'open' && (menus[restaurant.id] ?? []).some(item => item.status === 'available'),
   );
   const spotlight =
     spotlightCandidates.find(restaurant => restaurant.id !== pick?.restaurant.id) ?? spotlightCandidates[0];

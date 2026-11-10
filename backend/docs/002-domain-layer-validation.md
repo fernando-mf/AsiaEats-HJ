@@ -8,8 +8,8 @@ The request objects sit next to the service that uses them e.g. for account crea
 
 ```ts
 // domain/registration/registration.ts
-import { plainToInstance } from "class-transformer";
-import { IsEmail, IsString, MinLength } from "class-validator";
+import { plainToInstance } from 'class-transformer';
+import { IsEmail, IsString, MinLength } from 'class-validator';
 
 export class AccountCreationRequest {
   @IsEmail()
@@ -31,7 +31,7 @@ Validation rules are enforced and executed in our **Service** classes. They are 
 
 ```ts
 // domain/registration/registration.ts
-import { validate } from "class-validator";
+import { validate } from 'class-validator';
 
 class RegistrationService {
   async create(request: AccountCreationRequest) {

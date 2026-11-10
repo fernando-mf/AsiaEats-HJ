@@ -34,7 +34,12 @@ export function OutputConsole() {
                 <input type="checkbox" checked={showReads} onChange={event => setShowReads(event.target.checked)} />
                 Show reads
               </label>
-              <button className="secondary-button console-button" type="button" onClick={clearConsole} disabled={!entries.length}>
+              <button
+                className="secondary-button console-button"
+                type="button"
+                onClick={clearConsole}
+                disabled={!entries.length}
+              >
                 Clear
               </button>
             </>

@@ -23,7 +23,7 @@ export abstract class ApplicationError extends Error {
 
 export class DuplicateEntityError extends ApplicationError {
   statusCode = 409;
-  code = "duplicate_entity";
+  code = 'duplicate_entity';
 
   constructor(readonly entityType: string) {
     super(`duplicate: ${entityType}`);
@@ -51,7 +51,7 @@ Example for account not found:
 ```ts
 const account = await this.accounts.findById(id);
 if (!account) {
-  throw new NotFoundError("account");
+  throw new NotFoundError('account');
 }
 ```
 
@@ -87,9 +87,7 @@ An invalid request (HTTP 400):
   "errors": [
     {
       "field": "role",
-      "messages": [
-        "role must be one of the following values: customer, restaurant, courier, operator"
-      ]
+      "messages": ["role must be one of the following values: customer, restaurant, courier, operator"]
     }
   ]
 }

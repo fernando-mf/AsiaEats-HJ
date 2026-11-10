@@ -1,4 +1,3 @@
-
 .dashboard-shell {
   /* Side padding of the page; the header bar bleeds out by the same amount. */
   --shell-gutter: clamp(20px, 4vw, 64px);
@@ -123,9 +122,15 @@
   overflow-wrap: anywhere;
 }
 
-.console-command code { color: #a8cfc4; }
-.console-success code { color: #86cfb9; }
-.console-error code { color: #f1aaa0; }
+.console-command code {
+  color: #a8cfc4;
+}
+.console-success code {
+  color: #86cfb9;
+}
+.console-error code {
+  color: #f1aaa0;
+}
 
 .console-empty {
   margin: 8px 4px;
@@ -268,78 +273,367 @@
 
 /* Customer storefront and profile */
 /* Full-width header bar on --surface (as in the prototype); its content stays at the page width. */
-.site-header-bar { position: sticky; top: 0; z-index: 30; margin: 0 calc(-1 * var(--shell-gutter)); padding: 0 var(--shell-gutter); background: var(--surface); border-bottom: 1px solid var(--border); }
-.site-header { align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 20px; max-width: 1240px; min-height: 68px; margin: 0 auto; padding: 12px 0; }
-.brand-button { padding: 4px; border: 0; border-radius: var(--radius-md); background: transparent; cursor: pointer; }
-.header-spacer { flex: 1; }
-.header-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 14px; }
-.deliver-to { display: flex; align-items: center; gap: 9px; height: 40px; padding: 0 12px; color: var(--primary-ink); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
-.deliver-to > span { display: grid; line-height: 1.15; }
-.deliver-to small { color: var(--text-3); font-size: 11px; }
-.deliver-to strong { max-width: 220px; overflow: hidden; color: var(--text); font-size: 13.5px; font-weight: 560; text-overflow: ellipsis; white-space: nowrap; }
-button.deliver-to { font: inherit; text-align: left; cursor: pointer; }
-button.deliver-to:hover { background: var(--surface-2); border-color: var(--border-strong); }
-.deliver-to--missing { background: var(--primary-soft); border-color: var(--primary); }
-.deliver-to--missing strong { color: var(--primary-ink); }
-button.deliver-to--missing:hover { background: var(--primary-soft); border-color: var(--primary-ink); }
-/* Prompt to add a delivery address, on Discover and in the cart. */
-.address-prompt { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--primary-soft); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); }
-.address-prompt-icon { display: grid; flex: none; place-items: center; width: 36px; height: 36px; color: var(--primary-ink); background: var(--surface); border-radius: 50%; }
-.address-prompt p { display: grid; flex: 1; gap: 2px; margin: 0; }
-.address-prompt strong { color: var(--text); font-size: 14.5px; }
-.address-prompt p span { color: var(--text-2); font-size: 13.5px; }
-.address-prompt .primary-button { flex: none; }
-@media (max-width: 600px) {
-  .address-prompt { flex-wrap: wrap; }
-  .address-prompt .primary-button { width: 100%; }
+.site-header-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  margin: 0 calc(-1 * var(--shell-gutter));
+  padding: 0 var(--shell-gutter);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
-.header-nav { display: flex; gap: 6px; margin-right: 8px; }
-.header-nav-link { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; color: var(--text-2); background: transparent; border: 0; border-radius: 9px; font-size: 14px; font-weight: 540; cursor: pointer; }
-.header-nav-link:hover, .header-nav-link.active { color: var(--text); background: var(--surface-2); }
-.cart-button { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-md); font-size: 14px; font-weight: 560; cursor: pointer; }
-.cart-button:hover { background: var(--surface-2); }
-.cart-button .mono { font-size: 13px; }
-.cart-count { display: inline-grid; min-width: 20px; height: 20px; padding: 0 6px; color: var(--on-primary); background: var(--primary); border-radius: 999px; font-size: 11.5px; font-weight: 600; place-items: center; }
-.avatar { display: grid; width: 36px; height: 36px; color: var(--accent-ink); background: var(--accent-soft); border-radius: 50%; font-size: 13px; font-weight: 620; place-items: center; }
-.avatar-button { margin-left: 6px; padding: 0; border: 1px solid transparent; cursor: pointer; }
-.avatar-button:hover { border-color: var(--accent); }
+.site-header {
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+  max-width: 1240px;
+  min-height: 68px;
+  margin: 0 auto;
+  padding: 12px 0;
+}
+.brand-button {
+  padding: 4px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+}
+.header-spacer {
+  flex: 1;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.deliver-to {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 40px;
+  padding: 0 12px;
+  color: var(--primary-ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.deliver-to > span {
+  display: grid;
+  line-height: 1.15;
+}
+.deliver-to small {
+  color: var(--text-3);
+  font-size: 11px;
+}
+.deliver-to strong {
+  max-width: 220px;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 560;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+button.deliver-to {
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+button.deliver-to:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+.deliver-to--missing {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+.deliver-to--missing strong {
+  color: var(--primary-ink);
+}
+button.deliver-to--missing:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary-ink);
+}
+/* Prompt to add a delivery address, on Discover and in the cart. */
+.address-prompt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--primary-soft);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+}
+.address-prompt-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--primary-ink);
+  background: var(--surface);
+  border-radius: 50%;
+}
+.address-prompt p {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  margin: 0;
+}
+.address-prompt strong {
+  color: var(--text);
+  font-size: 14.5px;
+}
+.address-prompt p span {
+  color: var(--text-2);
+  font-size: 13.5px;
+}
+.address-prompt .primary-button {
+  flex: none;
+}
+@media (max-width: 600px) {
+  .address-prompt {
+    flex-wrap: wrap;
+  }
+  .address-prompt .primary-button {
+    width: 100%;
+  }
+}
+.header-nav {
+  display: flex;
+  gap: 6px;
+  margin-right: 8px;
+}
+.header-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  color: var(--text-2);
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 540;
+  cursor: pointer;
+}
+.header-nav-link:hover,
+.header-nav-link.active {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.cart-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 560;
+  cursor: pointer;
+}
+.cart-button:hover {
+  background: var(--surface-2);
+}
+.cart-button .mono {
+  font-size: 13px;
+}
+.cart-count {
+  display: inline-grid;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  color: var(--on-primary);
+  background: var(--primary);
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  place-items: center;
+}
+.avatar {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 620;
+  place-items: center;
+}
+.avatar-button {
+  margin-left: 6px;
+  padding: 0;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.avatar-button:hover {
+  border-color: var(--accent);
+}
 
 /* Account menu: a popover under the avatar, right-aligned to it. */
-.account-menu { min-width: 210px; margin: 0; padding: 6px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); }
+.account-menu {
+  min-width: 210px;
+  margin: 0;
+  padding: 6px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
 @supports (position-area: block-end) {
-  .account-menu { position-area: block-end span-inline-start; position-try-fallbacks: flip-block; inset: auto; margin-block-start: 8px; }
+  .account-menu {
+    position-area: block-end span-inline-start;
+    position-try-fallbacks: flip-block;
+    inset: auto;
+    margin-block-start: 8px;
+  }
 }
 @supports not (position-area: block-end) {
   /* top and right are set from script when the menu opens. */
-  .account-menu { position: fixed; inset: auto; }
+  .account-menu {
+    position: fixed;
+    inset: auto;
+  }
 }
-.account-menu-head { display: grid; gap: 2px; padding: 8px 10px 10px; margin-bottom: 4px; border-bottom: 1px solid var(--border); }
-.account-menu-head strong { font-size: 14px; font-weight: 600; }
-.account-menu-head span { color: var(--text-3); font-size: 12.5px; }
-.account-menu-item { display: flex; width: 100%; padding: 9px 10px; color: var(--text); background: transparent; border: 0; border-radius: var(--radius-sm); font-size: 14px; text-align: start; cursor: pointer; }
-.account-menu-item:hover, .account-menu-item:focus-visible { background: var(--surface-2); }
-.customer-main { max-width: 1240px; margin: 28px auto 0; }
-.restaurant-switch-dialog { width: min(92vw, 500px); padding: 0; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: 16px; box-shadow: 0 28px 70px rgba(0,0,0,.48); }
-.restaurant-switch-dialog::backdrop { background: rgba(3,8,7,.78); backdrop-filter: blur(5px); }
-.restaurant-switch-dialog-content { padding: clamp(24px, 4vw, 32px); }
-.restaurant-switch-dialog h2 { margin: 0; font-family: var(--font-display); font-size: clamp(24px, 4vw, 30px); line-height: 1.15; letter-spacing: -.025em; }
-.restaurant-switch-dialog p { max-width: 46ch; margin: 14px 0 0; color: var(--color-text-secondary); line-height: 1.65; }
-.restaurant-switch-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 26px; }
-.restaurant-switch-dialog-actions button { min-height: 44px; padding: 0 16px; border-radius: 10px; font: inherit; font-weight: 750; }
-.restaurant-switch-confirm:hover { color: #ffe2dd; background: #3a211e; border-color: #985047; }
-.site-footer { display: flex; justify-content: center; gap: 10px; max-width: 1240px; margin: 36px auto 0; padding: 20px 0 0; border-top: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: 12px; }
-.site-footer strong { color: var(--color-text); }
+.account-menu-head {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.account-menu-head strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.account-menu-head span {
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+.account-menu-item {
+  display: flex;
+  width: 100%;
+  padding: 9px 10px;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  text-align: start;
+  cursor: pointer;
+}
+.account-menu-item:hover,
+.account-menu-item:focus-visible {
+  background: var(--surface-2);
+}
+.customer-main {
+  max-width: 1240px;
+  margin: 28px auto 0;
+}
+.restaurant-switch-dialog {
+  width: min(92vw, 500px);
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 16px;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.48);
+}
+.restaurant-switch-dialog::backdrop {
+  background: rgba(3, 8, 7, 0.78);
+  backdrop-filter: blur(5px);
+}
+.restaurant-switch-dialog-content {
+  padding: clamp(24px, 4vw, 32px);
+}
+.restaurant-switch-dialog h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 4vw, 30px);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+.restaurant-switch-dialog p {
+  max-width: 46ch;
+  margin: 14px 0 0;
+  color: var(--color-text-secondary);
+  line-height: 1.65;
+}
+.restaurant-switch-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 26px;
+}
+.restaurant-switch-dialog-actions button {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 750;
+}
+.restaurant-switch-confirm:hover {
+  color: #ffe2dd;
+  background: #3a211e;
+  border-color: #985047;
+}
+.site-footer {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  max-width: 1240px;
+  margin: 36px auto 0;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+.site-footer strong {
+  color: var(--color-text);
+}
 
 @media (max-width: 900px) {
-  .deliver-to { display: none; }
+  .deliver-to {
+    display: none;
+  }
 }
 @media (max-width: 600px) {
-  .dashboard-shell { --shell-gutter: 14px; }
-  .header-spacer { display: none; }
-  .header-actions { gap: 8px; }
-  .header-nav { margin-right: 0; }
-  .header-nav-link { padding: 0 9px; font-size: 13px; }
-  .restaurant-switch-dialog-actions { align-items: stretch; flex-direction: column; }
-  .restaurant-switch-dialog-actions button { width: 100%; }
-  .site-footer { flex-direction: column; align-items: center; gap: 2px; }
+  .dashboard-shell {
+    --shell-gutter: 14px;
+  }
+  .header-spacer {
+    display: none;
+  }
+  .header-actions {
+    gap: 8px;
+  }
+  .header-nav {
+    margin-right: 0;
+  }
+  .header-nav-link {
+    padding: 0 9px;
+    font-size: 13px;
+  }
+  .restaurant-switch-dialog-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .restaurant-switch-dialog-actions button {
+    width: 100%;
+  }
+  .site-footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
 }
