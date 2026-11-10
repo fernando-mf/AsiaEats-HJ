@@ -149,9 +149,12 @@ export function CustomerDashboard({
   const cartTotal = cartLines.reduce((sum, line) => sum + line.item.price * line.quantity, 0);
   const cartCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
 
+  // The "added to cart" toasts offer a shortcut to checkout.
+  const viewCartAction = { label: 'View cart', onClick: () => setCustomerPage('cart') };
+
   function addToCart(item: MenuItem) {
     setCart(current => ({ ...current, [item.id]: (current[item.id] ?? 0) + 1 }));
-    showToast(`${item.name} added to cart.`);
+    showToast(`${item.name} added to cart.`, 'success', viewCartAction);
   }
 
   function changeQuantity(item: MenuItem, delta: number) {
@@ -204,7 +207,7 @@ export function CustomerDashboard({
       setSelectedRestaurant(pendingRestaurantId);
       setPendingRestaurantId(null);
       setPendingDish(null);
-      showToast(`Cart cleared. ${pendingDish.name} added to cart.`);
+      showToast(`Cart cleared. ${pendingDish.name} added to cart.`, 'success', viewCartAction);
       return;
     }
     const restaurantName = pendingRestaurant?.name ?? 'the selected restaurant';

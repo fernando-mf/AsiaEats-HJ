@@ -59,7 +59,30 @@
   line-height: 1.45;
 }
 
-.toast button {
+.toast--with-action {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.toast-action {
+  height: 34px;
+  padding: 0 12px;
+  color: var(--primary-ink);
+  background: var(--primary-soft);
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.toast-action:hover {
+  color: var(--text);
+  border-color: var(--primary);
+}
+
+.toast-dismiss {
   display: grid;
   width: 34px;
   height: 34px;
@@ -72,7 +95,7 @@
   place-items: center;
 }
 
-.toast button:hover {
+.toast-dismiss:hover {
   color: var(--color-text);
   background: rgba(255, 255, 255, 0.06);
 }

@@ -17,7 +17,7 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const [account, setAccount] = useState<Account | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const { toast, showToast, dismissToast } = useToast();
+  const { toast, showToast, dismissToast, pauseToast, resumeToast } = useToast();
 
   const run = useCallback(
     async <T,>(action: () => Promise<T>): Promise<T | undefined> => {
@@ -81,7 +81,7 @@ export function DashboardPage() {
 
   return (
     <main className="dashboard-shell">
-      <ToastRegion toast={toast} onDismiss={dismissToast} />
+      <ToastRegion toast={toast} onDismiss={dismissToast} onPause={pauseToast} onResume={resumeToast} />
 
       {account?.role === 'customer' ? (
         <CustomerDashboard

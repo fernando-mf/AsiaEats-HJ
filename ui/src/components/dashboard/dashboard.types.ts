@@ -1,4 +1,4 @@
-import type { ToastVariant } from '../feedback/useToast';
+import type { ToastAction, ToastVariant } from '../feedback/useToast';
 
 export type Role = 'customer' | 'restaurant' | 'courier' | 'operator';
 
@@ -80,4 +80,4 @@ export type MenuItemValues = Pick<MenuItem, 'name' | 'price' | 'status'>;
 
 export type OrderAction = 'accept' | 'reject' | 'prepare' | 'ready';
 export type RunAction = <T>(action: () => Promise<T>) => Promise<T | undefined>;
-export type ShowToast = (message: string, variant?: ToastVariant) => void;
+export type ShowToast = (message: string, variant?: ToastVariant, action?: ToastAction) => void;
