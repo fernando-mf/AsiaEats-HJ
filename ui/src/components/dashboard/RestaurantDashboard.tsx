@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { requestJson } from '../../shared/api/client';
 import { useAccountActions } from '../account/useAccountActions';
 import { logError } from '../../shared/console/outputConsole';
@@ -8,14 +8,14 @@ import {
   type RestaurantPage,
 } from '../../shared/dashboard/dashboardSession';
 import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
-import { MenuManager } from '../restaurant/MenuManager';
+import { MenuPage } from '../restaurant/MenuPage';
 import { RestaurantOrders } from '../restaurant/RestaurantOrders';
 import { RestaurantProfile } from '../restaurant/RestaurantProfile';
 import { RestaurantSidebar } from '../restaurant/RestaurantSidebar';
 import type {
   Account,
-  MenuDraft,
   MenuItem,
+  MenuItemValues,
   Order,
   OrderAction,
   Position,
@@ -36,8 +36,6 @@ type RestaurantDashboardProps = {
   // Shown at the end of the content column, beside the sidebar (the console and footer).
   children?: ReactNode;
 };
-
-const emptyMenuDraft: MenuDraft = { name: '', price: '', quantity: '0', status: 'available' };
 
 const statusToasts: Record<RestaurantStatus, string> = {
   open: 'Restaurant is open and taking orders.',
@@ -62,9 +60,6 @@ export function RestaurantDashboard({
   const [restaurantPage, setRestaurantPage] = useState<RestaurantPage>(restoredDashboard?.restaurantPage ?? 'orders');
   useScrollToTop(restaurantPage);
   const customerPage = restoredDashboard?.customerPage ?? 'restaurants';
-  const [menuDraft, setMenuDraft] = useState<MenuDraft>(emptyMenuDraft);
-  const [editingMenuItem, setEditingMenuItem] = useState<string | null>(null);
-  const [menuQuantities, setMenuQuantities] = useState<Record<string, number>>({});
   const { saveName, changePassword } = useAccountActions(run, showToast, onAccountChange);
 
   const loadRestaurants = useCallback(async () => {
@@ -108,18 +103,6 @@ export function RestaurantDashboard({
   }, [customerPage, restaurantPage, selectedRestaurant]);
 
   const ownedRestaurant = restaurants.find(restaurant => restaurant.ownerId === account.id);
-  const ownedRestaurantId = ownedRestaurant?.id;
-  const restaurantQuantityKey = ownedRestaurantId ? `asiaeats-menu-quantities-${ownedRestaurantId}` : '';
-
-  useEffect(() => {
-    if (!ownedRestaurantId || typeof window === 'undefined') return;
-    try {
-      const saved = window.localStorage.getItem(`asiaeats-menu-quantities-${ownedRestaurantId}`);
-      setMenuQuantities(saved ? (JSON.parse(saved) as Record<string, number>) : {});
-    } catch {
-      setMenuQuantities({});
-    }
-  }, [ownedRestaurantId]);
 
   async function orderAction(order: Order, action: OrderAction) {
     const body = action === 'reject' ? { reason: window.prompt('Why is this order being rejected?') ?? '' } : undefined;
@@ -142,70 +125,42 @@ export function RestaurantDashboard({
     }
   }
 
-  function saveMenuQuantities(next: Record<string, number>) {
-    setMenuQuantities(next);
-    if (restaurantQuantityKey) window.localStorage.setItem(restaurantQuantityKey, JSON.stringify(next));
-  }
-
-  function startEditingMenuItem(item: MenuItem) {
-    setEditingMenuItem(item.id);
-    setMenuDraft({
-      name: item.name,
-      price: String(item.price),
-      quantity: String(menuQuantities[item.id] ?? 0),
-      status: item.status,
-    });
-  }
-
-  function resetMenuDraft() {
-    setEditingMenuItem(null);
-    setMenuDraft(emptyMenuDraft);
-  }
-
-  async function saveMenuItem(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!ownedRestaurant) return;
-    const name = menuDraft.name.trim();
-    const price = Number(menuDraft.price);
-    const quantity = Number(menuDraft.quantity);
-    if (!name || !Number.isFinite(price) || price < 0 || !Number.isInteger(quantity) || quantity < 0) {
-      const message = 'Enter an item name, a valid non-negative price, and a whole-number quantity.';
-      logError(editingMenuItem ? 'UpdateMenuItemCommand' : 'CreateMenuItemCommand', message);
-      showToast(message, 'error');
-      return;
-    }
-    const wasEditing = editingMenuItem !== null;
-    const body = { name, price, status: menuDraft.status };
+  // saveMenuItem creates a dish (itemId null) or updates one, and swaps the saved dish into the menu.
+  async function saveMenuItem(itemId: string | null, values: MenuItemValues): Promise<MenuItem | undefined> {
+    if (!ownedRestaurant) return undefined;
+    const base = `/restaurants/${ownedRestaurant.id}/menu-items`;
     const result = await run(() =>
-      requestJson<MenuItem>(
-        editingMenuItem
-          ? `/restaurants/${ownedRestaurant.id}/menu-items/${editingMenuItem}`
-          : `/restaurants/${ownedRestaurant.id}/menu-items`,
-        { method: editingMenuItem ? 'PUT' : 'POST', body },
-      ),
+      requestJson<MenuItem>(itemId ? `${base}/${itemId}` : base, { method: itemId ? 'PUT' : 'POST', body: values }),
     );
-    if (result) {
-      saveMenuQuantities({ ...menuQuantities, [result.id]: quantity });
-      showToast(`${result.name} ${wasEditing ? 'updated' : 'created'} successfully.`);
-      await loadMenu(ownedRestaurant.id);
-      resetMenuDraft();
-    }
+    if (!result) return undefined;
+    setMenu(current => (itemId ? current.map(item => (item.id === result.id ? result : item)) : [...current, result]));
+    return result;
   }
 
-  async function deleteMenuItem(item: MenuItem) {
-    if (!ownedRestaurant || !window.confirm(`Delete “${item.name}” from your menu?`)) return;
+  // saveDish is what the Menu page's editor calls: saveMenuItem plus a confirmation toast.
+  async function saveDish(itemId: string | null, values: MenuItemValues) {
+    const result = await saveMenuItem(itemId, values);
+    if (result) showToast(itemId ? `${result.name} saved.` : `${result.name} added to your menu.`);
+    return result;
+  }
+
+  // The availability switch saves the dish with only its status changed.
+  async function setAvailability(item: MenuItem, available: boolean) {
+    const status = available ? 'available' : 'sold_out';
+    const result = await saveMenuItem(item.id, { name: item.name, price: item.price, status });
+    if (result) showToast(available ? `${item.name} is available again.` : `${item.name} marked sold out.`);
+  }
+
+  async function deleteMenuItem(item: MenuItem): Promise<boolean> {
+    if (!ownedRestaurant) return false;
     const result = await run(async () => {
       await requestJson<void>(`/restaurants/${ownedRestaurant.id}/menu-items/${item.id}`, { method: 'DELETE' });
       return true;
     });
-    if (result !== undefined) {
-      const next = { ...menuQuantities };
-      delete next[item.id];
-      saveMenuQuantities(next);
-      showToast(`${item.name} deleted successfully.`);
-      await loadMenu(ownedRestaurant.id);
-      if (editingMenuItem === item.id) resetMenuDraft();
-    }
+    if (!result) return false;
+    setMenu(current => current.filter(entry => entry.id !== item.id));
+    showToast(`${item.name} deleted.`);
+    return true;
   }
 
   // Swap the saved restaurant into the list, so the banner and status update without a reload.
@@ -242,7 +197,8 @@ export function RestaurantDashboard({
   }
 
   const newOrderCount = orders.filter(order => order.status === 'placed').length;
-  const pageTitle = restaurantPage === 'orders' ? 'Orders' : restaurantPage === 'menu' ? 'Menu' : null;
+  // The Menu and Profile pages draw their own heads; Orders still uses this one until it is rebuilt.
+  const pageTitle = restaurantPage === 'orders' ? 'Orders' : null;
 
   return (
     <div className="restaurant-shell">
@@ -275,18 +231,13 @@ export function RestaurantDashboard({
         ) : null}
 
         {restaurantPage === 'menu' ? (
-          <MenuManager
+          <MenuPage
+            restaurant={ownedRestaurant}
             menu={menu}
-            draft={menuDraft}
-            quantities={menuQuantities}
-            editingItemId={editingMenuItem}
             busy={busy}
-            onDraftChange={setMenuDraft}
-            onSubmit={saveMenuItem}
-            onCancelEdit={resetMenuDraft}
-            onEdit={startEditingMenuItem}
-            onDelete={item => void deleteMenuItem(item)}
-            onRefresh={() => ownedRestaurant && void loadMenu(ownedRestaurant.id)}
+            onSave={saveDish}
+            onSetAvailability={(item, available) => void setAvailability(item, available)}
+            onDelete={deleteMenuItem}
           />
         ) : null}
 

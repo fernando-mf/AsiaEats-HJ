@@ -75,12 +75,8 @@ export type CartLine = {
   quantity: number;
 };
 
-export type MenuDraft = {
-  name: string;
-  price: string;
-  quantity: string;
-  status: 'available' | 'sold_out';
-};
+// What a restaurant sends to create or update a dish.
+export type MenuItemValues = Pick<MenuItem, 'name' | 'price' | 'status'>;
 
 export type OrderAction = 'accept' | 'reject' | 'prepare' | 'ready';
 export type RunAction = <T>(action: () => Promise<T>) => Promise<T | undefined>;

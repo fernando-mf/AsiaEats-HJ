@@ -1,0 +1,335 @@
+/* Restaurant Menu page: dish list with availability switches and a side editor. */
+.menu-page {
+  display: grid;
+  gap: 18px;
+}
+
+.menu-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.menu-page-head h1 {
+  margin: 6px 0 0;
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.menu-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.menu-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 240px;
+  height: 40px;
+  padding: 0 12px;
+  color: var(--text-3);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.menu-search:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.menu-search input {
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.menu-search input:focus,
+.menu-search input:hover {
+  box-shadow: none;
+}
+
+.menu-summary {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.menu-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.menu-filter-count {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.menu-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ---------- Dish list ---------- */
+.menu-list {
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+}
+
+.menu-list-head,
+.menu-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px 140px 34px;
+  gap: 14px;
+  align-items: center;
+}
+
+.menu-list-head {
+  padding: 8px 12px;
+  color: var(--text-3);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.menu-list-head span:nth-child(2) {
+  text-align: right;
+}
+
+.menu-row {
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+
+.menu-row:hover {
+  background: var(--surface-2);
+}
+
+.menu-row.is-selected {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.menu-row-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 0;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-row-thumb {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 11px;
+}
+
+.menu-row-name {
+  overflow: hidden;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-row.is-sold-out .menu-row-thumb,
+.menu-row.is-sold-out .menu-row-name {
+  opacity: 0.5;
+}
+
+.menu-row-price {
+  font-size: 14px;
+  font-weight: 550;
+  text-align: right;
+}
+
+.menu-row-availability {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  font-weight: 560;
+}
+
+.menu-row-availability.is-available {
+  color: var(--green-ink);
+}
+
+.menu-empty {
+  margin: 0;
+  padding: 40px 20px;
+  color: var(--text-3);
+  font-size: 13.5px;
+  text-align: center;
+}
+
+/* ---------- Editor ---------- */
+.menu-editor {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.menu-editor--empty {
+  justify-items: start;
+  color: var(--text-2);
+  font-size: 13.5px;
+}
+
+.menu-editor--empty p {
+  margin: 0;
+}
+
+.menu-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.menu-editor-head h2 {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 630;
+}
+
+.menu-editor-art {
+  height: 132px;
+  border-radius: 12px;
+}
+
+.menu-editor-form {
+  display: grid;
+  gap: 14px;
+}
+
+.menu-price-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 14px;
+  color: var(--text-3);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.menu-price-input:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.menu-price-input input {
+  padding-left: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+.menu-price-input input:focus,
+.menu-price-input input:hover {
+  box-shadow: none;
+}
+
+.menu-availability-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border-radius: 12px;
+}
+
+.menu-availability-row > div {
+  display: grid;
+  flex-grow: 1;
+  gap: 2px;
+}
+
+.menu-availability-row strong {
+  font-size: 14px;
+  font-weight: 580;
+}
+
+.menu-availability-row span {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.menu-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.menu-editor-spacer {
+  flex-grow: 1;
+}
+
+.menu-delete-button {
+  color: var(--red-ink);
+}
+
+/* ---------- Narrow screens ---------- */
+@media (max-width: 1100px) {
+  /* The editor moves above the list so it opens where you are; the empty hint is dropped. */
+  .menu-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .menu-editor {
+    position: static;
+    order: -1;
+  }
+
+  .menu-editor--empty {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .menu-search {
+    width: 100%;
+  }
+
+  .menu-page-actions {
+    width: 100%;
+  }
+
+  .menu-list-head {
+    display: none;
+  }
+
+  /* Dish and price on the first line, the switch and edit button under them. */
+  .menu-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 8px;
+  }
+
+  .menu-row-availability {
+    grid-column: 1;
+  }
+}

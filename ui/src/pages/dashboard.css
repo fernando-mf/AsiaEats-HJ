@@ -483,16 +483,3 @@
   .restaurant-switch-dialog-actions button { width: 100%; }
   .site-footer { flex-direction: column; align-items: center; gap: 2px; }
 }
-
-/* Restaurant portal: menu editor */
-.menu-editor-form { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-background); }
-.menu-editor-form label { display: grid; gap: 7px; color: var(--color-text-secondary); font-size: 12px; font-weight: 700; }
-.menu-form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.menu-form-actions, .managed-menu-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-.menu-quantity-note { margin: 0; font-size: 12px; line-height: 1.5; }
-.menu-existing-heading { margin-top: 28px; }
-.managed-menu-list { display: grid; }
-.managed-menu-item { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--color-border); }
-.managed-menu-info { display: grid; gap: 5px; }
-.managed-menu-info > span:not(.restaurant-status) { color: var(--color-text-secondary); font-size: 12px; }
-@media (max-width: 700px) { .menu-form-grid { grid-template-columns: 1fr; } .managed-menu-item { align-items: flex-start; flex-direction: column; } }
