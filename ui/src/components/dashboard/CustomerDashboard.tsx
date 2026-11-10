@@ -62,8 +62,9 @@ export function CustomerDashboard({
   const [customerPage, setCustomerPage] = useState<CustomerPage>(restoredDashboard?.customerPage ?? 'restaurants');
   // True while the address form opened from "Deliver to" or an address prompt is showing.
   const [focusAddress, setFocusAddress] = useState(false);
-  // Set when the address form was opened from the cart, so saving returns there to finish the order.
-  const [returnToCart, setReturnToCart] = useState(false);
+  // The page the address form was opened from mid-order (cart or restaurant menu), so saving
+  // returns there; null when opened from elsewhere.
+  const [addressReturnPage, setAddressReturnPage] = useState<CustomerPage | null>(null);
   const restaurantPage = restoredDashboard?.restaurantPage ?? 'overview';
   const restaurantSwitchDialogRef = useRef<HTMLDialogElement>(null);
   const { saveName, changePassword } = useAccountActions(run, showToast, onAccountChange);
@@ -215,18 +216,18 @@ export function CustomerDashboard({
   }
 
   // openAddressForm shows the delivery address form on the profile page.
-  function openAddressForm(fromCart = false) {
-    setReturnToCart(fromCart);
+  function openAddressForm(returnPage: CustomerPage | null = null) {
+    setAddressReturnPage(returnPage);
     setFocusAddress(true);
     setCustomerPage('profile');
   }
 
   function closeAddressForm() {
     setFocusAddress(false);
-    setReturnToCart(false);
+    setAddressReturnPage(null);
   }
 
-  // Navigating from the header closes the address form and drops the pending return to the cart.
+  // Navigating from the header closes the address form and drops the pending return page.
   function changePage(page: CustomerPage) {
     closeAddressForm();
     setCustomerPage(page);
@@ -240,8 +241,8 @@ export function CustomerDashboard({
     if (!result) return false;
     setAddress(result.address);
     closeAddressForm();
-    if (returnToCart) {
-      setCustomerPage('cart');
+    if (addressReturnPage) {
+      setCustomerPage(addressReturnPage);
       showToast('Delivery address saved. You can place your order now.');
     } else {
       showToast('Delivery address saved.');
@@ -336,11 +337,14 @@ export function CustomerDashboard({
             restaurant={selected}
             menu={menu}
             cart={cart}
-            cartCount={cartCount}
-            busy={busy}
+            lines={cartLines}
+            total={cartTotal}
+            deliveryStreet={address === undefined ? undefined : (address?.street ?? null)}
             onBack={() => setCustomerPage('restaurants')}
-            onViewCart={() => setCustomerPage('cart')}
+            onCheckout={() => setCustomerPage('cart')}
             onAddToCart={addToCart}
+            onChangeQuantity={changeQuantity}
+            onAddAddress={() => openAddressForm('menu')}
           />
         ) : null}
 
@@ -351,7 +355,7 @@ export function CustomerDashboard({
             total={cartTotal}
             busy={busy}
             hasAddress={address === undefined ? undefined : address !== null}
-            onAddAddress={() => openAddressForm(true)}
+            onAddAddress={() => openAddressForm('cart')}
             onChangeQuantity={changeQuantity}
             onPlaceOrder={() => void placeOrder()}
             onContinueBrowsing={() => setCustomerPage('menu')}

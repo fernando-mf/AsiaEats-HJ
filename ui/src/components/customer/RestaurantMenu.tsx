@@ -1,86 +1,299 @@
-import type { MenuItem, Restaurant } from '../dashboard/dashboard.types';
-import { formatMoney } from '../dashboard/dashboard.utils';
+import { useState } from 'react';
+import { neighbourhoodShortName } from '../../shared/locations/montrealNeighbourhoods';
+import type { CartLine, MenuItem, Restaurant } from '../dashboard/dashboard.types';
+import { formatDistance, formatMoney, initials } from '../dashboard/dashboard.utils';
+import { DishArt } from '../food/DishArt';
+import { dishKind } from '../food/dishKind';
+import { IconArrowLeft, IconArrowRight, IconMinus, IconPin, IconPlus, IconSearch } from '../icons/Icons';
+import './storefront.css';
 
 type RestaurantMenuProps = {
   restaurant?: Restaurant;
   menu: MenuItem[];
+  // Quantity in the cart per menu item id. The cart holds this restaurant's items only.
   cart: Record<string, number>;
-  cartCount: number;
-  busy: string | null;
+  lines: CartLine[];
+  total: number;
+  // The customer's delivery street; null when they have none, undefined while it loads.
+  deliveryStreet: string | null | undefined;
   onBack: () => void;
-  onViewCart: () => void;
+  onCheckout: () => void;
   onAddToCart: (item: MenuItem) => void;
+  onChangeQuantity: (item: MenuItem, delta: number) => void;
+  onAddAddress: () => void;
 };
+
+// Available dishes first, sold-out ones last; otherwise the restaurant's own order.
+function byAvailability(a: MenuItem, b: MenuItem) {
+  return Number(a.status !== 'available') - Number(b.status !== 'available');
+}
+
+function DishTile({
+  item,
+  quantity,
+  orderable,
+  onAdd,
+  onChangeQuantity,
+}: {
+  item: MenuItem;
+  quantity: number;
+  orderable: boolean;
+  onAdd: () => void;
+  onChangeQuantity: (delta: number) => void;
+}) {
+  const soldOut = item.status !== 'available';
+
+  return (
+    <article className={`card storefront-dish${soldOut ? ' is-sold-out' : ''}${quantity ? ' is-in-cart' : ''}`}>
+      <DishArt kind={dishKind(item.name)} className="storefront-dish-art" iconSize={40} />
+      <div className="storefront-dish-body">
+        <strong>{item.name}</strong>
+        <div className="storefront-dish-foot">
+          <span className="mono">{formatMoney(item.price)}</span>
+          {soldOut ? (
+            <span className="pill">Sold out</span>
+          ) : quantity ? (
+            <div className="quantity-stepper" role="group" aria-label={`${item.name} quantity`}>
+              <button type="button" aria-label={`Remove one ${item.name}`} onClick={() => onChangeQuantity(-1)}>
+                <IconMinus size={15} />
+              </button>
+              <span className="mono" aria-live="polite">
+                {quantity}
+              </span>
+              <button
+                type="button"
+                aria-label={`Add one ${item.name}`}
+                disabled={!orderable}
+                onClick={() => onChangeQuantity(1)}
+              >
+                <IconPlus size={15} />
+              </button>
+            </div>
+          ) : (
+            <button
+              className="primary-button icon-button"
+              type="button"
+              aria-label={`Add ${item.name} to cart`}
+              disabled={!orderable}
+              onClick={onAdd}
+            >
+              <IconPlus size={17} />
+            </button>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function OrderSummary({
+  lines,
+  total,
+  deliveryStreet,
+  orderable,
+  onCheckout,
+  onAddAddress,
+}: Pick<RestaurantMenuProps, 'lines' | 'total' | 'deliveryStreet' | 'onCheckout' | 'onAddAddress'> & {
+  orderable: boolean;
+}) {
+  const count = lines.reduce((sum, line) => sum + line.quantity, 0);
+
+  return (
+    <aside className="card storefront-order" aria-labelledby="storefront-order-title">
+      <div className="storefront-order-head">
+        <h2 id="storefront-order-title">Your order</h2>
+        <span className="mono">
+          {count} {count === 1 ? 'item' : 'items'}
+        </span>
+      </div>
+
+      {lines.length ? (
+        <ul className="storefront-order-lines">
+          {lines.map(({ item, quantity }) => (
+            <li key={item.id}>
+              <span className="mono">{quantity}×</span>
+              <span>{item.name}</span>
+              <span className="mono">{formatMoney(item.price * quantity)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="storefront-order-empty">Your cart is empty. Add dishes from the menu to start an order.</p>
+      )}
+
+      <div className="storefront-order-total">
+        <span>Subtotal</span>
+        <span className="mono">{formatMoney(total)}</span>
+      </div>
+
+      {deliveryStreet ? (
+        <p className="storefront-order-address">
+          <IconPin size={15} />
+          <span>
+            Delivering to <strong>{deliveryStreet}</strong>
+          </span>
+        </p>
+      ) : deliveryStreet === null ? (
+        <button className="storefront-order-address is-missing" type="button" onClick={onAddAddress}>
+          <IconPin size={15} />
+          <span>Add a delivery address to order</span>
+        </button>
+      ) : null}
+
+      <button
+        className="primary-button storefront-checkout"
+        type="button"
+        disabled={!lines.length || !orderable}
+        onClick={onCheckout}
+      >
+        Go to checkout
+        <IconArrowRight size={16} />
+      </button>
+    </aside>
+  );
+}
 
 export function RestaurantMenu({
   restaurant,
   menu,
   cart,
-  cartCount,
-  busy,
+  lines,
+  total,
+  deliveryStreet,
   onBack,
-  onViewCart,
+  onCheckout,
   onAddToCart,
+  onChangeQuantity,
+  onAddAddress,
 }: RestaurantMenuProps) {
-  return (
-    <section className="panel storefront-panel">
-      <button className="back-link" onClick={onBack}>
-        ← All restaurants
-      </button>
-      <div className="menu-hero">
-        <span className="menu-hero-art">🥢</span>
-        <div>
-          <p className="eyebrow">RESTAURANT MENU</p>
-          <h1>{restaurant?.name ?? 'Restaurant menu'}</h1>
-          <p className="muted">Freshly made favourites, ready to order.</p>
-          <span className={`restaurant-status status-${restaurant?.status ?? 'closed'}`}>
-            <i />
-            {restaurant?.status ?? 'status unavailable'}
-          </span>
-        </div>
-      </div>
-      <div className="panel-heading menu-heading">
-        <div>
-          <h2>Full menu</h2>
-          <p className="muted">Choose your favourites and add them to your cart.</p>
-        </div>
-        <button className="primary-button" onClick={onViewCart}>
-          View cart · {cartCount}
+  const [query, setQuery] = useState('');
+
+  if (!restaurant) {
+    return (
+      <div className="storefront">
+        <button className="storefront-crumb" type="button" onClick={onBack}>
+          <IconArrowLeft size={15} />
+          Discover
         </button>
+        <p className="empty">Loading the restaurant…</p>
       </div>
-      {menu.length ? (
-        <div className="menu-list">
-          {menu.map(item => (
-            <article className="menu-item storefront-menu-item" key={item.id}>
-              <div className="dish-icon">
-                {item.name.toLowerCase().includes('soup')
-                  ? '🍲'
-                  : item.name.toLowerCase().includes('duck') || item.name.toLowerCase().includes('chicken')
-                    ? '🍗'
-                    : item.name.toLowerCase().includes('dumpling')
-                      ? '🥟'
-                      : '🍜'}
-              </div>
-              <div className="dish-description">
-                <strong>{item.name}</strong>
-                <span>{item.status === 'available' ? 'Made fresh to order' : 'Currently sold out'}</span>
-              </div>
-              <div className="menu-action">
-                <b>{formatMoney(item.price)}</b>
-                <button
-                  className="small-button"
-                  disabled={item.status !== 'available' || busy !== null}
-                  onClick={() => onAddToCart(item)}
-                >
-                  {cart[item.id] ? `Add more (${cart[item.id]})` : 'Add to cart +'}
-                </button>
-              </div>
-            </article>
-          ))}
+    );
+  }
+
+  const orderable = restaurant.status === 'open';
+  const search = query.trim().toLowerCase();
+  const soldOutCount = menu.filter(item => item.status !== 'available').length;
+  const visibleItems = menu.filter(item => item.name.toLowerCase().includes(search)).sort(byAvailability);
+  const neighbourhood = neighbourhoodShortName(restaurant.position.latitude, restaurant.position.longitude);
+  const place = [
+    restaurant.distanceKm !== undefined ? formatDistance(restaurant.distanceKm) : undefined,
+    neighbourhood,
+  ].filter(Boolean);
+  const cartCount = lines.reduce((sum, line) => sum + line.quantity, 0);
+
+  return (
+    <div className={`storefront${cartCount ? ' has-cart-bar' : ''}`}>
+      <button className="storefront-crumb" type="button" onClick={onBack}>
+        <IconArrowLeft size={15} />
+        Discover <span>/ {restaurant.name}</span>
+      </button>
+
+      <DishArt
+        kind={dishKind(restaurant.name)}
+        className={`storefront-cover${orderable ? '' : ' is-unavailable'}`}
+        iconSize={84}
+      />
+
+      <section className="storefront-head" aria-labelledby="storefront-name">
+        <span className="storefront-monogram" aria-hidden="true">
+          {initials(restaurant.name)}
+        </span>
+        <div className="storefront-head-text">
+          <div className="storefront-title">
+            <h1 id="storefront-name">{restaurant.name}</h1>
+            <span className={`restaurant-status status-${restaurant.status}`}>
+              <i />
+              {restaurant.status}
+            </span>
+          </div>
+          <p className="storefront-meta">
+            {place.length ? (
+              <span>
+                <IconPin size={15} />
+                {place.join(' · ')}
+              </span>
+            ) : null}
+            <span>
+              {menu.length} {menu.length === 1 ? 'dish' : 'dishes'}
+              {soldOutCount ? ` · ${soldOutCount} sold out` : ''}
+            </span>
+          </p>
         </div>
-      ) : (
-        <p className="empty">This restaurant hasn’t added menu items yet.</p>
-      )}
-    </section>
+      </section>
+
+      {!orderable ? (
+        <p className="storefront-notice" role="status">
+          {restaurant.name} is {restaurant.status} and isn’t taking orders right now. You can browse the menu, but
+          adding dishes is off until it reopens.
+        </p>
+      ) : null}
+
+      <div className="storefront-body">
+        <section className="storefront-menu" aria-labelledby="storefront-menu-title">
+          <div className="storefront-menu-head">
+            <h2 id="storefront-menu-title">Menu</h2>
+            {menu.length ? (
+              <label className="storefront-search">
+                <IconSearch size={15} />
+                <input
+                  type="search"
+                  aria-label="Search the menu"
+                  placeholder="Search menu"
+                  value={query}
+                  onChange={event => setQuery(event.target.value)}
+                />
+              </label>
+            ) : null}
+          </div>
+
+          {!menu.length ? (
+            <p className="empty">This restaurant hasn’t added any dishes yet.</p>
+          ) : visibleItems.length ? (
+            <div className="storefront-dish-grid">
+              {visibleItems.map(item => (
+                <DishTile
+                  key={item.id}
+                  item={item}
+                  quantity={cart[item.id] ?? 0}
+                  orderable={orderable}
+                  onAdd={() => onAddToCart(item)}
+                  onChangeQuantity={delta => onChangeQuantity(item, delta)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="empty">No dishes match “{query.trim()}”.</p>
+          )}
+        </section>
+
+        <OrderSummary
+          lines={lines}
+          total={total}
+          deliveryStreet={deliveryStreet}
+          orderable={orderable}
+          onCheckout={onCheckout}
+          onAddAddress={onAddAddress}
+        />
+      </div>
+
+      {cartCount ? (
+        <div className="storefront-cart-bar">
+          <button className="primary-button" type="button" onClick={onCheckout}>
+            View cart · {cartCount} {cartCount === 1 ? 'item' : 'items'}
+            <span className="mono">{formatMoney(total)}</span>
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }

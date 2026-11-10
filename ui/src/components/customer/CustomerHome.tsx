@@ -3,7 +3,7 @@ import { DishArt } from '../food/DishArt';
 import { dishKind } from '../food/dishKind';
 import { IconArrowRight, IconPlus, IconSearch } from '../icons/Icons';
 import type { MenuItem, Restaurant } from '../dashboard/dashboard.types';
-import { formatMoney } from '../dashboard/dashboard.utils';
+import { formatDistance, formatMoney } from '../dashboard/dashboard.utils';
 import { AddressPrompt } from './AddressPrompt';
 import './home.css';
 
@@ -26,10 +26,6 @@ type Dish = {
 
 const NEARBY_KM = 3;
 const QUICK_PICKS = 5;
-
-function formatDistance(km: number) {
-  return `${km < 10 ? km.toFixed(1) : Math.round(km)} km`;
-}
 
 function RestaurantCard({
   restaurant,
