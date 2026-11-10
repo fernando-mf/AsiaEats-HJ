@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 
 type ConfirmDialogProps = {
   open: boolean;
@@ -29,6 +29,10 @@ export function ConfirmDialog({
   onConfirm,
 }: ConfirmDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  // Unique per dialog, so two dialogs on one page (e.g. the operator's cancel and restore) don't
+  // share the ids their title and description are announced by.
+  const titleId = useId();
+  const descriptionId = useId();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -41,16 +45,16 @@ export function ConfirmDialog({
     <dialog
       ref={dialogRef}
       className="restaurant-switch-dialog"
-      aria-labelledby="confirm-dialog-title"
-      aria-describedby="confirm-dialog-description"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
       onCancel={event => {
         event.preventDefault();
         if (!busy) onCancel();
       }}
     >
       <div className="restaurant-switch-dialog-content">
-        <h2 id="confirm-dialog-title">{title}</h2>
-        <div id="confirm-dialog-description">{children}</div>
+        <h2 id={titleId}>{title}</h2>
+        <div id={descriptionId}>{children}</div>
         <div className="restaurant-switch-dialog-actions">
           <button className="secondary-button" type="button" autoFocus disabled={busy} onClick={onCancel}>
             {cancelLabel}

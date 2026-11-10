@@ -117,7 +117,9 @@ export class RestaurantsService {
       return restaurant;
     }
 
-    // TODO: implement cannot close restaurant if it has orders in its preparation queue
+    // Pausing or closing only stops new orders: placing one requires an open restaurant
+    // (R-ORD-02). Orders already in flight stay on the board and must still be finished, as the
+    // project description asks of a paused restaurant, so the status change doesn't touch them.
 
     restaurant.status = request.status;
     restaurant.updatedAt = new Date();
