@@ -64,15 +64,13 @@
 }
 
 .menu-list,
-.cart-list,
-.order-list {
+.cart-list {
   display: grid;
   gap: 8px;
 }
 
 .menu-item,
-.cart-row,
-.order-card {
+.cart-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -83,23 +81,19 @@
   border-radius: 11px;
 }
 
-.menu-item > div:first-child,
-.order-details {
+.menu-item > div:first-child {
   display: grid;
   gap: 4px;
   min-width: 0;
 }
 
 .menu-item span,
-.order-card span,
 .empty {
   color: var(--color-text-secondary);
   font-size: 13px;
 }
 
-.menu-action,
-.order-meta,
-.order-controls {
+.menu-action {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -120,33 +114,6 @@
   margin: 16px 0;
   padding-top: 14px;
   border-top: 1px solid var(--color-border);
-}
-
-.order-card {
-  align-items: flex-start;
-}
-
-.order-card-large {
-  padding: 18px;
-}
-
-.order-details {
-  flex: 1;
-}
-
-.order-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.order-controls {
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.order-details small {
-  color: #d89e96;
 }
 
 .empty {
@@ -343,27 +310,14 @@
     align-items: flex-start;
   }
 
-  .menu-item,
-  .order-card {
-    align-items: flex-start;
-  }
-
   .menu-item {
+    align-items: flex-start;
     flex-direction: column;
   }
 
   .menu-action {
     width: 100%;
     justify-content: space-between;
-  }
-
-  .order-card {
-    flex-direction: column;
-  }
-
-  .order-controls {
-    width: 100%;
-    justify-content: flex-start;
   }
 }
 
@@ -447,7 +401,6 @@ button.deliver-to--missing:hover { background: var(--primary-soft); border-color
 .empty-cart > span { font-size: 44px; }
 .empty-cart h2 { margin: 14px 0 4px; }
 .empty-cart p { max-width: 360px; margin: 0 0 20px; color: var(--color-text-secondary); }
-.order-restaurant-name { color: var(--color-primary) !important; font-weight: 700; }
 .restaurant-switch-dialog { width: min(92vw, 500px); padding: 0; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: 16px; box-shadow: 0 28px 70px rgba(0,0,0,.48); }
 .restaurant-switch-dialog::backdrop { background: rgba(3,8,7,.78); backdrop-filter: blur(5px); }
 .restaurant-switch-dialog-content { padding: clamp(24px, 4vw, 32px); }

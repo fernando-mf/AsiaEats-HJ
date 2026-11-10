@@ -292,7 +292,6 @@ input:-webkit-autofill:focus {
    statuses use .restaurant-status.status-<open|paused|closed> with an <i> dot. */
 .pill,
 .order-status,
-.order-card .order-status,
 .restaurant-status {
   display: inline-flex;
   align-items: center;

@@ -323,12 +323,10 @@ export function CustomerDashboard({
             restaurants={restaurants}
             menus={menus}
             hasAddress={Boolean(address)}
-            recentOrders={orders.slice(0, 3)}
             busy={busy}
             onRefresh={() => void loadRestaurants()}
             onOpenRestaurant={selectRestaurant}
             onAddDish={addDish}
-            onViewAllOrders={() => setCustomerPage('orders')}
             onAddAddress={address === null ? () => openAddressForm() : undefined}
           />
         ) : null}

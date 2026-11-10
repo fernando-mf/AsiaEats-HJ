@@ -2,22 +2,19 @@ import { useState } from 'react';
 import { DishArt } from '../food/DishArt';
 import { dishKind } from '../food/dishKind';
 import { IconArrowRight, IconPlus, IconSearch } from '../icons/Icons';
-import type { MenuItem, Order, Restaurant } from '../dashboard/dashboard.types';
+import type { MenuItem, Restaurant } from '../dashboard/dashboard.types';
 import { formatMoney } from '../dashboard/dashboard.utils';
 import { AddressPrompt } from './AddressPrompt';
-import { OrderHistory } from './OrderHistory';
 import './home.css';
 
 type CustomerHomeProps = {
   restaurants: Restaurant[];
   menus: Record<string, MenuItem[]>;
   hasAddress: boolean;
-  recentOrders: Order[];
   busy: string | null;
   onRefresh: () => void;
   onOpenRestaurant: (restaurantId: string) => void;
   onAddDish: (item: MenuItem) => void;
-  onViewAllOrders: () => void;
   // Set only when the customer has no delivery address; shows a prompt to add one.
   onAddAddress?: () => void;
 };
@@ -145,12 +142,10 @@ export function CustomerHome({
   restaurants,
   menus,
   hasAddress,
-  recentOrders,
   busy,
   onRefresh,
   onOpenRestaurant,
   onAddDish,
-  onViewAllOrders,
   onAddAddress,
 }: CustomerHomeProps) {
   const [query, setQuery] = useState('');
@@ -324,18 +319,6 @@ export function CustomerHome({
           </p>
         )}
       </section>
-
-      {recentOrders.length ? (
-        <section className="home-section" aria-labelledby="home-orders-title">
-          <div className="home-section-head">
-            <h2 id="home-orders-title">Recent orders</h2>
-            <button className="text-button" onClick={onViewAllOrders}>
-              View all →
-            </button>
-          </div>
-          <OrderHistory orders={recentOrders} restaurants={restaurants} />
-        </section>
-      ) : null}
     </div>
   );
 }
