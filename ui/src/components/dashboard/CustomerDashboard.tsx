@@ -13,6 +13,8 @@ import { CustomerProfile } from '../customer/CustomerProfile';
 import { OrdersPage } from '../customer/OrdersPage';
 import { CustomerHome } from '../customer/CustomerHome';
 import { RestaurantMenu } from '../customer/RestaurantMenu';
+import { ConfirmDialog } from '../feedback/ConfirmDialog';
+import { orderNumber } from '../restaurant/orderTime';
 import { DashboardHeader } from './DashboardHeader';
 import type {
   Account,
@@ -67,6 +69,8 @@ export function CustomerDashboard({
   const [addressReturnPage, setAddressReturnPage] = useState<CustomerPage | null>(null);
   const restaurantPage = restoredDashboard?.restaurantPage ?? 'overview';
   const restaurantSwitchDialogRef = useRef<HTMLDialogElement>(null);
+  // The order waiting for the customer to confirm its cancellation.
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
   const { saveName, changePassword } = useAccountActions(run, showToast, onAccountChange);
   useScrollToTop(customerPage);
 
@@ -253,9 +257,10 @@ export function CustomerDashboard({
     return true;
   }
 
+  // Runs once the customer confirms in the dialog.
   async function cancelOrder(order: Order) {
-    if (!window.confirm(`Cancel order #${order.id.slice(0, 8)}?`)) return;
     const result = await run(() => requestJson<Order>(`/orders/${order.id}/cancel`, { method: 'POST' }));
+    setCancelTarget(null);
     if (result) {
       showToast('Order cancelled.');
       await loadOrders();
@@ -293,6 +298,24 @@ export function CustomerDashboard({
         onEditAddress={() => openAddressForm()}
         onLogout={onLogout}
       />
+
+      <ConfirmDialog
+        open={cancelTarget !== null}
+        title={cancelTarget ? `Cancel order ${orderNumber(cancelTarget)}?` : 'Cancel order?'}
+        confirmLabel="Cancel order"
+        busyLabel="Cancelling…"
+        cancelLabel="Keep order"
+        busy={busy !== null}
+        onCancel={() => setCancelTarget(null)}
+        onConfirm={() => {
+          if (cancelTarget) void cancelOrder(cancelTarget);
+        }}
+      >
+        <p>
+          {restaurants.find(restaurant => restaurant.id === cancelTarget?.restaurantId)?.name ?? 'The restaurant'}{' '}
+          hasn’t accepted it yet, so it won’t be prepared. This can’t be undone.
+        </p>
+      </ConfirmDialog>
 
       <dialog
         ref={restaurantSwitchDialogRef}
@@ -374,7 +397,7 @@ export function CustomerDashboard({
             onRefreshOrders={() => void loadOrders()}
             onFindRestaurants={() => setCustomerPage('restaurants')}
             onOpenRestaurant={selectRestaurant}
-            onCancelOrder={order => void cancelOrder(order)}
+            onCancelOrder={setCancelTarget}
           />
         ) : null}
 
