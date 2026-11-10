@@ -9,6 +9,7 @@ import {
   MenuItemCreationRequest,
   MenuItemDeletedEvent,
   MenuItemStatus,
+  MenuItemStatusChangedEvent,
   MenuItemUpdatedEvent,
   MenuItemUpdateRequest,
   Restaurant,
@@ -218,6 +219,13 @@ export class RestaurantsService {
     const restaurant = await this.getManagedRestaurant(actor, restaurantId);
     const menuItem = await this.repository.getMenuItem(restaurant.id, itemId);
 
+    const previousStatus = menuItem.status;
+    const detailsChanged = menuItem.name !== request.name || menuItem.price !== request.price;
+    const statusChanged = previousStatus !== request.status;
+    if (!detailsChanged && !statusChanged) {
+      return menuItem;
+    }
+
     menuItem.name = request.name;
     menuItem.price = request.price;
     menuItem.status = request.status;
@@ -225,13 +233,25 @@ export class RestaurantsService {
 
     const updated = await this.repository.updateMenuItem(menuItem);
 
-    await this.events.publish(
-      new MenuItemUpdatedEvent({
-        entityId: updated.id,
-        payload: updated,
-        actor,
-      }),
-    );
+    // One event per kind of change: details and the availability transition are recorded apart.
+    if (detailsChanged) {
+      await this.events.publish(
+        new MenuItemUpdatedEvent({
+          entityId: updated.id,
+          payload: updated,
+          actor,
+        }),
+      );
+    }
+    if (statusChanged) {
+      await this.events.publish(
+        new MenuItemStatusChangedEvent({
+          entityId: updated.id,
+          payload: { previousStatus, newStatus: updated.status },
+          actor,
+        }),
+      );
+    }
 
     return updated;
   }
