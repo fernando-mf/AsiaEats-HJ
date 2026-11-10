@@ -15,7 +15,9 @@ import { GetMeCommand } from '#application/commands/reg/get-me.command.js';
 import { CurrentActor } from '#application/auth/current-actor.decorator.js';
 import { LoginCommand, LoginResult } from '#application/commands/reg/login.command.js';
 import { CommandRunner } from '#application/commands/command-runner.js';
+import { AuthorizedCommand } from '#application/commands/decorators/authorized-command.js';
 import { LoggedCommand } from '#application/commands/decorators/logged-command.js';
+import { ALL_ROLES, ApiRoles, getApiRoles } from '#application/controllers/api-roles.decorator.js';
 import { CreateAccountCommand } from '#application/commands/reg/create-account.command.js';
 import { Public } from '#application/auth/public.decorator.js';
 import { Command } from '#application/commands/command.js';
@@ -64,12 +66,14 @@ export class AuthController {
   }
 
   @Get('me')
+  @ApiRoles(...ALL_ROLES)
   @ApiOperation({ summary: 'Get current account' })
   @ApiBearerAuth()
   @ApiOkResponse({ type: AccountResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
   me(@CurrentActor() actor: Actor) {
     let command: Command<Account> = new GetMeCommand(this.service, actor);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.me));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);

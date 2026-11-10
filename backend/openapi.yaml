@@ -80,6 +80,7 @@ paths:
         - auth
   /api/auth/me:
     get:
+      description: "**Allowed roles:** `customer`, `restaurant`, `courier`, `operator`"
       operationId: AuthController_me
       parameters: []
       responses:
@@ -95,13 +96,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `customer`, `restaurant`, `courier`, `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
       summary: Get current account
       tags:
         - auth
+      x-roles:
+        - customer
+        - restaurant
+        - courier
+        - operator
   /api/accounts/me:
     put:
+      description: "**Allowed roles:** `customer`, `restaurant`, `courier`, `operator`"
       operationId: AccountsController_update
       parameters: []
       requestBody:
@@ -129,13 +142,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `customer`, `restaurant`, `courier`, `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
       summary: Update current account
       tags:
         - accounts
+      x-roles:
+        - customer
+        - restaurant
+        - courier
+        - operator
   /api/accounts/me/password:
     put:
+      description: "**Allowed roles:** `customer`, `restaurant`, `courier`, `operator`"
       operationId: AccountsController_changePassword
       parameters: []
       requestBody:
@@ -163,11 +188,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `customer`, `restaurant`, `courier`, `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
       summary: Change current account password
       tags:
         - accounts
+      x-roles:
+        - customer
+        - restaurant
+        - courier
+        - operator
   /api/customers/me:
     put:
       description: "**Allowed roles:** `customer`"
