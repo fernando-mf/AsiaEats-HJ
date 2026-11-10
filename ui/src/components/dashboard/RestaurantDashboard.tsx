@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { requestJson } from '../../shared/api/client';
 import { useAccountActions } from '../account/useAccountActions';
-import { logError } from '../../shared/console/outputConsole';
 import {
   readDashboardSession,
   writeDashboardSession,
@@ -9,7 +8,7 @@ import {
 } from '../../shared/dashboard/dashboardSession';
 import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
 import { MenuPage } from '../restaurant/MenuPage';
-import { RestaurantOrders } from '../restaurant/RestaurantOrders';
+import { OrderBoard } from '../restaurant/OrderBoard';
 import { RestaurantProfile } from '../restaurant/RestaurantProfile';
 import { RestaurantSidebar } from '../restaurant/RestaurantSidebar';
 import type {
@@ -57,6 +56,13 @@ export function RestaurantDashboard({
   const [selectedRestaurant, setSelectedRestaurant] = useState(restoredDashboard?.selectedRestaurantId ?? '');
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  // Ids of accepted orders in preparation order; only the first may start preparing.
+  const [queue, setQueue] = useState<string[]>([]);
+  // The background refresh reads busy through a ref so the timer isn't restarted on every action.
+  const busyRef = useRef(busy);
+  useEffect(() => {
+    busyRef.current = busy;
+  }, [busy]);
   const [restaurantPage, setRestaurantPage] = useState<RestaurantPage>(restoredDashboard?.restaurantPage ?? 'orders');
   useScrollToTop(restaurantPage);
   const customerPage = restoredDashboard?.customerPage ?? 'restaurants';
@@ -80,11 +86,41 @@ export function RestaurantDashboard({
     [run],
   );
 
-  const loadOrders = useCallback(async () => {
+  // fetchOrders reads the restaurant's orders and its preparation queue (accepted orders, in
+  // the order the backend lets them start preparing).
+  const fetchOrders = useCallback(async () => {
     const query = selectedRestaurant ? `?restaurantId=${encodeURIComponent(selectedRestaurant)}` : '';
-    const result = await run(() => requestJson<Order[]>(`/orders${query}`));
-    if (result) setOrders(result);
-  }, [run, selectedRestaurant]);
+    const [all, queued] = await Promise.all([
+      requestJson<Order[]>(`/orders${query}`),
+      selectedRestaurant
+        ? requestJson<Order[]>(`/restaurants/${selectedRestaurant}/preparation-queue`)
+        : Promise.resolve<Order[]>([]),
+    ]);
+    return { all, queue: queued.map(order => order.id) };
+  }, [selectedRestaurant]);
+
+  const loadOrders = useCallback(async () => {
+    const result = await run(fetchOrders);
+    if (result) {
+      setOrders(result.all);
+      setQueue(result.queue);
+    }
+  }, [fetchOrders, run]);
+
+  // New orders arrive without a click: refresh quietly every 15 s, skipping while an action runs.
+  // Failures are left to the next manual action, which reports them.
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (busyRef.current !== null) return;
+      fetchOrders()
+        .then(result => {
+          setOrders(result.all);
+          setQueue(result.queue);
+        })
+        .catch(() => undefined);
+    }, 15_000);
+    return () => window.clearInterval(timer);
+  }, [fetchOrders]);
 
   useEffect(() => {
     void loadRestaurants();
@@ -104,25 +140,22 @@ export function RestaurantDashboard({
 
   const ownedRestaurant = restaurants.find(restaurant => restaurant.ownerId === account.id);
 
-  async function orderAction(order: Order, action: OrderAction) {
-    const body = action === 'reject' ? { reason: window.prompt('Why is this order being rejected?') ?? '' } : undefined;
-    if (action === 'reject' && (!body || body.reason.trim().length < 3)) {
-      const message = 'Please enter a rejection reason of at least 3 characters.';
-      logError('RejectOrderCommand', message);
-      showToast(message, 'error');
-      return;
-    }
+  // orderAction moves an order to its next status. Rejecting needs a reason,
+  // which the board's reject dialog collects. Resolves to whether the action succeeded.
+  async function orderAction(order: Order, action: OrderAction, reason?: string): Promise<boolean> {
+    const body = action === 'reject' ? { reason } : undefined;
     const result = await run(() => requestJson<Order>(`/orders/${order.id}/${action}`, { method: 'POST', body }));
-    if (result) {
-      const messages = {
-        accept: 'Order accepted.',
-        reject: 'Order rejected.',
-        prepare: 'Order is now being prepared.',
-        ready: 'Order marked ready.',
-      };
-      showToast(messages[action]);
-      await loadOrders();
-    }
+    if (!result) return false;
+    const number = `#${order.id.slice(0, 8)}`;
+    const messages: Record<OrderAction, string> = {
+      accept: `${number} accepted and added to the preparation queue.`,
+      reject: `${number} rejected.`,
+      prepare: `${number} is being prepared.`,
+      ready: `${number} is ready for pickup.`,
+    };
+    showToast(messages[action]);
+    await loadOrders();
+    return true;
   }
 
   // saveMenuItem creates a dish (itemId null) or updates one, and swaps the saved dish into the menu.
@@ -197,8 +230,6 @@ export function RestaurantDashboard({
   }
 
   const newOrderCount = orders.filter(order => order.status === 'placed').length;
-  // The Menu and Profile pages draw their own heads; Orders still uses this one until it is rebuilt.
-  const pageTitle = restaurantPage === 'orders' ? 'Orders' : null;
 
   return (
     <div className="restaurant-shell">
@@ -213,20 +244,15 @@ export function RestaurantDashboard({
         onLogout={onLogout}
       />
       <div className="restaurant-main">
-        {pageTitle ? (
-          <div className="restaurant-page-head">
-            <p className="eyebrow">{ownedRestaurant ? `${ownedRestaurant.name} · ${pageTitle}` : pageTitle}</p>
-            <h1>{pageTitle}</h1>
-          </div>
-        ) : null}
-
         {restaurantPage === 'orders' ? (
-          <RestaurantOrders
+          <OrderBoard
+            restaurant={ownedRestaurant}
             orders={orders}
-            restaurants={restaurants}
+            queue={queue}
             busy={busy}
             onAction={orderAction}
             onRefresh={() => void loadOrders()}
+            onToggleAccepting={toggleAccepting}
           />
         ) : null}
 

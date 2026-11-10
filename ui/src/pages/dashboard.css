@@ -149,27 +149,6 @@
   color: #d89e96;
 }
 
-.lifecycle {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  color: #c4d4cf;
-  font-size: 13px;
-}
-
-.lifecycle span {
-  padding: 7px 10px;
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-}
-
-.lifecycle i {
-  color: #71847e;
-  font-style: normal;
-}
-
 .empty {
   margin: 0;
   padding: 18px;

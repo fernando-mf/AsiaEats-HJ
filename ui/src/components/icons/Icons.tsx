@@ -174,6 +174,22 @@ export function IconClose(props: IconProps) {
   );
 }
 
+export function IconPause(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 5v14M15 5v14" />
+    </Icon>
+  );
+}
+
+export function IconPlay(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M7 5v14l12-7z" />
+    </Icon>
+  );
+}
+
 export function IconArrowRight(props: IconProps) {
   return (
     <Icon {...props}>
