@@ -1,3 +1,12 @@
+x-backend: &backend
+  image: asiaeats-backend-e2e
+  pull_policy: never
+  environment: &backend-env
+    DATABASE_URL: postgresql://root:root@postgres:5432/app
+    PORT: "3000"
+    JWT_SECRET: e2e-jwt-secret-with-at-least-32-characters
+    ENV_MANAGER_ENABLED: "true"
+
 services:
   postgres:
     image: postgres:18
@@ -14,6 +23,45 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  migrate:
+    <<: *backend
+    build:
+      context: ../..
+      dockerfile: backend/Dockerfile
+    command: ["pnpm", "--filter", "backend", "db:deploy"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *backend
+    command: ["pnpm", "--filter", "backend", "start"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/api/status').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  tests:
+    <<: *backend
+    command: ["pnpm", "--filter", "backend", "test:e2e:local"]
+    volumes:
+      - ./tests:/app/backend/integration/tests
+    environment:
+      <<: *backend-env
+      API_URL: http://api:3000/api
+      UPDATE_SNAPSHOTS: ${UPDATE_SNAPSHOTS:-false}
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   postgres_data:

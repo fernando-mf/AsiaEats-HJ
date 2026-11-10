@@ -1,0 +1,18 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`couriers > get me > success 1`] = `
+{
+  "account": {
+    "createdAt": 2026-02-01T00:00:00.000Z,
+    "id": "test",
+    "name": "Courier Two",
+    "role": "courier",
+    "updatedAt": 2026-02-01T00:00:00.000Z,
+    "username": "courier2",
+  },
+  "createdAt": 2026-02-01T00:00:00.000Z,
+  "position": null,
+  "status": "offline",
+  "updatedAt": 2026-02-01T00:00:00.000Z,
+}
+`;

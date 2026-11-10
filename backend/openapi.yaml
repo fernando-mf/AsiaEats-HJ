@@ -204,6 +204,129 @@ paths:
         - restaurant
         - courier
         - operator
+  /api/couriers/me:
+    get:
+      description: "**Allowed roles:** `courier`"
+      operationId: CouriersController_get
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourierResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Get courier profile
+      tags:
+        - couriers
+      x-roles:
+        - courier
+  /api/couriers:
+    get:
+      description: "**Allowed roles:** `operator`"
+      operationId: CouriersController_find
+      parameters:
+        - name: status
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - offline
+              - idle
+              - assigned
+              - carrying
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CourierSummary"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: List couriers
+      tags:
+        - couriers
+      x-roles:
+        - operator
+  /api/couriers/me/position:
+    put:
+      description: "**Allowed roles:** `courier`"
+      operationId: CouriersController_updatePosition
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CourierPositionUpdateRequest"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourierResponse"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Update courier position
+      tags:
+        - couriers
+      x-roles:
+        - courier
   /api/customers/me:
     put:
       description: "**Allowed roles:** `customer`"
@@ -1367,6 +1490,73 @@ components:
       required:
         - currentPassword
         - newPassword
+    Position:
+      type: object
+      properties:
+        latitude:
+          type: number
+        longitude:
+          type: number
+      required:
+        - latitude
+        - longitude
+    CourierResponse:
+      type: object
+      properties:
+        position:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/Position"
+        status:
+          enum:
+            - offline
+            - idle
+            - assigned
+            - carrying
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+        account:
+          $ref: "#/components/schemas/AccountResponse"
+      required:
+        - position
+        - status
+        - createdAt
+        - updatedAt
+        - account
+    CourierSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        position:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/Position"
+        status:
+          type: string
+          enum:
+            - offline
+            - idle
+            - assigned
+            - carrying
+      required:
+        - id
+        - position
+        - status
+    CourierPositionUpdateRequest:
+      type: object
+      properties:
+        position:
+          $ref: "#/components/schemas/Position"
+      required:
+        - position
     AddressRequest:
       type: object
       properties:
@@ -1573,16 +1763,6 @@ components:
           maxLength: 500
       required:
         - reason
-    Position:
-      type: object
-      properties:
-        latitude:
-          type: number
-        longitude:
-          type: number
-      required:
-        - latitude
-        - longitude
     RestaurantCreationRequest:
       type: object
       properties:
