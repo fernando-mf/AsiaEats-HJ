@@ -4,6 +4,7 @@ import type { Command } from '#application/commands/command.js';
 
 export class GetMenuCommand implements Command<MenuItem[]> {
   readonly name = 'GetMenuCommand';
+  readonly readOnly = true;
 
   constructor(
     private readonly restaurantsService: RestaurantsService,

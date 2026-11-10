@@ -3,6 +3,7 @@ import type { Command } from '#application/commands/command.js';
 
 export class FindRestaurantsCommand implements Command<RestaurantSearchResult[]> {
   readonly name = 'FindRestaurantsCommand';
+  readonly readOnly = true;
 
   constructor(
     private readonly restaurantsService: RestaurantsService,

@@ -3,6 +3,7 @@ import type { Command } from '#application/commands/command.js';
 
 export class GetEventsByEntityCommand implements Command<StoredEvent[]> {
   readonly name = 'GetEventsByEntityCommand';
+  readonly readOnly = true;
 
   constructor(
     private readonly eventsService: EventsService,

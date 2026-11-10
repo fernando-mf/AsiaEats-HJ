@@ -17,7 +17,7 @@ export class PrismaOrderRepository extends OrderRepository {
 
   async create(order: Order): Promise<Order> {
     try {
-      const row = await this.db.order.create({
+      const row = await this.db.client().order.create({
         data: {
           customerId: order.customerId,
           restaurantId: order.restaurantId,
@@ -51,7 +51,7 @@ export class PrismaOrderRepository extends OrderRepository {
   }
 
   async getById(id: string, filter: OrderFilter = {}): Promise<Order> {
-    const row = await this.db.order.findUnique({
+    const row = await this.db.client().order.findUnique({
       where: {
         id,
         customerId: filter.customerId,
@@ -68,7 +68,7 @@ export class PrismaOrderRepository extends OrderRepository {
 
   async list(filter: OrderFilter = {}): Promise<Order[]> {
     try {
-      const rows = await this.db.order.findMany({
+      const rows = await this.db.client().order.findMany({
         where: {
           customerId: filter.customerId,
           restaurantId: filter.restaurantId,
@@ -86,7 +86,7 @@ export class PrismaOrderRepository extends OrderRepository {
 
   async listAccepted(restaurantId: string): Promise<Order[]> {
     try {
-      const rows = await this.db.order.findMany({
+      const rows = await this.db.client().order.findMany({
         where: { restaurantId, status: OrderStatus.Accepted },
         include: { lines: { orderBy: [{ id: 'asc' }] } },
         orderBy: preparationQueueOrder,
@@ -100,7 +100,7 @@ export class PrismaOrderRepository extends OrderRepository {
 
   async getNextAccepted(restaurantId: string): Promise<Order | undefined> {
     try {
-      const row = await this.db.order.findFirst({
+      const row = await this.db.client().order.findFirst({
         where: { restaurantId, status: OrderStatus.Accepted },
         include: { lines: { orderBy: [{ id: 'asc' }] } },
         orderBy: preparationQueueOrder,
@@ -114,7 +114,7 @@ export class PrismaOrderRepository extends OrderRepository {
 
   async updateStatus(order: Order, previousStatus: OrderStatus): Promise<Order> {
     try {
-      const row = await this.db.order.update({
+      const row = await this.db.client().order.update({
         where: { id: order.id, status: previousStatus },
         data: {
           status: order.status,

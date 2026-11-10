@@ -7,5 +7,9 @@ export abstract class CommandDecorator<TResult> implements Command<TResult> {
     return this.wrapped.name;
   }
 
+  get readOnly(): boolean | undefined {
+    return this.wrapped.readOnly;
+  }
+
   abstract execute(): Promise<TResult>;
 }

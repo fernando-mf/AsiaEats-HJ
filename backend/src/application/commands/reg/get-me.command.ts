@@ -3,6 +3,7 @@ import type { Command } from '#application/commands/command.js';
 
 export class GetMeCommand implements Command<Account> {
   readonly name = 'GetMeCommand';
+  readonly readOnly = true;
 
   constructor(
     private readonly accountsService: AccountsService,

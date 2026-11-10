@@ -20,7 +20,7 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
 
   async create(restaurant: Restaurant): Promise<Restaurant> {
     try {
-      const row = await this.db.restaurant.create({
+      const row = await this.db.client().restaurant.create({
         data: {
           ownerId: restaurant.ownerId,
           name: restaurant.name,
@@ -43,7 +43,7 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
 
   async createMenuItem(menuItem: MenuItem): Promise<MenuItem> {
     try {
-      const row = await this.db.menuItem.create({
+      const row = await this.db.client().menuItem.create({
         data: {
           restaurantId: menuItem.restaurantId,
           name: menuItem.name,
@@ -64,7 +64,7 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
   }
 
   async getMenuItem(restaurantId: string, itemId: string): Promise<MenuItem> {
-    const row = await this.db.menuItem.findFirst({ where: { id: itemId, restaurantId } });
+    const row = await this.db.client().menuItem.findFirst({ where: { id: itemId, restaurantId } });
     if (!row) {
       throw new NotFoundError('menu item');
     }
@@ -74,7 +74,7 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
 
   async listMenuItems(restaurantId: string): Promise<MenuItem[]> {
     try {
-      const rows = await this.db.menuItem.findMany({
+      const rows = await this.db.client().menuItem.findMany({
         where: { restaurantId },
         orderBy: [{ createdAt: 'asc' }],
       });
@@ -87,7 +87,7 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
 
   async updateMenuItem(menuItem: MenuItem): Promise<MenuItem> {
     try {
-      const row = await this.db.menuItem.update({
+      const row = await this.db.client().menuItem.update({
         where: { id: menuItem.id },
         data: {
           name: menuItem.name,
@@ -104,14 +104,14 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
   }
 
   async deleteMenuItem(restaurantId: string, itemId: string): Promise<void> {
-    const result = await this.db.menuItem.deleteMany({ where: { id: itemId, restaurantId } });
+    const result = await this.db.client().menuItem.deleteMany({ where: { id: itemId, restaurantId } });
     if (result.count === 0) {
       throw new NotFoundError('menu item');
     }
   }
 
   async getById(id: string): Promise<Restaurant> {
-    const row = await this.db.restaurant.findUnique({ where: { id } });
+    const row = await this.db.client().restaurant.findUnique({ where: { id } });
     if (!row) {
       throw new NotFoundError('restaurant');
     }
@@ -121,7 +121,7 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
 
   async update(restaurant: Restaurant): Promise<Restaurant> {
     try {
-      const row = await this.db.restaurant.update({
+      const row = await this.db.client().restaurant.update({
         where: { id: restaurant.id },
         data: {
           name: restaurant.name,
@@ -139,7 +139,7 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
 
   async updateStatus(restaurant: Restaurant): Promise<Restaurant> {
     try {
-      const row = await this.db.restaurant.update({
+      const row = await this.db.client().restaurant.update({
         where: { id: restaurant.id },
         data: {
           status: restaurant.status,
@@ -156,7 +156,7 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
   async list(filter: RestaurantFilter = {}): Promise<RestaurantSearchResult[]> {
     try {
       if (!filter.position) {
-        const rows = await this.db.restaurant.findMany({ orderBy: [{ createdAt: 'asc' }] });
+        const rows = await this.db.client().restaurant.findMany({ orderBy: [{ createdAt: 'asc' }] });
         return rows.map(toRestaurantModel);
       }
 
@@ -167,7 +167,7 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
           ? Prisma.empty
           : Prisma.sql`WHERE earth_distance(ll_to_earth(latitude, longitude), ${origin}) <= ${filter.radiusKm * 1000}::float8`;
 
-      const rows = await this.db.$queryRaw<RestaurantDistanceRow[]>`
+      const rows = await this.db.client().$queryRaw<RestaurantDistanceRow[]>`
         SELECT id, owner_id, name, status::text AS status, latitude, longitude, created_at, updated_at,
                earth_distance(ll_to_earth(latitude, longitude), ${origin}) / 1000 AS distance_km
         FROM restaurants
@@ -182,7 +182,7 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
 
   async getByOwnerId(ownerId: string): Promise<Restaurant> {
     try {
-      const row = await this.db.restaurant.findFirst({
+      const row = await this.db.client().restaurant.findFirst({
         where: { ownerId },
         orderBy: [{ createdAt: 'asc' }],
         take: 1,

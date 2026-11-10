@@ -3,6 +3,7 @@ import type { Command } from '#application/commands/command.js';
 
 export class GetCustomerCommand implements Command<Customer> {
   readonly name = 'GetCustomerCommand';
+  readonly readOnly = true;
 
   constructor(
     private readonly customersService: CustomersService,
