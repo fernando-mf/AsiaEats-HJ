@@ -6,7 +6,7 @@ import {
   type CustomerPage,
 } from '../../shared/dashboard/dashboardSession';
 import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
-import { requestJson } from '../../shared/api/client';
+import { ApiError, requestJson } from '../../shared/api/client';
 import { useAccountActions } from '../account/useAccountActions';
 import { CartView } from '../customer/CartView';
 import { CustomerProfile } from '../customer/CustomerProfile';
@@ -82,15 +82,27 @@ export function CustomerDashboard({
     setRestaurants(result);
     setSelectedRestaurant(current => current || result[0]?.id || '');
 
-    const entries = await run(() =>
-      Promise.all(
+    // Each menu loads on its own, so one that fails (it is logged in the output console) only
+    // leaves that restaurant's dishes out of the home page instead of every dish. A session that
+    // is no longer valid is still thrown, so run() ends it.
+    const settled = await run(async () => {
+      const outcomes = await Promise.allSettled(
         result.map(
           async restaurant =>
             [restaurant.id, await requestJson<MenuItem[]>(`/restaurants/${restaurant.id}/menu`)] as const,
         ),
-      ),
-    );
-    if (entries) setMenus(Object.fromEntries(entries));
+      );
+      const expired = outcomes.find(
+        outcome =>
+          outcome.status === 'rejected' &&
+          outcome.reason instanceof ApiError &&
+          outcome.reason.code === 'unauthenticated',
+      );
+      if (expired?.status === 'rejected') throw expired.reason;
+      return outcomes;
+    });
+    if (!settled) return;
+    setMenus(Object.fromEntries(settled.flatMap(outcome => (outcome.status === 'fulfilled' ? [outcome.value] : []))));
   }, [address, run]);
 
   // Numbers each menu request. Responses can arrive out of order when the customer switches

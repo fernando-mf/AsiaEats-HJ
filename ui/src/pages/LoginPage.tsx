@@ -6,7 +6,8 @@ import { logError, setConsoleActor } from '../shared/console/outputConsole';
 
 type LoginResponse = { accessToken: string; account: { username: string; role: string } };
 
-// Seeded demo accounts, one per role (backend/src/domain/env/env.seed.ts). All share one password.
+// Seeded demo accounts, one per role, for the "click to fill" buttons. They copy
+// backend/config/seed.json: update both when a username or the shared password changes there.
 const DEMO_PASSWORD = 'password123';
 const demoAccounts = [
   { username: 'alice', role: 'customer' },

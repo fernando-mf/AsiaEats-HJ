@@ -9,6 +9,7 @@ import {
 import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
 import { MenuPage } from '../restaurant/MenuPage';
 import { OrderBoard } from '../restaurant/OrderBoard';
+import { orderNumber } from '../restaurant/orderTime';
 import { Overview } from '../restaurant/Overview';
 import { RestaurantProfile } from '../restaurant/RestaurantProfile';
 import { RestaurantSidebar } from '../restaurant/RestaurantSidebar';
@@ -150,7 +151,7 @@ export function RestaurantDashboard({
     const body = action === 'reject' ? { reason } : undefined;
     const result = await run(() => requestJson<Order>(`/orders/${order.id}/${action}`, { method: 'POST', body }));
     if (!result) return false;
-    const number = `#${order.id.slice(0, 8)}`;
+    const number = orderNumber(order);
     const messages: Record<OrderAction, string> = {
       accept: `${number} accepted and added to the preparation queue.`,
       reject: `${number} rejected.`,

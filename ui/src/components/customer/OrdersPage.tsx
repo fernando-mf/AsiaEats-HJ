@@ -4,6 +4,7 @@ import { dishKind } from '../food/dishKind';
 import { IconCheck, IconChevronRight, IconClock, IconPin, IconSearch } from '../icons/Icons';
 import type { Order, Restaurant } from '../dashboard/dashboard.types';
 import { formatMoney, orderTotal } from '../dashboard/dashboard.utils';
+import { orderNumber } from '../restaurant/orderTime';
 import './orders.css';
 
 type OrdersPageProps = {
@@ -113,12 +114,7 @@ function OrderSteps({ order }: { order: Order }) {
   );
 }
 
-function LiveOrder({
-  order,
-  restaurantName,
-  busy,
-  onCancel,
-}: CancelProps & { order: Order; restaurantName: string }) {
+function LiveOrder({ order, restaurantName, busy, onCancel }: CancelProps & { order: Order; restaurantName: string }) {
   const address = order.deliveryAddress;
 
   return (
@@ -131,7 +127,7 @@ function LiveOrder({
             <StatusPill status={order.status} />
           </div>
           <span className="mono">
-            #{order.id.slice(0, 8)} · {itemCount(order)} · placed {timeFormat.format(new Date(order.createdAt))}
+            {orderNumber(order)} · {itemCount(order)} · placed {timeFormat.format(new Date(order.createdAt))}
           </span>
         </div>
         <div className="order-live-total">
@@ -203,7 +199,7 @@ function CompactOrder({
         <span>
           {itemSummary(order)}{' '}
           <span className="mono">
-            · #{order.id.slice(0, 8)} · placed {timeFormat.format(new Date(order.createdAt))}
+            · {orderNumber(order)} · placed {timeFormat.format(new Date(order.createdAt))}
           </span>
         </span>
       </div>
