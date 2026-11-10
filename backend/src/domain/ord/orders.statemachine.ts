@@ -1,95 +1,59 @@
-import { ApplicationError } from '#domain/errors.js';
-import { AccountRole, type Actor } from '#domain/reg/index.js';
-import { Order, OrderStatus, OrderStatusChangedEvent } from './orders.models.js';
+import type { Actor } from '#domain/reg/index.js';
+import { type Order, OrderStatusChangedEvent } from './orders.models.js';
+import { type OrderState, stateOf } from './orders.states.js';
 
-export class InvalidOrderTransitionError extends ApplicationError {
-  statusCode = 409;
-  code = 'invalid_order_transition';
-
-  constructor(
-    readonly from: OrderStatus,
-    readonly to: OrderStatus,
-  ) {
-    super(`invalid order transition: ${from} -> ${to}`);
-  }
-}
-
-// Order status transition rules.
-const ALLOWED_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
-  [OrderStatus.Placed]: [OrderStatus.Accepted, OrderStatus.Rejected, OrderStatus.Cancelled],
-  [OrderStatus.Accepted]: [OrderStatus.Preparing, OrderStatus.Cancelled],
-  [OrderStatus.Preparing]: [OrderStatus.Ready, OrderStatus.Cancelled],
-  [OrderStatus.Ready]: [OrderStatus.PickedUp, OrderStatus.Cancelled],
-  [OrderStatus.PickedUp]: [OrderStatus.Delivered, OrderStatus.Cancelled],
-  [OrderStatus.Delivered]: [],
-  [OrderStatus.Rejected]: [],
-  [OrderStatus.Cancelled]: [],
-};
-
-const CANCELLABLE_FROM: Partial<Record<AccountRole, readonly OrderStatus[]>> = {
-  [AccountRole.Customer]: [OrderStatus.Placed],
-  [AccountRole.Operator]: Object.values(OrderStatus),
-};
-
-function validateTransition(from: OrderStatus, to: OrderStatus): void {
-  const allowed = ALLOWED_TRANSITIONS[from]?.includes(to) ?? false;
-
-  if (!allowed) {
-    throw new InvalidOrderTransitionError(from, to);
-  }
-}
-
-// OrderStateMachine defines available transitions on an order. Each transition is validated.
+// OrderStateMachine is the context of the State pattern (R-ORD-04): it holds the order's
+// current state and delegates each action to it. The state either refuses the action
+// (InvalidOrderTransitionError, leaving the order untouched) or returns the next state; the
+// context then moves the order to it and returns the event to record (R-ORD-05).
 export class OrderStateMachine {
+  private state: OrderState;
+
   constructor(
     private readonly actor: Actor,
     private readonly order: Order,
-  ) {}
+  ) {
+    this.state = stateOf(order.status);
+  }
 
   accept(): OrderStatusChangedEvent {
-    return this.transition(OrderStatus.Accepted);
+    return this.moveTo(this.state.accept());
   }
 
   reject(reason: string): OrderStatusChangedEvent {
-    const event = this.transition(OrderStatus.Rejected, { reason });
+    const event = this.moveTo(this.state.reject(), { reason });
     this.order.rejectionReason = reason;
     return event;
   }
 
   cancel(): OrderStatusChangedEvent {
-    const allowed = CANCELLABLE_FROM[this.actor.role]?.includes(this.order.status) ?? false;
-    if (!allowed) {
-      throw new InvalidOrderTransitionError(this.order.status, OrderStatus.Cancelled);
-    }
-
-    return this.transition(OrderStatus.Cancelled);
+    return this.moveTo(this.state.cancel(this.actor));
   }
 
   prepare(): OrderStatusChangedEvent {
-    return this.transition(OrderStatus.Preparing);
+    return this.moveTo(this.state.prepare());
   }
 
   ready(): OrderStatusChangedEvent {
-    return this.transition(OrderStatus.Ready);
+    return this.moveTo(this.state.ready());
   }
 
   pickUp(): OrderStatusChangedEvent {
-    return this.transition(OrderStatus.PickedUp);
+    return this.moveTo(this.state.pickUp());
   }
 
   deliver(): OrderStatusChangedEvent {
-    return this.transition(OrderStatus.Delivered);
+    return this.moveTo(this.state.deliver());
   }
 
-  private transition(to: OrderStatus, extra: { reason?: string } = {}): OrderStatusChangedEvent {
-    const previousStatus = this.order.status;
-    validateTransition(previousStatus, to);
-
-    this.order.status = to;
+  private moveTo(next: OrderState, extra: { reason?: string } = {}): OrderStatusChangedEvent {
+    const previousStatus = this.state.status;
+    this.state = next;
+    this.order.status = next.status;
 
     return new OrderStatusChangedEvent({
       entityId: this.order.id,
-      payload: { previousStatus, newStatus: to, ...extra },
+      payload: { previousStatus, newStatus: next.status, ...extra },
       actor: this.actor,
     });
   }

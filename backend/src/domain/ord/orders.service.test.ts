@@ -4,7 +4,7 @@ import type { EventsService } from '#domain/events/index.js';
 import { type Address, AccountRole, type Customer, type CustomersService } from '#domain/reg/index.js';
 import { type Order, OrderPlacementRequest, OrderRejectionRequest, OrderStatus } from './orders.models.js';
 import { type OrderRepository, OrdersService } from './orders.service.js';
-import { InvalidOrderTransitionError } from './orders.statemachine.js';
+import { InvalidOrderTransitionError } from './orders.errors.js';
 import { MenuItemStatus, RestaurantStatus } from './restaurants.models.js';
 import type { RestaurantsService } from './restaurants.service.js';
 

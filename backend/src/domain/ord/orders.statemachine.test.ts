@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { AccountRole } from '#domain/reg/index.js';
 import { Order, OrderStatus } from './orders.models.js';
-import { InvalidOrderTransitionError, OrderStateMachine } from './orders.statemachine.js';
+import { InvalidOrderTransitionError } from './orders.errors.js';
+import { OrderStateMachine } from './orders.statemachine.js';
 
 describe('OrderStateMachine', () => {
   const actor = { id: 'user-1', role: AccountRole.Customer };
@@ -89,6 +90,49 @@ describe('OrderStateMachine', () => {
 
     expect(() => machine.pickUp()).toThrow(InvalidOrderTransitionError);
     expect(order.status).toBe(OrderStatus.Accepted); // order is left untouched
+  });
+
+  // The whole lifecycle in one table: from each status, the one action that moves the order on
+  // (none for the terminal states). Every other action must be refused and leave it untouched.
+  it('allows exactly the lifecycle moves and refuses every skipped or repeated one', () => {
+    const owner = { id: 'owner-1', role: AccountRole.Restaurant };
+    const actions = {
+      accept: (machine: OrderStateMachine) => machine.accept(),
+      reject: (machine: OrderStateMachine) => machine.reject('reason'),
+      prepare: (machine: OrderStateMachine) => machine.prepare(),
+      ready: (machine: OrderStateMachine) => machine.ready(),
+      pickUp: (machine: OrderStateMachine) => machine.pickUp(),
+      deliver: (machine: OrderStateMachine) => machine.deliver(),
+    };
+    const allowed: Record<OrderStatus, Partial<Record<keyof typeof actions, OrderStatus>>> = {
+      [OrderStatus.Placed]: { accept: OrderStatus.Accepted, reject: OrderStatus.Rejected },
+      [OrderStatus.Accepted]: { prepare: OrderStatus.Preparing },
+      [OrderStatus.Preparing]: { ready: OrderStatus.Ready },
+      [OrderStatus.Ready]: { pickUp: OrderStatus.PickedUp },
+      [OrderStatus.PickedUp]: { deliver: OrderStatus.Delivered },
+      [OrderStatus.Delivered]: {},
+      [OrderStatus.Rejected]: {},
+      [OrderStatus.Cancelled]: {},
+    };
+
+    for (const status of Object.values(OrderStatus)) {
+      for (const [name, act] of Object.entries(actions) as [
+        keyof typeof actions,
+        (m: OrderStateMachine) => unknown,
+      ][]) {
+        const order = newOrder(status);
+        const machine = new OrderStateMachine(owner, order);
+        const next = allowed[status][name];
+
+        if (next) {
+          act(machine);
+          expect(order.status, `${status} --${name}-->`).toBe(next);
+        } else {
+          expect(() => act(machine), `${status} --${name}--> must be refused`).toThrow(InvalidOrderTransitionError);
+          expect(order.status).toBe(status);
+        }
+      }
+    }
   });
 
   it('allows no transition from a terminal state', () => {
