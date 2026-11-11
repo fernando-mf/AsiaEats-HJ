@@ -14,7 +14,7 @@ export class PrismaEnvironmentRepository extends EnvironmentRepository {
   // reset truncates every table of the current schema except the migrations history
   async reset(): Promise<void> {
     try {
-      const tables = await this.db.$queryRaw<{ tablename: string }[]>`
+      const tables = await this.db.client().$queryRaw<{ tablename: string }[]>`
         SELECT tablename FROM pg_tables
         WHERE schemaname = current_schema() AND tablename <> ${MIGRATIONS_TABLE}
       `;
@@ -23,7 +23,7 @@ export class PrismaEnvironmentRepository extends EnvironmentRepository {
       }
 
       const list = tables.map(t => `"${t.tablename}"`).join(', ');
-      await this.db.$executeRawUnsafe(`TRUNCATE TABLE ${list} RESTART IDENTITY CASCADE`);
+      await this.db.client().$executeRawUnsafe(`TRUNCATE TABLE ${list} RESTART IDENTITY CASCADE`);
     } catch (err) {
       throw new InternalError(err as Error);
     }

@@ -190,9 +190,20 @@ export class MenuItemCreatedEvent extends Event<MenuItem> {
   readonly eventType = 'menu_item.created';
 }
 
+// MenuItemUpdatedEvent records a change to a dish's details (name or price).
 export class MenuItemUpdatedEvent extends Event<MenuItem> {
   readonly entityType = 'menu_item';
   readonly eventType = 'menu_item.updated';
+}
+
+// MenuItemStatusChangedEvent records a state transition (available <-> sold_out), so each one
+// has its own event id (R-ORD-05), like restaurant and order status changes.
+export class MenuItemStatusChangedEvent extends Event<{
+  previousStatus: MenuItemStatus;
+  newStatus: MenuItemStatus;
+}> {
+  readonly entityType = 'menu_item';
+  readonly eventType = 'menu_item.status_changed';
 }
 
 export class MenuItemDeletedEvent extends Event<{}> {

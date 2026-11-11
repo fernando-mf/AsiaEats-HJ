@@ -1,5 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { AccountRole } from '#domain/reg/index.js';
+import { hashPassword } from '#domain/reg/accounts.helpers.js';
 import type { CourierResponse } from '#application/controllers/responses.dto.js';
 import { PrismaClient } from '#infrastructure/generated/prisma/client.js';
 import type { Client } from '../client/client.ts';
@@ -15,17 +16,29 @@ export async function openSessionAsCourier(client: Client) {
   await createCourier(client, 'courier');
 }
 
+// Operator accounts can't be registered through the API (they are predefined, like the seed's),
+// so the test operator is inserted straight into the database and then signs in normally.
 export async function openSessionAsOperator(client: Client) {
   const password = 'password123';
   const username = 'operator';
-  const account = await client.accounts.create({
-    role: AccountRole.Operator,
-    username,
-    password,
-    name: `Test operator`,
-  });
+  const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
+  try {
+    const now = new Date();
+    await db.account.create({
+      data: {
+        name: 'Test operator',
+        username,
+        role: AccountRole.Operator,
+        passwordHash: await hashPassword(password),
+        createdAt: now,
+        updatedAt: now,
+      },
+    });
+  } finally {
+    await db.$disconnect();
+  }
   await client.accounts.login({ username, password });
-  return account;
+  return client.accounts.me();
 }
 
 export async function purgeDatabase(): Promise<void> {

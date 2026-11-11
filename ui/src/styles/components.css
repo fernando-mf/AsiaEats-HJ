@@ -1,0 +1,519 @@
+/* Shared components: buttons, form controls, cards, status pills and text helpers. */
+
+/* ---------- Buttons ---------- */
+.primary-button,
+.secondary-button,
+.ghost-button,
+.soft-button,
+.danger-button,
+.small-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-weight: 560;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.primary-button {
+  color: var(--on-primary);
+  background: var(--primary);
+}
+
+.primary-button:hover:not(:disabled) {
+  color: var(--on-primary);
+  background: var(--primary-hover);
+}
+
+.secondary-button {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.ghost-button {
+  color: var(--text-2);
+  background: transparent;
+}
+
+.ghost-button:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.soft-button,
+.small-button {
+  color: var(--primary-ink);
+  background: var(--primary-soft);
+}
+
+.soft-button:hover:not(:disabled),
+.small-button:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.danger-button {
+  color: var(--red-ink);
+  background: var(--red-soft);
+  border-color: rgba(242, 154, 138, 0.28);
+}
+
+.danger-button:hover:not(:disabled) {
+  border-color: rgba(242, 154, 138, 0.55);
+}
+
+.primary-button.small,
+.small-button {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 12.5px;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled,
+.ghost-button:disabled,
+.soft-button:disabled,
+.danger-button:disabled,
+.small-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Square button holding a single icon, e.g. "add to cart". */
+.icon-button {
+  width: 34px;
+  min-height: 34px;
+  padding: 0;
+}
+
+/* "− quantity +" for a dish in the cart (QuantityStepper). */
+.quantity-stepper {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 34px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.quantity-stepper button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 100%;
+  padding: 0;
+  color: var(--text-2);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.quantity-stepper button:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.quantity-stepper button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.quantity-stepper .mono {
+  min-width: 22px;
+  font-size: 13px;
+  font-weight: 550;
+  text-align: center;
+}
+
+/* Toggle chip for filters and quick picks; aria-pressed marks the active state. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 13px;
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 520;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.chip[aria-pressed='true'] {
+  color: var(--bg);
+  background: var(--text);
+  border-color: var(--text);
+}
+
+/* Segmented control: a row of options in one rounded strip; aria-pressed marks the active one. */
+.segmented {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.segmented > button {
+  height: 30px;
+  padding: 0 12px;
+  color: var(--text-2);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 520;
+  cursor: pointer;
+}
+
+.segmented > button:hover {
+  color: var(--text);
+}
+
+.segmented > button[aria-pressed='true'] {
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-weight: 600;
+}
+
+/* On/off switch: <button role="switch" aria-checked> with an empty <span> as the knob. */
+.switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 38px;
+  height: 22px;
+  padding: 0;
+  background: var(--border-strong);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.switch > span {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: left 150ms ease;
+}
+
+.switch[aria-checked='true'] {
+  background: var(--primary);
+}
+
+.switch[aria-checked='true'] > span {
+  left: 18px;
+}
+
+.switch:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch,
+  .switch > span {
+    transition: none;
+  }
+}
+
+.text-button {
+  padding: 3px 6px;
+  color: var(--primary-ink);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font-weight: 560;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  color: var(--accent-ink);
+}
+
+/* ---------- Form controls ---------- */
+:where(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea) {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  color: var(--text);
+  caret-color: var(--primary-ink);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  outline: none;
+  font-size: 14px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+:where(textarea) {
+  padding-block: 12px;
+  resize: vertical;
+}
+
+:where(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea):hover {
+  border-color: #49615a;
+}
+
+:where(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea):focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+:where(input, select, textarea)[aria-invalid='true'] {
+  border-color: var(--red-ink);
+}
+
+:where(input[type='checkbox'], input[type='radio']) {
+  accent-color: var(--primary);
+}
+
+/* Keep browser autofill on our palette instead of the browser's blue-grey. The inset
+   shadow paints the field; the :focus rule keeps the focus ring on autofilled fields. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover {
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+  box-shadow: 0 0 0 1000px var(--surface) inset;
+}
+
+input:-webkit-autofill:focus {
+  box-shadow:
+    0 0 0 1000px var(--surface) inset,
+    0 0 0 4px var(--primary-soft);
+}
+
+/* ---------- Cards and panels ---------- */
+.panel,
+.card {
+  padding: clamp(20px, 3vw, 24px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+/* ---------- Status pills ---------- */
+/* Order statuses use .order-status.status-pill-<status>; restaurant and menu-item
+   statuses use .restaurant-status.status-<open|paused|closed> with an <i> dot. */
+.pill,
+.order-status,
+.restaurant-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  height: 22px;
+  padding: 0 9px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 560;
+  line-height: 1;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.pill::before,
+.order-status::before {
+  width: 6px;
+  height: 6px;
+  content: '';
+  background: currentColor;
+  border-radius: 50%;
+}
+
+.restaurant-status i {
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+.pill--primary,
+.order-status.status-pill-placed {
+  color: var(--primary-ink);
+  background: var(--primary-soft);
+}
+
+.pill--accent,
+.order-status.status-pill-accepted {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.pill--amber,
+.order-status.status-pill-preparing,
+.restaurant-status.status-paused {
+  color: var(--amber-ink);
+  background: var(--amber-soft);
+}
+
+.pill--green,
+.order-status.status-pill-ready,
+.restaurant-status.status-open {
+  color: var(--green-ink);
+  background: var(--green-soft);
+}
+
+.pill--red,
+.order-status.status-pill-rejected,
+.order-status.status-pill-cancelled {
+  color: var(--red-ink);
+  background: var(--red-soft);
+}
+
+.pill--neutral,
+.order-status.status-pill-picked_up,
+.order-status.status-pill-delivered,
+.restaurant-status.status-closed {
+  color: var(--text-2);
+  background: var(--surface-2);
+}
+
+/* ---------- Dish placeholder art ---------- */
+/* A muted color block with a line-drawn dish icon, used where a photo would go. */
+.dish-art {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  place-items: center;
+}
+
+.dish-art > svg {
+  opacity: 0.8;
+}
+
+.dish-art--dumplings {
+  color: #a3adc4;
+  background: #1e2129;
+}
+
+.dish-art--noodles {
+  color: #c9ae7e;
+  background: #2a2419;
+}
+
+.dish-art--tofu {
+  color: #d4a391;
+  background: #2a1e19;
+}
+
+.dish-art--dimsum {
+  color: #a5bc97;
+  background: #1c231a;
+}
+
+.dish-art--soup {
+  color: #d79a88;
+  background: #2b1d19;
+}
+
+.dish-art--rice {
+  color: #b5a8c9;
+  background: #221f28;
+}
+
+.dish-art--wonton {
+  color: #c8b08f;
+  background: #26211a;
+}
+
+/* ---------- Brand ---------- */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-wordmark {
+  display: block;
+  width: auto;
+  height: 30px;
+}
+
+/* The app is dark-only for now; a light theme swaps the wordmark variants. */
+.brand-wordmark--on-light,
+:root[data-theme='light'] .brand-wordmark--on-dark {
+  display: none;
+}
+
+:root[data-theme='light'] .brand-wordmark--on-light {
+  display: block;
+}
+
+.brand--lg .brand-wordmark {
+  height: 40px;
+}
+
+/* ---------- Text helpers ---------- */
+.eyebrow {
+  margin: 0;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.muted {
+  margin: 6px 0 0;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.zh {
+  font-family: var(--font-zh);
+}
+
+/* Read by screen readers but not shown, e.g. a label for a column of buttons. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

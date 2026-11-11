@@ -1,7 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { OrdersService, RestaurantsService } from '#domain/ord/index.js';
-import { AccountsService, CustomersService } from '#domain/reg/index.js';
-import { seedCouriers, seedCustomers, seedOperators, seedRestaurants } from './env.seed.js';
+import { InvalidParamsError } from '#domain/errors.js';
+import {
+  MenuItemCreationRequest,
+  OrdersService,
+  RestaurantCreationRequest,
+  RestaurantsService,
+} from '#domain/ord/index.js';
+import {
+  AccountCreationRequest,
+  AccountRole,
+  AccountsService,
+  CourierPositionUpdateRequest,
+  CouriersService,
+  CustomersService,
+  CustomerUpdateRequest,
+} from '#domain/reg/index.js';
+import { TransactionRunner } from '#domain/transactions.js';
+import { type EnvSeed, type SeedAccount, SeedSource } from './env.seed.js';
 
 export abstract class EnvironmentRepository {
   abstract reset(): Promise<void>;
@@ -11,52 +26,87 @@ export abstract class EnvironmentRepository {
 export class EnvService {
   constructor(
     private readonly environment: EnvironmentRepository,
+    private readonly seedSource: SeedSource,
     private readonly accounts: AccountsService,
+    private readonly couriers: CouriersService,
     private readonly customers: CustomersService,
     private readonly restaurants: RestaurantsService,
     private readonly orders: OrdersService,
+    private readonly transactions: TransactionRunner,
   ) {}
 
+  // reset empties the database and loads the seed again. The seed's structure is checked
+  // first, and emptying and seeding run as one transaction, so a value the services refuse
+  // (a duplicate username, a negative price) rolls everything back instead of leaving the
+  // database half seeded. Run from a command, it joins the command's transaction; run from
+  // the seed script, it opens its own.
   async reset(): Promise<void> {
-    await this.environment.reset();
-    await this.seed();
+    const seed = await this.seedSource.load();
+    assertEveryRoleSeeded(seed);
+
+    await this.transactions.run(async () => {
+      await this.environment.reset();
+      await this.seed(seed);
+    });
   }
 
-  private async seed(): Promise<void> {
-    //
-    // Seed operators
-    //
-    for (const request of seedOperators) {
-      await this.accounts.create(request);
+  // Every seeded record goes through the same services, and so the same validation, as the API.
+  private async seed(seed: EnvSeed): Promise<void> {
+    const account = (role: AccountRole, { username, name }: SeedAccount) =>
+      AccountCreationRequest.initialize({ role, username, name, password: seed.password });
+
+    for (const operator of seed.operators) {
+      await this.accounts.create(account(AccountRole.Operator, operator));
     }
 
-    //
-    // Seed couriers
-    //
-    for (const request of seedCouriers) {
-      await this.accounts.create(request);
-    }
-
-    //
-    // Seed customers and their profiles
-    //
-    for (const seed of seedCustomers) {
-      const customer = await this.accounts.create(seed.account);
-      if (seed.customerProfile) {
-        await this.customers.update(customer, seed.customerProfile);
+    // Creating a courier account also creates its courier, offline and without a position.
+    for (const courier of seed.couriers) {
+      const created = await this.accounts.create(account(AccountRole.Courier, courier));
+      if (courier.position) {
+        await this.couriers.updatePosition(
+          { id: created.id, role: created.role },
+          CourierPositionUpdateRequest.initialize({ position: courier.position }),
+        );
       }
     }
 
-    //
-    // Seed restaurant accounts, their restaurants, and their menus
-    //
-    for (const seed of seedRestaurants) {
-      const owner = await this.accounts.create(seed.owner);
-      const restaurant = await this.restaurants.create(owner, seed.restaurant);
-
-      for (const item of seed.menu) {
-        await this.restaurants.createMenuItem(owner, restaurant.id, item);
+    for (const customer of seed.customers) {
+      const created = await this.accounts.create(account(AccountRole.Customer, customer));
+      if (customer.address) {
+        await this.customers.update(created, CustomerUpdateRequest.initialize({ address: customer.address }));
       }
     }
+
+    for (const restaurant of seed.restaurants) {
+      const owner = await this.accounts.create(account(AccountRole.Restaurant, restaurant.owner));
+      const created = await this.restaurants.create(
+        owner,
+        RestaurantCreationRequest.initialize({
+          name: restaurant.name,
+          status: restaurant.status,
+          position: restaurant.position,
+        }),
+      );
+
+      for (const item of restaurant.menu) {
+        await this.restaurants.createMenuItem(owner, created.id, MenuItemCreationRequest.initialize(item));
+      }
+    }
+  }
+}
+
+// R-REG-03: the seed holds at least one account per role, so every role can be demonstrated.
+function assertEveryRoleSeeded(seed: EnvSeed): void {
+  const counts: Record<string, number> = {
+    operators: seed.operators.length,
+    couriers: seed.couriers.length,
+    customers: seed.customers.length,
+    restaurants: seed.restaurants.length,
+  };
+  const missing = Object.entries(counts).filter(([, count]) => count === 0);
+  if (missing.length > 0) {
+    throw new InvalidParamsError(
+      missing.map(([field]) => ({ field, messages: [`the seed must contain at least one of ${field}`] })),
+    );
   }
 }

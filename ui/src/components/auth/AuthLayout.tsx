@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { BrandMark } from '../brand/BrandMark';
 
 type AuthLayoutProps = {
   children: ReactNode;
@@ -7,15 +8,6 @@ type AuthLayoutProps = {
 type FoodIconProps = {
   name: 'dumplings' | 'noodles' | 'tea';
 };
-
-function BrandMark() {
-  return (
-    <svg viewBox="0 0 40 40" aria-hidden="true">
-      <path d="M9 19h22c0 8-4.9 13-11 13S9 27 9 19Z" />
-      <path d="M7 15h26M15 8l3 7M25 7l-3 8" />
-    </svg>
-  );
-}
 
 function FoodIcon({ name }: FoodIconProps) {
   if (name === 'dumplings') {
@@ -55,11 +47,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
     <main className="auth-shell">
       <section className="auth-story" aria-labelledby="auth-story-title">
         <div className="brand-lockup">
-          <span className="brand-mark">
-            <BrandMark />
-          </span>
-          <span className="brand-name">EatChinese</span>
-          <span className="city-badge">MTL</span>
+          <BrandMark size="lg" />
         </div>
 
         <div className="story-copy">

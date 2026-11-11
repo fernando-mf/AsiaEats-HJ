@@ -4,6 +4,7 @@ import type { Command } from '#application/commands/command.js';
 
 export class FindOrdersCommand implements Command<Order[]> {
   readonly name = 'FindOrdersCommand';
+  readonly readOnly = true;
 
   constructor(
     private readonly ordersService: OrdersService,

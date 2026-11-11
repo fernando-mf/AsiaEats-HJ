@@ -1,5 +1,19 @@
 import { ApplicationError } from '#domain/errors.js';
+import type { OrderStatus } from './orders.models.js';
 import type { RestaurantStatus } from './restaurants.models.js';
+
+// R-ORD-04: an action the order's current state does not allow, e.g. a skipped state.
+export class InvalidOrderTransitionError extends ApplicationError {
+  statusCode = 409;
+  code = 'invalid_order_transition';
+
+  constructor(
+    readonly from: OrderStatus,
+    readonly to: OrderStatus,
+  ) {
+    super(`invalid order transition: ${from} -> ${to}`);
+  }
+}
 
 export class RestaurantNotOpenError extends ApplicationError {
   statusCode = 409;

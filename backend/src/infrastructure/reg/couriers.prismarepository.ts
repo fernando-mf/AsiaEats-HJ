@@ -12,7 +12,7 @@ export class PrismaCourierRepository extends CourierRepository {
 
   async create(courier: Courier): Promise<Courier> {
     try {
-      const row = await this.db.courier.create({
+      const row = await this.db.client().courier.create({
         data: {
           accountId: courier.account.id,
           latitude: courier.position?.latitude ?? null,
@@ -37,7 +37,7 @@ export class PrismaCourierRepository extends CourierRepository {
   }
 
   async getByAccountId(accountId: string): Promise<Courier> {
-    const row = await this.db.courier.findUnique({ where: { accountId }, include: { account: true } });
+    const row = await this.db.client().courier.findUnique({ where: { accountId }, include: { account: true } });
     if (!row) {
       throw new NotFoundError('courier');
     }
@@ -47,7 +47,7 @@ export class PrismaCourierRepository extends CourierRepository {
 
   async list(filter?: CourierFilter): Promise<Courier[]> {
     try {
-      const rows = await this.db.courier.findMany({
+      const rows = await this.db.client().courier.findMany({
         where: { status: filter?.status },
         include: { account: true },
         orderBy: { createdAt: 'asc' },
@@ -60,7 +60,7 @@ export class PrismaCourierRepository extends CourierRepository {
 
   async update(courier: Courier): Promise<Courier> {
     try {
-      const row = await this.db.courier.update({
+      const row = await this.db.client().courier.update({
         where: { accountId: courier.account.id },
         data: {
           latitude: courier.position?.latitude ?? null,

@@ -1,0 +1,70 @@
+{
+  "password": "password123",
+  "operators": [{ "username": "operator1", "name": "Jon Doe" }],
+  "couriers": [
+    {
+      "username": "courier",
+      "name": "Patrick Courier",
+      "position": { "latitude": 45.5017, "longitude": -73.5673 }
+    }
+  ],
+  "customers": [
+    {
+      "username": "alice",
+      "name": "Alice Chen",
+      "address": {
+        "street": "1455 De Maisonneuve Blvd W",
+        "city": "Montreal",
+        "postalCode": "H3G 1M8",
+        "latitude": 45.4972,
+        "longitude": -73.579
+      }
+    },
+    {
+      "username": "bob",
+      "name": "Bob Tremblay",
+      "address": {
+        "street": "1001 Rue Sherbrooke W",
+        "city": "Montreal",
+        "postalCode": "H3A 1G5",
+        "latitude": 45.5048,
+        "longitude": -73.5772
+      }
+    }
+  ],
+  "restaurants": [
+    {
+      "name": "Golden Dragon",
+      "status": "open",
+      "position": { "latitude": 45.5076, "longitude": -73.561 },
+      "owner": { "username": "golden-dragon", "name": "Golden Dragon Owner" },
+      "menu": [
+        { "name": "Pork Dumplings", "price": 9.5 },
+        { "name": "General Tao Chicken", "price": 15.95 },
+        { "name": "Hot and Sour Soup", "price": 6.25 },
+        { "name": "Peking Duck", "price": 42, "status": "sold_out" }
+      ]
+    },
+    {
+      "name": "Jade Garden",
+      "status": "open",
+      "position": { "latitude": 45.4955, "longitude": -73.5785 },
+      "owner": { "username": "jade-garden", "name": "Jade Garden Owner" },
+      "menu": [
+        { "name": "Dan Dan Noodles", "price": 13.5 },
+        { "name": "Mapo Tofu", "price": 12.75 },
+        { "name": "Scallion Pancake", "price": 7 }
+      ]
+    },
+    {
+      "name": "Lotus House",
+      "status": "closed",
+      "position": { "latitude": 45.5231, "longitude": -73.5817 },
+      "owner": { "username": "lotus-house", "name": "Lotus House Owner" },
+      "menu": [
+        { "name": "Char Siu Bao", "price": 8.5 },
+        { "name": "Fried Rice", "price": 11 }
+      ]
+    }
+  ]
+}

@@ -11,7 +11,7 @@ export class PrismaAccountRepository extends AccountRepository {
 
   async create(account: Account): Promise<Account> {
     try {
-      const row = await this.db.account.create({
+      const row = await this.db.client().account.create({
         data: {
           name: account.name,
           username: account.username,
@@ -33,8 +33,28 @@ export class PrismaAccountRepository extends AccountRepository {
     }
   }
 
+  async update(account: Account): Promise<Account> {
+    try {
+      const row = await this.db.client().account.update({
+        where: { id: account.id },
+        data: {
+          name: account.name,
+          passwordHash: account.passwordHash,
+          updatedAt: account.updatedAt,
+        },
+      });
+
+      return this.toAccount(row);
+    } catch (err) {
+      if (this.db.isRecordNotFound(err)) {
+        throw new NotFoundError('account');
+      }
+      throw new InternalError(err as Error);
+    }
+  }
+
   async getByUsername(username: string): Promise<Account> {
-    const row = await this.db.account.findUnique({ where: { username } });
+    const row = await this.db.client().account.findUnique({ where: { username } });
     if (!row) {
       throw new NotFoundError('account');
     }
@@ -42,7 +62,7 @@ export class PrismaAccountRepository extends AccountRepository {
   }
 
   async getById(id: string): Promise<Account> {
-    const row = await this.db.account.findUnique({ where: { id } });
+    const row = await this.db.client().account.findUnique({ where: { id } });
     if (!row) {
       throw new NotFoundError('account');
     }

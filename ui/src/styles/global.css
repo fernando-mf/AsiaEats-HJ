@@ -6,23 +6,26 @@
 
 html {
   min-width: 320px;
-  background: var(--color-background);
+  background: var(--bg);
 }
 
 body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  color: var(--color-text);
-  background: var(--color-background);
+  color: var(--text);
+  background: var(--bg);
   font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -32,18 +35,22 @@ a {
 }
 
 a {
-  color: #70c7b5;
+  color: var(--primary-ink);
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
 }
 
 a:hover {
-  color: #9bddcf;
+  color: var(--accent-ink);
+}
+
+::placeholder {
+  color: var(--text-3);
 }
 
 ::selection {
-  color: var(--color-text);
-  background: var(--color-primary);
+  color: var(--text);
+  background: var(--primary);
 }
 
 ::-webkit-scrollbar {
@@ -61,8 +68,8 @@ a:hover {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 3px;
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .auth-shell {
@@ -102,42 +109,6 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.brand-mark {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  color: var(--color-text);
-  background: var(--color-primary);
-  border-radius: 12px;
-  place-items: center;
-}
-
-.brand-mark svg {
-  width: 28px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
-}
-
-.brand-name {
-  font-size: 20px;
-  font-weight: 750;
-  letter-spacing: -0.02em;
-}
-
-.city-badge {
-  padding: 3px 8px;
-  color: #b8d8d0;
-  background: var(--color-primary-soft);
-  border: 1px solid var(--color-border-strong);
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.08em;
 }
 
 .story-copy {
@@ -186,27 +157,25 @@ a:hover {
   gap: 16px;
   align-items: center;
   padding: 13px 16px;
-  background: rgba(10, 17, 16, 0.48);
-  border: 1px solid var(--color-border-strong);
+  /* Showcase content, not a control: lighter fill and a faint border so the
+     tiles don't read like the form inputs. */
+  background: rgba(231, 240, 237, 0.03);
+  border: 1px solid var(--border);
   border-radius: 14px;
-}
-
-.food-tile:nth-child(2) {
-  margin-left: 48px;
 }
 
 .food-icon {
   display: grid;
   width: 52px;
   height: 52px;
-  color: #89cfbd;
-  background: var(--color-primary-soft);
+  color: var(--accent-ink);
+  background: var(--primary-soft);
   border-radius: 12px;
   place-items: center;
 }
 
 .food-icon svg {
-  width: 36px;
+  width: 40px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -289,82 +258,17 @@ a:hover {
   font-weight: 650;
 }
 
-.field-group input {
-  width: 100%;
-  height: 48px;
-  padding: 0 14px;
-  color: var(--color-text);
-  caret-color: var(--color-focus);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
-  border-radius: 10px;
-  outline: none;
-  transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.field-group input::placeholder {
-  color: #72857f;
-}
-
-.field-group input:hover {
-  border-color: #49615a;
-}
-
-.field-group input:focus {
-  background: #121e1b;
-  border-color: var(--color-focus);
-  box-shadow: 0 0 0 3px rgba(93, 194, 173, 0.13);
-}
-
-.field-group input[aria-invalid='true'] {
-  border-color: var(--color-error);
-}
-
 .form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
-.primary-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  padding: 0 20px;
-  color: #f4fffc;
-  background: var(--color-primary);
-  border: 0;
-  border-radius: 10px;
-  font-weight: 750;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background-color 160ms ease,
-    transform 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.primary-button:hover {
-  color: #ffffff;
-  background: var(--color-primary-hover);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
-  transform: translateY(-1px);
-}
-
-.primary-button:active {
-  box-shadow: none;
-  transform: translateY(0);
-}
-
-.primary-button:disabled {
-  color: #9db2ac;
-  background: #28423c;
-  cursor: wait;
-  transform: none;
+/* Auth pages use a taller primary button than the dashboard. */
+.auth-form .primary-button,
+.button-link {
+  min-height: 46px;
+  font-size: 15px;
 }
 
 .form-notice,
@@ -563,10 +467,6 @@ a:hover {
     margin-top: 72px;
   }
 
-  .food-tile:nth-child(2) {
-    margin-left: 0;
-  }
-
   .auth-form-panel {
     padding-inline: 36px;
   }
@@ -612,7 +512,7 @@ a:hover {
   }
 
   .food-icon svg {
-    width: 31px;
+    width: 34px;
   }
 
   .story-note {
@@ -652,7 +552,7 @@ a:hover {
   }
 
   .field-group input,
-  .primary-button {
+  .auth-form .primary-button {
     min-height: 44px;
     height: 44px;
   }
@@ -756,18 +656,46 @@ a:hover {
   }
 }
 
-.demo-hint {
-  margin: 18px 0 0;
-  padding: 10px 12px;
-  color: #91aaa3;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 9px;
-  font-size: 12px;
-  line-height: 1.5;
-  text-align: center;
+/* Seeded demo accounts on the sign-in page: one chip per role, click to fill. */
+.demo-accounts {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  margin-top: 20px;
 }
 
-.demo-hint strong {
-  color: #c1ddd5;
+.demo-accounts-title {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.demo-account-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.demo-account {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 11px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: border-color 160ms ease;
+}
+
+.demo-account:hover {
+  border-color: var(--primary);
+}
+
+.demo-account-role {
+  color: var(--text-3);
+  font-size: 11.5px;
 }

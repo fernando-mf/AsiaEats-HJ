@@ -6,6 +6,7 @@ export type LoginResult = { accessToken: string; account: Account };
 
 export class LoginCommand implements Command<LoginResult> {
   readonly name = 'LoginCommand';
+  readonly readOnly = true;
 
   constructor(
     private readonly accountsService: AccountsService,

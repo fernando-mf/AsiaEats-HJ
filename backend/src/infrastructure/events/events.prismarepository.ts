@@ -13,7 +13,7 @@ export class PrismaEventRepository extends EventRepository {
 
   async append(event: Event<unknown>): Promise<void> {
     try {
-      await this.db.eventLog.create({
+      await this.db.client().eventLog.create({
         data: {
           id: event.id,
           entityType: event.entityType,
@@ -32,7 +32,7 @@ export class PrismaEventRepository extends EventRepository {
 
   async findByEntity(entityType: string, entityId: string): Promise<StoredEvent[]> {
     try {
-      const rows = await this.db.eventLog.findMany({
+      const rows = await this.db.client().eventLog.findMany({
         where: { entityType, entityId },
         orderBy: [{ occurredAt: 'asc' }],
       });

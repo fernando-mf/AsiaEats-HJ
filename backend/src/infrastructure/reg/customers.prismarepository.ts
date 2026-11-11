@@ -12,7 +12,7 @@ export class PrismaCustomerProfileRepository extends CustomerProfileRepository {
 
   async create(customer: Customer): Promise<Customer> {
     try {
-      const row = await this.db.customerProfile.create({
+      const row = await this.db.client().customerProfile.create({
         data: {
           accountId: customer.account.id,
           ...toAddressColumns(customer.address),
@@ -36,7 +36,7 @@ export class PrismaCustomerProfileRepository extends CustomerProfileRepository {
 
   async update(customer: Customer): Promise<Customer> {
     try {
-      const row = await this.db.customerProfile.update({
+      const row = await this.db.client().customerProfile.update({
         where: { accountId: customer.account.id },
         data: {
           ...toAddressColumns(customer.address),
@@ -55,7 +55,7 @@ export class PrismaCustomerProfileRepository extends CustomerProfileRepository {
   }
 
   async getByAccountId(accountId: string): Promise<Customer> {
-    const row = await this.db.customerProfile.findUnique({ where: { accountId }, include: { account: true } });
+    const row = await this.db.client().customerProfile.findUnique({ where: { accountId }, include: { account: true } });
     if (!row) {
       throw new NotFoundError('customer');
     }

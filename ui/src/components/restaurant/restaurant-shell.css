@@ -1,0 +1,259 @@
+/* Restaurant portal layout: a sticky sidebar on the left and the page beside it.
+   Under 900px the sidebar turns into a sticky top bar with the links in a row. */
+.restaurant-shell {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  gap: clamp(24px, 3vw, 40px);
+  align-items: start;
+  /* The sidebar starts at the window's left edge, past the page gutter. */
+  margin-left: calc(-1 * var(--shell-gutter));
+}
+
+.restaurant-main {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  max-width: 1240px;
+  padding-top: 28px;
+}
+
+/* Amber notice shown on restaurant pages while new orders are paused or the restaurant is closed. */
+.restaurant-notice {
+  margin: 0;
+  padding: 12px 14px;
+  color: var(--amber-ink);
+  background: var(--amber-soft);
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+/* ---------- Sidebar ---------- */
+.restaurant-sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  height: 100svh;
+  padding: 20px 16px;
+  overflow-y: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+.restaurant-sidebar > .brand {
+  padding: 4px 6px 6px;
+}
+
+.sidebar-restaurant {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.sidebar-restaurant-tile {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sidebar-restaurant-text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.sidebar-restaurant-text strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-restaurant-text span {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 2px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 40px;
+  padding: 0 12px;
+  color: var(--text-2);
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 520;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sidebar-link:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.sidebar-link[aria-current='page'] {
+  color: var(--primary-ink);
+  background: var(--primary-soft);
+  font-weight: 600;
+}
+
+.sidebar-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: auto;
+  padding: 0 5px;
+  color: var(--on-primary);
+  background: var(--primary);
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.sidebar-spacer {
+  flex-grow: 1;
+}
+
+.sidebar-accepting {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background: var(--surface-2);
+  border-radius: 12px;
+}
+
+.sidebar-accepting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sidebar-accepting p {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.sidebar-owner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 4px 0;
+}
+
+.sidebar-owner-avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--primary-ink);
+  background: var(--primary-soft);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 620;
+}
+
+.sidebar-owner-text {
+  display: grid;
+  flex-grow: 1;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.sidebar-owner-text strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 580;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-owner-text span {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+/* ---------- Narrow screens: sticky top bar ---------- */
+@media (max-width: 900px) {
+  .restaurant-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    margin-left: 0;
+  }
+
+  .restaurant-sidebar {
+    z-index: 30;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    height: auto;
+    margin: 0 calc(-1 * var(--shell-gutter));
+    padding: 10px var(--shell-gutter);
+    overflow: visible;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .restaurant-sidebar > .brand {
+    padding: 0;
+  }
+
+  .sidebar-restaurant,
+  .sidebar-accepting p,
+  .sidebar-owner-avatar,
+  .sidebar-owner-text {
+    display: none;
+  }
+
+  .sidebar-spacer {
+    flex-grow: 1;
+  }
+
+  .sidebar-accepting {
+    padding: 6px 10px;
+  }
+
+  .sidebar-owner {
+    padding: 0;
+  }
+
+  /* The links take their own row under the brand. */
+  .sidebar-nav {
+    display: flex;
+    order: 10;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .sidebar-link {
+    flex-shrink: 0;
+    height: 36px;
+  }
+}

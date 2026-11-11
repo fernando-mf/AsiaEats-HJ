@@ -13,6 +13,18 @@ function createLogger(): CommandLogger {
 }
 
 describe('LoggedCommand', () => {
+  it('passes the read-only flag of the wrapped command through both decorators', () => {
+    const actor = { id: 'customer-1', role: AccountRole.Customer };
+    const query: Command<void> = { name: 'GetMeCommand', readOnly: true, execute: vi.fn() };
+    const change: Command<void> = { name: 'PlaceOrderCommand', execute: vi.fn() };
+
+    const wrap = (command: Command<void>) =>
+      new LoggedCommand(new AuthorizedCommand(command, actor, [AccountRole.Customer]), createLogger(), actor);
+
+    expect(wrap(query).readOnly).toBe(true);
+    expect(wrap(change).readOnly).toBeFalsy();
+  });
+
   it('logs and propagates a denied authorization without executing the concrete command', async () => {
     const execute = vi.fn();
     const wrapped: Command<void> = {

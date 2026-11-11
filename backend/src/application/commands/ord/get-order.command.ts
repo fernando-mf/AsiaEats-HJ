@@ -4,6 +4,7 @@ import type { Command } from '#application/commands/command.js';
 
 export class GetOrderCommand implements Command<Order> {
   readonly name = 'GetOrderCommand';
+  readonly readOnly = true;
 
   constructor(
     private readonly ordersService: OrdersService,

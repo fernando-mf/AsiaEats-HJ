@@ -3,6 +3,7 @@ import type { Command } from '#application/commands/command.js';
 
 export class FindCouriersCommand implements Command<CourierSummary[]> {
   readonly name = 'FindCouriersCommand';
+  readonly readOnly = true;
 
   constructor(
     private readonly couriersService: CouriersService,

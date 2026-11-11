@@ -9,6 +9,7 @@ import {
   MenuItemCreationRequest,
   MenuItemDeletedEvent,
   MenuItemStatus,
+  MenuItemStatusChangedEvent,
   MenuItemUpdatedEvent,
   MenuItemUpdateRequest,
   Restaurant,
@@ -116,7 +117,9 @@ export class RestaurantsService {
       return restaurant;
     }
 
-    // TODO: implement cannot close restaurant if it has orders in its preparation queue
+    // Pausing or closing only stops new orders: placing one requires an open restaurant
+    // (R-ORD-02). Orders already in flight stay on the board and must still be finished, as the
+    // project description asks of a paused restaurant, so the status change doesn't touch them.
 
     restaurant.status = request.status;
     restaurant.updatedAt = new Date();
@@ -158,6 +161,18 @@ export class RestaurantsService {
 
   async getMenu(restaurantId: string): Promise<MenuItem[]> {
     const restaurant = await this.repository.getById(restaurantId);
+    return this.repository.listMenuItems(restaurant.id);
+  }
+
+  // browseMenu returns a restaurant's menu to an actor. Restaurant staff may only read
+  // their own restaurant's menu; customers and operators may read any menu.
+  async browseMenu(actor: Actor, restaurantId: string): Promise<MenuItem[]> {
+    const restaurant = await this.repository.getById(restaurantId);
+
+    if (actor.role === AccountRole.Restaurant && actor.id !== restaurant.ownerId) {
+      throw new ForbiddenError('cannot read the menu of a restaurant you do not own');
+    }
+
     return this.repository.listMenuItems(restaurant.id);
   }
 
@@ -206,6 +221,13 @@ export class RestaurantsService {
     const restaurant = await this.getManagedRestaurant(actor, restaurantId);
     const menuItem = await this.repository.getMenuItem(restaurant.id, itemId);
 
+    const previousStatus = menuItem.status;
+    const detailsChanged = menuItem.name !== request.name || menuItem.price !== request.price;
+    const statusChanged = previousStatus !== request.status;
+    if (!detailsChanged && !statusChanged) {
+      return menuItem;
+    }
+
     menuItem.name = request.name;
     menuItem.price = request.price;
     menuItem.status = request.status;
@@ -213,13 +235,25 @@ export class RestaurantsService {
 
     const updated = await this.repository.updateMenuItem(menuItem);
 
-    await this.events.publish(
-      new MenuItemUpdatedEvent({
-        entityId: updated.id,
-        payload: updated,
-        actor,
-      }),
-    );
+    // One event per kind of change: details and the availability transition are recorded apart.
+    if (detailsChanged) {
+      await this.events.publish(
+        new MenuItemUpdatedEvent({
+          entityId: updated.id,
+          payload: updated,
+          actor,
+        }),
+      );
+    }
+    if (statusChanged) {
+      await this.events.publish(
+        new MenuItemStatusChangedEvent({
+          entityId: updated.id,
+          payload: { previousStatus, newStatus: updated.status },
+          actor,
+        }),
+      );
+    }
 
     return updated;
   }

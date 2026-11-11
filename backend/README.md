@@ -2,50 +2,61 @@
 
 NestJS API split into the three layers from the layered design:
 
-- `application`: HTTP controllers and the app entry point
-- `domain`: services, business rules, and repository ports
-- `infrastructure`: repository implementations and other providers
+- `application`: HTTP controllers, commands and their decorators (authorization, logging), the session guard and the
+  app entry point
+- `domain`: services, business rules, the order state machine, and the ports the domain needs (repositories,
+  `TransactionRunner`, `SeedSource`)
+- `infrastructure`: Prisma implementations of those ports, and the reader of the seed file
 
-`AppModule` imports `InfrastructureModule`, `DomainModule`, and `ApplicationModule`. Nest wires those modules together.
+`AppModule` (in `application/`) declares the controllers and imports `DomainModule` and `InfrastructureModule`. Nest
+wires those modules together.
+
+The platform requirements and the full setup are in the [root README](../README.md). The steps below are the backend
+part only.
 
 ## Setting up the local dev environment
 
 1. From `backend/`, copy the example env file:
 
-```sh
-cp .env.example .env
-```
+   ```sh
+   cp .env.example .env
+   ```
 
-That should create a `.env` ready to use for local development.
+   That creates a `.env` ready for local development, with `ENV_MANAGER_ENABLED=true` so the operator can restore the
+   initial state.
 
+2. Start the database: open a new terminal at `backend/` and keep it running. Skip this if `DATABASE_URL` points at a
+   hosted database.
+
+   ```sh
+   pnpm deps:up
+   ```
+
+3. Apply the migrations:
+
+   ```sh
+   pnpm db:deploy
+   ```
+
+   **Note:** after changing `integration/prisma/schema.prisma`, run `pnpm db:migrate` to create a new migration, then
+   `pnpm db:generate` to regenerate the Prisma client.
+
+4. Load the seed:
+
+   ```sh
+   pnpm seed
+   ```
+
+   It empties the database and loads [`config/seed.json`](./config/seed.json) in one transaction. The operator's
+   **Restore initial state** button runs the same reset.
 
 ## Running the API
-
-1. Run the dependencies: open a new terminal at `backend/` and run the following command, keep this terminal open and running.
-
-```sh
-pnpm deps:up
-```
-
-1. Run the migrations: open a separate terminal at `backend/` and apply the migrations. You can skip this step if the data model hasn't changed.
-
-```sh
-pnpm db:migrate
-```
-
-**Note:** after changing `integration/prisma/schema.prisma`, run `pnpm db:migrate` again to create a new migration, then `pnpm db:generate` to regenerate the Prisma client.
-
-1. Start the API: run the following command:
 
 ```sh
 pnpm dev
 ```
 
----
-
-The API listens on port 3000. Once the server is running, you can open your browser and navigate to `http://localhost:3000/api/status` to confirm it works as expected.
-
-You may also use the `curl` command to test the API.
+The API listens on port 3000. Open `http://localhost:3000/api/status` to confirm it works, or use `curl`:
 
 ```sh
 curl http://localhost:3000/api/status
@@ -60,8 +71,16 @@ Should return:
 }
 ```
 
+`pnpm build` and `pnpm openapi` compile into `dist/`, which the running `pnpm dev` also uses: stop `pnpm dev` before
+running them.
 
+## Tests
+
+```sh
+pnpm test
+```
 
 ## Project documentation
 
-See the [project documentation](./docs/) for more information on the backend architecture and design decisions.
+See the [project documentation](./docs/) for more information on the backend architecture and design decisions, and
+[`openapi.yaml`](./openapi.yaml) for every endpoint with the roles allowed to call it.

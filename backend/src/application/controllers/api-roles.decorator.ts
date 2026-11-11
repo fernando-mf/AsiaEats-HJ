@@ -1,9 +1,13 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiExtension, ApiForbiddenResponse, DECORATORS } from '@nestjs/swagger';
-import type { AccountRole } from '#domain/reg/index.js';
+import { AccountRole } from '#domain/reg/index.js';
 import { ErrorResponse } from '#application/controllers/responses.dto.js';
 
 const ROLES_METADATA = 'asiaeats:roles';
+
+// For commands every signed-in role may run on its own account, such as reading or renaming it.
+// They still go through AuthorizedCommand, so every command has its permission check.
+export const ALL_ROLES: readonly AccountRole[] = Object.values(AccountRole);
 
 // Documents the roles allowed on a route. Read them back with `getApiRoles(this.handler)`
 // when building the `AuthorizedCommand`, so the docs and the role enforcement stay in sync.

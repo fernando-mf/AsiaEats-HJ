@@ -1,0 +1,401 @@
+/* Operator console. The layout, sidebar and stat cards reuse the restaurant portal's styles
+   (restaurant-shell.css, restaurant-overview.css); this file holds what only the operator has. */
+
+/* ---------- Sidebar ---------- */
+.operator-console-tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: var(--surface-2);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 560;
+}
+
+.operator-console-tile > span {
+  width: 8px;
+  height: 8px;
+  background: var(--green-ink);
+  border-radius: 50%;
+}
+
+.operator-demo-controls {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+}
+
+.operator-demo-controls strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.operator-demo-controls p {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.operator-demo-controls .secondary-button {
+  width: 100%;
+}
+
+/* ---------- Overview ---------- */
+.operator-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.card.operator-card {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.operator-card-note {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.operator-table-wrap {
+  overflow-x: auto;
+}
+
+.operator-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.operator-table th,
+.operator-table td {
+  padding: 10px 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.operator-table thead th {
+  padding-top: 0;
+  color: var(--text-3);
+  border-bottom: 1px solid var(--border);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.operator-table tbody th {
+  font-weight: 580;
+}
+
+.operator-table tbody tr + tr > * {
+  border-top: 1px solid var(--border);
+}
+
+.operator-table tbody tr:hover > * {
+  background: var(--surface-2);
+}
+
+.operator-table .is-number {
+  text-align: right;
+}
+
+.operator-table .is-action {
+  width: 1%;
+  padding-block: 6px;
+  text-align: right;
+}
+
+.operator-muted {
+  color: var(--text-2);
+}
+
+.operator-row-button {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+
+.operator-attention {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.operator-attention li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.operator-attention-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: 10px;
+}
+
+.operator-attention-icon.is-amber {
+  color: var(--amber-ink);
+  background: var(--amber-soft);
+}
+
+.operator-attention-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.operator-attention-text strong {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.operator-attention-text span {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+
+/* ---------- Orders ---------- */
+.operator-orders {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
+.operator-orders.has-panel {
+  grid-template-columns: minmax(0, 1fr) 380px;
+}
+
+.operator-orders-table tbody tr {
+  cursor: pointer;
+}
+
+.operator-orders-table tbody tr.is-selected > * {
+  background: var(--primary-soft);
+}
+
+.operator-order-link {
+  padding: 0;
+  color: var(--primary-ink);
+  background: none;
+  border: 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.operator-order-link:hover {
+  text-decoration: underline;
+}
+
+/* Stays in view while the table scrolls. */
+.card.operator-order-panel {
+  position: sticky;
+  top: 20px;
+  display: grid;
+  gap: 18px;
+  max-height: calc(100svh - 40px);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.operator-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.operator-panel-head > div {
+  display: grid;
+  gap: 8px;
+}
+
+.operator-panel-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 620;
+}
+
+.operator-facts {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.operator-facts > div {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 12px;
+  font-size: 13.5px;
+}
+
+.operator-facts dt {
+  color: var(--text-3);
+}
+
+.operator-facts dd {
+  margin: 0;
+}
+
+.operator-reason {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 12px 14px;
+  color: var(--red-ink);
+  background: var(--red-soft);
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.operator-reason strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.operator-panel-section {
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.operator-panel-section h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 620;
+}
+
+.operator-lines {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.operator-lines li {
+  display: flex;
+  gap: 10px;
+  font-size: 13.5px;
+}
+
+.operator-lines li > span:nth-child(1) {
+  min-width: 24px;
+  color: var(--text-3);
+}
+
+.operator-lines li > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+.operator-lines-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Event history: one entry per state change, joined by a vertical line. */
+.operator-events {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.operator-events li {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+.operator-events li:last-child {
+  padding-bottom: 0;
+}
+
+.operator-events li:not(:last-child)::before {
+  position: absolute;
+  top: 14px;
+  bottom: 0;
+  left: 4px;
+  width: 2px;
+  content: '';
+  background: var(--border);
+}
+
+.operator-event-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-top: 4px;
+  background: var(--primary);
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.operator-events li > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.operator-event-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13.5px;
+}
+
+.operator-event-head .mono {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.operator-event-actor {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+
+.operator-event-id {
+  color: var(--text-3);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.danger-button.operator-cancel {
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .operator-grid,
+  .operator-orders.has-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card.operator-order-panel {
+    position: static;
+    max-height: none;
+  }
+}

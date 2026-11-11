@@ -1,0 +1,434 @@
+/* Customer restaurant page: cover, restaurant header, dish grid and the "Your order" panel. */
+.storefront {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* ---------- Breadcrumb ---------- */
+.storefront-crumb {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 2px;
+  color: var(--text-2);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 520;
+  cursor: pointer;
+}
+
+.storefront-crumb:hover {
+  color: var(--text);
+}
+
+.storefront-crumb > span {
+  color: var(--text-3);
+}
+
+/* ---------- Cover and header ---------- */
+.storefront-cover {
+  width: 100%;
+  height: 220px;
+  border-radius: 22px;
+}
+
+.storefront-cover.is-unavailable {
+  filter: saturate(0.6);
+}
+
+.storefront-cover.is-unavailable > svg {
+  opacity: 0.4;
+}
+
+.storefront-head {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 4px;
+}
+
+/* The restaurant's initials, beside its name. */
+.storefront-monogram {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  color: var(--primary-ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  font-size: 26px;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+}
+
+.storefront-head-text {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.storefront-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.storefront-title h1 {
+  margin: 0;
+  font-size: clamp(26px, 4vw, 32px);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+.storefront-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13.5px;
+}
+
+.storefront-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.storefront-meta svg {
+  color: var(--primary-ink);
+}
+
+.storefront-notice {
+  margin: 0;
+  padding: 12px 14px;
+  color: var(--amber-ink);
+  background: var(--amber-soft);
+  border-radius: 12px;
+  font-size: 13.5px;
+}
+
+/* ---------- Menu and order panel ---------- */
+.storefront-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 28px;
+  align-items: start;
+  margin-top: 4px;
+}
+
+.storefront-menu {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.storefront-menu-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+}
+
+.storefront-menu-head h2 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+}
+
+.storefront-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 240px;
+  max-width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  color: var(--text-3);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.storefront-search:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.storefront-search input {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  font-size: 13.5px;
+}
+
+/* The search box shows focus with :focus-within, so the input draws no ring of its own. */
+.storefront-search input:focus,
+.storefront-search input:focus-visible,
+.storefront-search input:hover {
+  outline: none;
+  box-shadow: none;
+}
+
+.storefront-dish-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card.storefront-dish {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px;
+}
+
+.card.storefront-dish.is-in-cart {
+  border-color: var(--primary);
+}
+
+.storefront-dish-art {
+  width: 100%;
+  height: 140px;
+  border-radius: 11px;
+}
+
+.storefront-dish.is-sold-out .storefront-dish-art {
+  opacity: 0.5;
+}
+
+.storefront-dish.is-sold-out strong {
+  color: var(--text-2);
+}
+
+.storefront-dish-body {
+  display: grid;
+  flex: 1;
+  gap: 10px;
+  padding: 0 8px 8px;
+}
+
+.storefront-dish-body strong {
+  font-size: 15px;
+  font-weight: 610;
+}
+
+.storefront-dish-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  align-self: end;
+  min-height: 34px;
+}
+
+.storefront-dish-foot > .mono {
+  font-size: 14px;
+  font-weight: 550;
+}
+
+/* Stays in view while the menu scrolls; top clears the sticky customer header. */
+.card.storefront-order {
+  position: sticky;
+  top: 88px;
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.storefront-order-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.storefront-order-head h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 620;
+}
+
+.storefront-order-head .mono {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.storefront-order-lines {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.storefront-order-lines li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13.5px;
+}
+
+.storefront-order-lines li > span:nth-child(1) {
+  min-width: 24px;
+  color: var(--text-3);
+}
+
+.storefront-order-lines li > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+.storefront-order-empty {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.storefront-order-total {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.storefront-order-total > span:first-child {
+  color: var(--text-2);
+}
+
+.storefront-order-total .mono {
+  font-weight: 550;
+}
+
+.storefront-order-address {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.storefront-order-address svg {
+  flex: none;
+  color: var(--primary-ink);
+}
+
+.storefront-order-address strong {
+  color: var(--text);
+  font-weight: 560;
+}
+
+.storefront-order-address.is-missing {
+  color: var(--primary-ink);
+  background: var(--primary-soft);
+  cursor: pointer;
+}
+
+.storefront-order-address.is-missing:hover {
+  text-decoration: underline;
+}
+
+.primary-button.storefront-checkout {
+  min-height: 46px;
+  font-size: 15px;
+}
+
+/* Phone and tablet: the order panel becomes a bar pinned to the bottom of the screen. */
+.storefront-cart-bar {
+  display: none;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  .storefront-dish-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .storefront-body {
+    grid-template-columns: 1fr;
+  }
+
+  .card.storefront-order {
+    display: none;
+  }
+
+  .storefront.has-cart-bar {
+    padding-bottom: 72px;
+  }
+
+  .storefront-cart-bar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    display: block;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+
+  .storefront-cart-bar .primary-button {
+    justify-content: space-between;
+    width: 100%;
+    min-height: 46px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 600px) {
+  .storefront-cover {
+    height: 160px;
+    border-radius: 16px;
+  }
+
+  .storefront-head {
+    gap: 14px;
+  }
+
+  .storefront-monogram {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    font-size: 21px;
+  }
+
+  .storefront-search {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .storefront-dish-grid {
+    grid-template-columns: 1fr;
+  }
+}

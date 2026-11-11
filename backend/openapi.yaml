@@ -80,6 +80,7 @@ paths:
         - auth
   /api/auth/me:
     get:
+      description: "**Allowed roles:** `customer`, `restaurant`, `courier`, `operator`"
       operationId: AuthController_me
       parameters: []
       responses:
@@ -95,11 +96,114 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `customer`, `restaurant`, `courier`, `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
       summary: Get current account
       tags:
         - auth
+      x-roles:
+        - customer
+        - restaurant
+        - courier
+        - operator
+  /api/accounts/me:
+    put:
+      description: "**Allowed roles:** `customer`, `restaurant`, `courier`, `operator`"
+      operationId: AccountsController_update
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountUpdateRequest"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `customer`, `restaurant`, `courier`, `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Update current account
+      tags:
+        - accounts
+      x-roles:
+        - customer
+        - restaurant
+        - courier
+        - operator
+  /api/accounts/me/password:
+    put:
+      description: "**Allowed roles:** `customer`, `restaurant`, `courier`, `operator`"
+      operationId: AccountsController_changePassword
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChangeRequest"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `customer`, `restaurant`, `courier`, `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Change current account password
+      tags:
+        - accounts
+      x-roles:
+        - customer
+        - restaurant
+        - courier
+        - operator
   /api/couriers/me:
     get:
       description: "**Allowed roles:** `courier`"
@@ -328,7 +432,7 @@ paths:
         - operator
   /api/events:
     get:
-      description: "**Allowed roles:** `operator`, `restaurant`"
+      description: "**Allowed roles:** `operator`"
       operationId: EventsController_getByEntity
       parameters:
         - name: entityType
@@ -363,7 +467,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: "Requires one of the roles: `operator`, `restaurant`"
+          description: "Requires one of the roles: `operator`"
           content:
             application/json:
               schema:
@@ -375,7 +479,6 @@ paths:
         - events
       x-roles:
         - operator
-        - restaurant
   /api/orders:
     post:
       description: "**Allowed roles:** `customer`"
@@ -824,6 +927,7 @@ paths:
       x-roles:
         - restaurant
     get:
+      description: "**Allowed roles:** `customer`, `restaurant`, `operator`"
       operationId: RestaurantsController_find
       parameters:
         - name: lat
@@ -863,11 +967,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `customer`, `restaurant`, `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - bearer: []
       summary: Search restaurants
       tags:
         - restaurants
+      x-roles:
+        - customer
+        - restaurant
+        - operator
   /api/restaurants/{id}:
     put:
       description: "**Allowed roles:** `restaurant`, `operator`"
@@ -986,6 +1100,10 @@ paths:
         - operator
   /api/restaurants/{id}/menu:
     get:
+      description: |-
+        Restaurant staff may only read the menu of their own restaurant.
+
+        **Allowed roles:** `customer`, `restaurant`, `operator`
       operationId: RestaurantsController_getMenu
       parameters:
         - name: id
@@ -1008,6 +1126,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `customer`, `restaurant`, `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: ""
           content:
@@ -1019,6 +1143,10 @@ paths:
       summary: Get restaurant menu
       tags:
         - restaurants
+      x-roles:
+        - customer
+        - restaurant
+        - operator
   /api/restaurants/{id}/preparation-queue:
     get:
       description: "**Allowed roles:** `restaurant`, `operator`"
@@ -1342,6 +1470,26 @@ components:
       required:
         - accessToken
         - account
+    AccountUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+      required:
+        - name
+    PasswordChangeRequest:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+      required:
+        - currentPassword
+        - newPassword
     Position:
       type: object
       properties:
@@ -1564,6 +1712,8 @@ components:
           type: string
         customerId:
           type: string
+        customerName:
+          type: string
         restaurantId:
           type: string
         status:
@@ -1579,6 +1729,11 @@ components:
           type: string
         rejectionReason:
           type: string
+        deliveryAddress:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/Address"
         lines:
           type: array
           items:
@@ -1592,8 +1747,10 @@ components:
       required:
         - id
         - customerId
+        - customerName
         - restaurantId
         - status
+        - deliveryAddress
         - lines
         - createdAt
         - updatedAt

@@ -4,6 +4,7 @@ import type { Command } from '#application/commands/command.js';
 
 export class GetPreparationQueueCommand implements Command<Order[]> {
   readonly name = 'GetPreparationQueueCommand';
+  readonly readOnly = true;
 
   constructor(
     private readonly ordersService: OrdersService,

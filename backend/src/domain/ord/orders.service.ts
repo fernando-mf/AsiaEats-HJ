@@ -88,8 +88,10 @@ export class OrdersService {
 
     const order = new Order();
     order.customerId = actor.id;
+    order.customerName = customer.account.name;
     order.restaurantId = restaurant.id;
     order.status = OrderStatus.Placed;
+    order.deliveryAddress = { ...customer.address };
     order.lines = lines;
     order.createdAt = now;
     order.updatedAt = now;
