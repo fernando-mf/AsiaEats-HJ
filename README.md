@@ -113,6 +113,25 @@ To start a demo from this state again, sign in as `operator1` and press **Restor
 reset as `pnpm seed` and needs `ENV_MANAGER_ENABLED=true`. Editing `seed.json` changes the next restore; no rebuild is
 needed.
 
+## Pricing
+
+An order's fare is computed from its lines and the `pricing` values in
+[`backend/config/seed.json`](./backend/config/seed.json), which are not written into the code (R-PRC-01):
+
+| Value                   | Amount |
+| ----------------------- | ------ |
+| `deliveryFee`           | $3.00  |
+| `serviceFee`            | $2.00  |
+| `smallOrderThreshold`   | $15.00 |
+| `smallOrderSurcharge`   | $2.50  |
+
+**Total = subtotal of the lines + delivery fee + service fee + small-order surcharge**, where the surcharge applies only
+when the subtotal is below the threshold. An order exactly at the threshold pays none. Amounts are added in cents, so
+the total is exact. For example:
+
+- Mapo Tofu ($12.75): 12.75 + 3.00 + 2.00 + 2.50 = **$20.25**
+- Pork Dumplings × 2 ($19.00): 19.00 + 3.00 + 2.00 = **$24.00**
+
 ## Building and checking
 
 ```sh

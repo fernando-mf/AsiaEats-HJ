@@ -1,4 +1,10 @@
 {
+  "pricing": {
+    "deliveryFee": 3.0,
+    "serviceFee": 2.0,
+    "smallOrderThreshold": 15.0,
+    "smallOrderSurcharge": 2.5
+  },
   "password": "password123",
   "operators": [{ "username": "operator1", "name": "Jon Doe" }],
   "couriers": [
