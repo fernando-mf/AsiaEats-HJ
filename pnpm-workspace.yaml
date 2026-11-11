@@ -5,3 +5,8 @@ allowBuilds:
   '@prisma/engines': true
   prisma: true
   '@scarf/scarf': false
+# Security fixes for packages express pulls in (pnpm audit). Both stay inside the ranges express
+# itself asks for (body-parser ^2.3.0, qs ^6.16.0); remove them once express requires these.
+overrides:
+  body-parser: ^2.4.0
+  qs: ^6.16.1
