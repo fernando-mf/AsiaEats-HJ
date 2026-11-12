@@ -1,5 +1,5 @@
 import { Injectable, type OnModuleInit } from '@nestjs/common';
-import { NotFoundError } from '#domain/errors.js';
+import { ConflictError, NotFoundError } from '#domain/errors.js';
 import { type Event, type EventSubscriber, EventsService } from '#domain/events/index.js';
 import { OrderRepository, OrderStatus, OrderStatusChangedEvent } from '#domain/ord/index.js';
 import type { Actor } from '#domain/reg/index.js';
@@ -47,9 +47,44 @@ export class LedgerService implements EventSubscriber, OnModuleInit {
 
   async handle(event: Event): Promise<void> {
     if (!(event instanceof OrderStatusChangedEvent)) return;
-    if (!FINAL_STATUSES.includes(event.payload.newStatus)) return;
 
-    await this.recordCharge(event.entityId, event.occurredAt, event.actor);
+    if (event.payload.newStatus === OrderStatus.Refunded) {
+      await this.recordRefund(event.entityId, event.occurredAt, event.actor);
+    } else if (FINAL_STATUSES.includes(event.payload.newStatus)) {
+      await this.recordCharge(event.entityId, event.occurredAt, event.actor);
+    }
+  }
+
+  // recordRefund records a refunded order's refund as its own entry (R-PRC-05): the charge's amounts,
+  // negated, so the ledger adds up to what was actually kept. The charge entry is left unchanged.
+  // Recording it again returns the first refund and publishes nothing.
+  async recordRefund(orderId: string, refundedAt: Date, actor: Actor | null = null): Promise<LedgerEntry> {
+    const existing = await this.ledger.findByOrder(orderId, LedgerEntryKind.Refund);
+    if (existing) return existing;
+
+    const charge = await this.ledger.findByOrder(orderId, LedgerEntryKind.Charge);
+    if (!charge || charge.orderStatus !== OrderStatus.Delivered) {
+      throw new ConflictError('the order has no delivery charge to refund');
+    }
+
+    const entry = new LedgerEntry();
+    entry.orderId = charge.orderId;
+    entry.kind = LedgerEntryKind.Refund;
+    entry.orderStatus = OrderStatus.Refunded;
+    entry.customerId = charge.customerId;
+    entry.restaurantId = charge.restaurantId;
+    entry.subtotal = -charge.subtotal;
+    entry.deliveryFee = -charge.deliveryFee;
+    entry.serviceFee = -charge.serviceFee;
+    entry.smallOrderSurcharge = -charge.smallOrderSurcharge;
+    entry.total = -charge.total;
+    entry.orderPlacedAt = charge.orderPlacedAt;
+    entry.orderClosedAt = refundedAt;
+    entry.recordedAt = new Date();
+
+    const recorded = await this.ledger.record(entry);
+    await this.announce(recorded, actor);
+    return recorded;
   }
 
   // recordCharge records an order's charge once; recording it again returns the first entry and
@@ -77,18 +112,7 @@ export class LedgerService implements EventSubscriber, OnModuleInit {
     entry.recordedAt = new Date();
 
     const recorded = await this.ledger.record(entry);
-    await this.events.publish(
-      new LedgerEntryRecordedEvent({
-        entityId: recorded.id,
-        payload: {
-          orderId: recorded.orderId,
-          kind: recorded.kind,
-          orderStatus: recorded.orderStatus,
-          total: recorded.total,
-        },
-        actor,
-      }),
-    );
+    await this.announce(recorded, actor);
     // A delivered order's charge is its summary (R-PRC-02).
     if (fare) {
       await this.events.publish(
@@ -97,6 +121,17 @@ export class LedgerService implements EventSubscriber, OnModuleInit {
     }
 
     return recorded;
+  }
+
+  // announce publishes that an entry was added to the ledger (R-PRC-03).
+  private async announce(entry: LedgerEntry, actor: Actor | null): Promise<void> {
+    await this.events.publish(
+      new LedgerEntryRecordedEvent({
+        entityId: entry.id,
+        payload: { orderId: entry.orderId, kind: entry.kind, orderStatus: entry.orderStatus, total: entry.total },
+        actor,
+      }),
+    );
   }
 
   // list returns the whole ledger, refunds included, for the operator to audit (R-PRC-03). Who may

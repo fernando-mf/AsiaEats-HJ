@@ -29,6 +29,7 @@ const routes: Array<[Method, RegExp, string]> = [
   ['POST', new RegExp(`^/orders/${ID}/prepare$`), 'StartPreparingCommand'],
   ['POST', new RegExp(`^/orders/${ID}/ready$`), 'MarkOrderReadyCommand'],
   ['POST', new RegExp(`^/orders/${ID}/cancel$`), 'CancelOrderCommand'],
+  ['POST', new RegExp(`^/orders/${ID}/refund$`), 'RefundOrderCommand'],
   ['POST', /^\/env\/reset$/, 'ResetEnvCommand'],
   ['GET', /^\/events$/, 'GetEventsByEntityCommand'],
   ['GET', /^\/ledger$/, 'ListLedgerCommand'],

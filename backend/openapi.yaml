@@ -925,6 +925,57 @@ paths:
       x-roles:
         - customer
         - operator
+  /api/orders/{id}/refund:
+    post:
+      description: |-
+        Moves a delivered order to refunded and records the refund as its own ledger entry; the charge is left unchanged.
+
+        **Allowed roles:** `operator`
+      operationId: OrdersController_refund
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Refund order
+      tags:
+        - orders
+      x-roles:
+        - operator
   /api/restaurants:
     post:
       description: "**Allowed roles:** `restaurant`"
@@ -1912,6 +1963,17 @@ components:
         - fare
         - placedAt
         - deliveredAt
+    BillingRefundResponse:
+      type: object
+      properties:
+        amount:
+          type: number
+        refundedAt:
+          format: date-time
+          type: string
+      required:
+        - amount
+        - refundedAt
     BillingLedgerResponse:
       type: object
       properties:
@@ -1935,11 +1997,17 @@ components:
           type: string
         totalCharge:
           type: number
+        refund:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/BillingRefundResponse"
       required:
         - finalState
         - placedAt
         - deliveredAt
         - totalCharge
+        - refund
     BillingDetailsResponse:
       type: object
       properties:

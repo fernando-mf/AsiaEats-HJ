@@ -59,11 +59,17 @@ export class OrderSummaryResponse {
   deliveredAt: Date;
 }
 
+export class BillingRefundResponse {
+  amount: number;
+  refundedAt: Date;
+}
+
 export class BillingLedgerResponse {
   finalState: OrderStatus;
   placedAt: Date;
   deliveredAt: Date;
   totalCharge: number;
+  refund: BillingRefundResponse | null;
 }
 
 export class BillingDetailsResponse {

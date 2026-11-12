@@ -168,3 +168,37 @@ describe('OrdersService lifecycle (R-ORD-04)', () => {
     await expect(service.cancel(actor, accepted.id)).rejects.toBeInstanceOf(InvalidOrderTransitionError);
   });
 });
+
+describe('OrdersService.refund (R-PRC-04)', () => {
+  const operator = { id: '0190f0a0-0000-7000-8000-000000000010', role: AccountRole.Operator };
+
+  it('lets an operator refund a delivered order', async () => {
+    const delivered = kitchenOrder('order-1', OrderStatus.Delivered);
+    const { service, publish } = newKitchen([delivered]);
+
+    const order = await service.refund(operator, delivered.id);
+
+    expect(order.status).toBe(OrderStatus.Refunded);
+    expect(publish.mock.calls[0][0].payload).toMatchObject({
+      previousStatus: OrderStatus.Delivered,
+      newStatus: OrderStatus.Refunded,
+    });
+  });
+
+  it('refuses to refund an order that was not delivered', async () => {
+    for (const status of [OrderStatus.Placed, OrderStatus.PickedUp, OrderStatus.Cancelled, OrderStatus.Refunded]) {
+      const order = kitchenOrder('order-1', status);
+      const { service, updateStatus } = newKitchen([order]);
+
+      await expect(service.refund(operator, order.id)).rejects.toBeInstanceOf(InvalidOrderTransitionError);
+      expect(updateStatus).not.toHaveBeenCalled();
+    }
+  });
+
+  it('refuses a refund from anyone but an operator', async () => {
+    const delivered = kitchenOrder('order-1', OrderStatus.Delivered);
+    const { service } = newKitchen([delivered]);
+
+    await expect(service.refund(actor, delivered.id)).rejects.toBeInstanceOf(InvalidOrderTransitionError);
+  });
+});

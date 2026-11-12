@@ -66,6 +66,36 @@ describe('BillingService.billingFor', () => {
       placedAt,
       deliveredAt,
       totalCharge: 20.25,
+      refund: null,
+    });
+  });
+
+  it('shows a refunded order as refunded, keeping the original charge', async () => {
+    const refundedAt = new Date('2026-11-12T09:00:00Z');
+    const refund = Object.assign(new LedgerEntry(), {
+      ...charge('order-1', OrderStatus.Delivered),
+      id: 'order-1-refund',
+      kind: LedgerEntryKind.Refund,
+      orderStatus: OrderStatus.Refunded,
+      subtotal: -12.75,
+      deliveryFee: -3,
+      serviceFee: -2,
+      smallOrderSurcharge: -2.5,
+      total: -20.25,
+      orderClosedAt: refundedAt,
+      recordedAt: refundedAt,
+    });
+    const { service } = newBilling([charge('order-1', OrderStatus.Delivered), refund]);
+
+    const details = (await service.billingFor([order('order-1', OrderStatus.Refunded)])).get('order-1')!;
+
+    expect(details.summary.fare.total).toBe(20.25);
+    expect(details.ledger).toEqual({
+      finalState: OrderStatus.Refunded,
+      placedAt,
+      deliveredAt,
+      totalCharge: 20.25,
+      refund: { amount: 20.25, refundedAt },
     });
   });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { NotFoundError } from '#domain/errors.js';
+import { ConflictError, NotFoundError } from '#domain/errors.js';
 import type { EventsService } from '#domain/events/index.js';
 import {
   type Order,
@@ -187,6 +187,78 @@ describe('LedgerService', () => {
     await service.handle(event);
 
     expect(events.publish).not.toHaveBeenCalled();
+  });
+
+  describe('refunds (R-PRC-04)', () => {
+    const operator = { id: 'operator-1', role: AccountRole.Operator };
+    const refunded = () =>
+      new OrderStatusChangedEvent({
+        entityId: 'order-1',
+        payload: { previousStatus: OrderStatus.Delivered, newStatus: OrderStatus.Refunded },
+        actor: operator,
+      });
+
+    async function deliveredLedger() {
+      const ledger = newLedger(order(OrderStatus.Delivered));
+      await ledger.service.handle(statusChanged(OrderStatus.PickedUp, OrderStatus.Delivered));
+      vi.mocked(ledger.events.publish).mockClear();
+      return ledger;
+    }
+
+    it('records the refund as its own entry, the charge negated, and leaves the charge as it was', async () => {
+      const { service, entries } = await deliveredLedger();
+      const charge = { ...entries[0] };
+      const event = refunded();
+
+      await service.handle(event);
+
+      expect(entries).toHaveLength(2);
+      expect(entries[0]).toEqual(charge);
+      expect(entries[1]).toMatchObject({
+        orderId: 'order-1',
+        kind: LedgerEntryKind.Refund,
+        orderStatus: OrderStatus.Refunded,
+        subtotal: -12.75,
+        deliveryFee: -3,
+        serviceFee: -2,
+        smallOrderSurcharge: -2.5,
+        total: -20.25,
+        orderPlacedAt: placedAt,
+        orderClosedAt: event.occurredAt,
+      });
+    });
+
+    it('announces the refund entry, as the operator', async () => {
+      const { service, events, entries } = await deliveredLedger();
+
+      await service.handle(refunded());
+
+      const published = vi.mocked(events.publish).mock.calls.map(([event]) => event);
+      expect(published.map(event => event.eventType)).toEqual(['ledger_entry.recorded']);
+      expect(published[0]).toMatchObject({
+        entityId: entries[1].id,
+        payload: { kind: LedgerEntryKind.Refund, total: -20.25 },
+        actor: operator,
+      });
+    });
+
+    it('records a refund only once', async () => {
+      const { service, entries, events } = await deliveredLedger();
+
+      await service.handle(refunded());
+      await service.handle(refunded());
+
+      expect(entries).toHaveLength(2);
+      expect(events.publish).toHaveBeenCalledOnce();
+    });
+
+    it('refuses to refund an order with no delivery charge', async () => {
+      const { service, entries } = newLedger(order(OrderStatus.Cancelled));
+      await service.handle(statusChanged(OrderStatus.Placed, OrderStatus.Cancelled));
+
+      await expect(service.handle(refunded())).rejects.toBeInstanceOf(ConflictError);
+      expect(entries).toHaveLength(1);
+    });
   });
 
   it('lists every entry of the ledger, refunds included, most recent first', async () => {

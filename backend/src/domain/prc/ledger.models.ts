@@ -49,10 +49,14 @@ export type BillingDetails = {
   orderId: string;
   summary: OrderSummary;
   ledger: {
+    // delivered, or refunded once refunded.
     finalState: OrderStatus;
     placedAt: Date;
     deliveredAt: Date;
+    // What the delivery was charged; a refund doesn't change it.
     totalCharge: number;
+    // Set once the order is refunded (R-PRC-05).
+    refund: { amount: number; refundedAt: Date } | null;
   };
 };
 

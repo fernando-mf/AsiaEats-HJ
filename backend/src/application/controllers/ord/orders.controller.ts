@@ -27,6 +27,7 @@ import { FindOrdersCommand } from '#application/commands/ord/find-orders.command
 import { GetOrderCommand } from '#application/commands/ord/get-order.command.js';
 import { MarkOrderReadyCommand } from '#application/commands/ord/mark-order-ready.command.js';
 import { PlaceOrderCommand } from '#application/commands/ord/place-order.command.js';
+import { RefundOrderCommand } from '#application/commands/ord/refund-order.command.js';
 import { RejectOrderCommand } from '#application/commands/ord/reject-order.command.js';
 import { StartPreparingCommand } from '#application/commands/ord/start-preparing.command.js';
 import { Command } from '#application/commands/command.js';
@@ -174,6 +175,26 @@ export class OrdersController {
   cancel(@CurrentActor() actor: Actor, @Param('id') id: string) {
     let command: Command<Order> = new CancelOrderCommand(this.service, actor, id);
     command = new AuthorizedCommand(command, actor, getApiRoles(this.cancel));
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Post(':id/refund')
+  @ApiRoles(AccountRole.Operator)
+  @ApiOperation({
+    summary: 'Refund order',
+    description:
+      'Moves a delivered order to refunded and records the refund as its own ledger entry; the charge is left unchanged.',
+  })
+  @HttpCode(200)
+  @ApiOkResponse({ type: Order })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse })
+  @ApiConflictResponse({ type: ErrorResponse })
+  refund(@CurrentActor() actor: Actor, @Param('id') id: string) {
+    let command: Command<Order> = new RefundOrderCommand(this.service, actor, id);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.refund));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
