@@ -11,6 +11,8 @@ export abstract class LedgerRepository {
   abstract findByOrder(orderId: string, kind: LedgerEntryKind): Promise<LedgerEntry | undefined>;
   // Every entry of these orders, charges and refunds, in one query.
   abstract findByOrders(orderIds: readonly string[]): Promise<LedgerEntry[]>;
+  // Every entry, charges and refunds, most recent first.
+  abstract list(): Promise<LedgerEntry[]>;
 }
 
 // The statuses an order can't leave; reaching one closes the order and records it.
@@ -60,6 +62,12 @@ export class LedgerService implements EventSubscriber {
     entry.recordedAt = new Date();
 
     return this.ledger.record(entry);
+  }
+
+  // list returns the whole ledger, refunds included, for the operator to audit (R-PRC-03). Who may
+  // call it is checked by the command, like every other permission.
+  list(): Promise<LedgerEntry[]> {
+    return this.ledger.list();
   }
 
   // getSummary returns a delivered order's summary, built from its ledger entry: the fare it was

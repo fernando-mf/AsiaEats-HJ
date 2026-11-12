@@ -479,6 +479,42 @@ paths:
         - events
       x-roles:
         - operator
+  /api/ledger:
+    get:
+      description: |-
+        Every ledger entry, charges and refunds, most recent first.
+
+        **Allowed roles:** `operator`
+      operationId: LedgerController_list
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LedgerEntry"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: List the billing ledger
+      tags:
+        - ledger
+      x-roles:
+        - operator
   /api/orders:
     post:
       description: "**Allowed roles:** `customer`"
@@ -1663,6 +1699,67 @@ components:
         - payload
         - actor
         - occurredAt
+    LedgerEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        kind:
+          type: string
+          enum:
+            - charge
+            - refund
+        orderStatus:
+          type: string
+          enum:
+            - placed
+            - accepted
+            - preparing
+            - ready
+            - picked_up
+            - delivered
+            - rejected
+            - cancelled
+        customerId:
+          type: string
+        restaurantId:
+          type: string
+        subtotal:
+          type: number
+        deliveryFee:
+          type: number
+        serviceFee:
+          type: number
+        smallOrderSurcharge:
+          type: number
+        total:
+          type: number
+        orderPlacedAt:
+          format: date-time
+          type: string
+        orderClosedAt:
+          format: date-time
+          type: string
+        recordedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - orderId
+        - kind
+        - orderStatus
+        - customerId
+        - restaurantId
+        - subtotal
+        - deliveryFee
+        - serviceFee
+        - smallOrderSurcharge
+        - total
+        - orderPlacedAt
+        - orderClosedAt
+        - recordedAt
     OrderItemRequest:
       type: object
       properties:

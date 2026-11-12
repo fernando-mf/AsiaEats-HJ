@@ -51,6 +51,7 @@ function newLedger(current: Order) {
     findByOrder: vi.fn(async (orderId: string, kind: LedgerEntryKind) =>
       entries.find(entry => entry.orderId === orderId && entry.kind === kind),
     ),
+    list: vi.fn(async () => [...entries].reverse()),
   } as unknown as LedgerRepository;
   const orders = { getById: vi.fn(async () => current) } as unknown as OrderRepository;
   const source: PricingSource = {
@@ -138,5 +139,16 @@ describe('LedgerService', () => {
     await service.handle(statusChanged(OrderStatus.Placed, OrderStatus.Cancelled));
 
     await expect(service.getSummary('order-1')).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it('lists every entry of the ledger, refunds included, most recent first', async () => {
+    const { service, entries } = newLedger(order(OrderStatus.Delivered));
+    await service.handle(statusChanged(OrderStatus.PickedUp, OrderStatus.Delivered));
+    const refund = Object.assign(new LedgerEntry(), { ...entries[0], id: 'refund-1', kind: LedgerEntryKind.Refund });
+    entries.push(refund);
+
+    const listed = await service.list();
+
+    expect(listed.map(entry => entry.kind)).toEqual([LedgerEntryKind.Refund, LedgerEntryKind.Charge]);
   });
 });

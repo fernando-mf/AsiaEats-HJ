@@ -43,6 +43,15 @@ export class PrismaLedgerRepository extends LedgerRepository {
     return row ? toLedgerEntry(row) : undefined;
   }
 
+  async list(): Promise<LedgerEntry[]> {
+    try {
+      const rows = await this.db.client().ledgerEntry.findMany({ orderBy: [{ recordedAt: 'desc' }, { id: 'desc' }] });
+      return rows.map(toLedgerEntry);
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
+
   async findByOrders(orderIds: readonly string[]): Promise<LedgerEntry[]> {
     try {
       const rows = await this.db.client().ledgerEntry.findMany({
