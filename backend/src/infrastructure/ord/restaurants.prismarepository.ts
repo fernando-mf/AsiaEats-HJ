@@ -137,6 +137,16 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
     }
   }
 
+  async countOrdersInProgress(restaurantId: string): Promise<number> {
+    try {
+      return await this.db.client().order.count({
+        where: { restaurantId, status: { in: ['placed', 'accepted', 'preparing'] } },
+      });
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
+
   async updateStatus(restaurant: Restaurant): Promise<Restaurant> {
     try {
       const row = await this.db.client().restaurant.update({
