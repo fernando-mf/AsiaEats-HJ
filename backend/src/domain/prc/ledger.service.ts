@@ -1,16 +1,9 @@
 import { Injectable, type OnModuleInit } from '@nestjs/common';
-import { ConflictError, NotFoundError } from '#domain/errors.js';
+import { ConflictError } from '#domain/errors.js';
 import { type Event, type EventSubscriber, EventsService } from '#domain/events/index.js';
 import { OrderRepository, OrderStatus, OrderStatusChangedEvent } from '#domain/ord/index.js';
 import type { Actor } from '#domain/reg/index.js';
-import {
-  LedgerEntry,
-  LedgerEntryKind,
-  LedgerEntryRecordedEvent,
-  type OrderSummary,
-  OrderSummaryCreatedEvent,
-  summaryOf,
-} from './ledger.models.js';
+import { LedgerEntry, LedgerEntryKind, LedgerEntryRecordedEvent, OrderSummaryCreatedEvent } from './ledger.models.js';
 import { FareComponentKind } from './pricing.models.js';
 import { PricingService } from './pricing.service.js';
 
@@ -138,17 +131,5 @@ export class LedgerService implements EventSubscriber, OnModuleInit {
   // call it is checked by the command, like every other permission.
   list(): Promise<LedgerEntry[]> {
     return this.ledger.list();
-  }
-
-  // getSummary returns a delivered order's summary, built from its ledger entry: the fare it was
-  // charged, even if the pricing values have changed since.
-  async getSummary(orderId: string): Promise<OrderSummary> {
-    const entry = await this.ledger.findByOrder(orderId, LedgerEntryKind.Charge);
-    if (!entry || entry.orderStatus !== OrderStatus.Delivered) {
-      throw new NotFoundError('order summary');
-    }
-
-    const order = await this.orders.getById(orderId);
-    return summaryOf(order, entry);
   }
 }

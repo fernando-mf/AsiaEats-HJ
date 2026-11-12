@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ConflictError, NotFoundError } from '#domain/errors.js';
+import { ConflictError } from '#domain/errors.js';
 import type { EventsService } from '#domain/events/index.js';
 import {
   type Order,
@@ -11,7 +11,6 @@ import {
 import { AccountRole } from '#domain/reg/index.js';
 import { LedgerEntry, LedgerEntryKind } from './ledger.models.js';
 import { type LedgerRepository, LedgerService } from './ledger.service.js';
-import { FareComponentKind } from './pricing.models.js';
 import { PricingService, type PricingSource } from './pricing.service.js';
 
 const actor = { id: 'courier-1', role: AccountRole.Courier };
@@ -129,28 +128,13 @@ describe('LedgerService', () => {
     expect(entries).toHaveLength(1);
   });
 
-  it("builds a delivered order's summary from the fare it was charged", async () => {
-    const { service } = newLedger(order(OrderStatus.Delivered, [{ unitPrice: 9.5, quantity: 2 }]));
+  it('charges no small-order surcharge at or above the threshold', async () => {
+    const { service, entries } = newLedger(order(OrderStatus.Delivered, [{ unitPrice: 9.5, quantity: 2 }]));
+
     await service.handle(statusChanged(OrderStatus.PickedUp, OrderStatus.Delivered));
 
-    const summary = await service.getSummary('order-1');
-
     // Pork Dumplings x2: 19.00 + 3.00 + 2.00 = 24.00, with no surcharge
-    expect(summary.fare.total).toBe(24);
-    expect(summary.fare.components.map(component => component.kind)).toEqual([
-      FareComponentKind.Subtotal,
-      FareComponentKind.DeliveryFee,
-      FareComponentKind.ServiceFee,
-    ]);
-    expect(summary.lines).toHaveLength(1);
-    expect(summary.placedAt).toEqual(placedAt);
-  });
-
-  it('has no summary for an order that was not delivered', async () => {
-    const { service } = newLedger(order(OrderStatus.Cancelled));
-    await service.handle(statusChanged(OrderStatus.Placed, OrderStatus.Cancelled));
-
-    await expect(service.getSummary('order-1')).rejects.toBeInstanceOf(NotFoundError);
+    expect(entries[0]).toMatchObject({ subtotal: 19, smallOrderSurcharge: 0, total: 24 });
   });
 
   it('announces the recorded entry, then the summary of a delivered order, as the deliverer', async () => {

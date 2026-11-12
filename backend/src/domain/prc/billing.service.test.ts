@@ -70,6 +70,25 @@ describe('BillingService.billingFor', () => {
     });
   });
 
+  it('leaves the surcharge out of the summary when none was charged', async () => {
+    const noSurcharge = Object.assign(charge('order-1', OrderStatus.Delivered), {
+      subtotal: 19,
+      smallOrderSurcharge: 0,
+      total: 24,
+    });
+    const { service } = newBilling([noSurcharge]);
+
+    const details = (await service.billingFor([order('order-1', OrderStatus.Delivered)])).get('order-1')!;
+
+    // Pork Dumplings x2: 19.00 + 3.00 + 2.00 = 24.00
+    expect(details.summary.fare.total).toBe(24);
+    expect(details.summary.fare.components.map(component => component.kind)).toEqual([
+      FareComponentKind.Subtotal,
+      FareComponentKind.DeliveryFee,
+      FareComponentKind.ServiceFee,
+    ]);
+  });
+
   it('shows a refunded order as refunded, keeping the original charge', async () => {
     const refundedAt = new Date('2026-11-12T09:00:00Z');
     const refund = Object.assign(new LedgerEntry(), {
