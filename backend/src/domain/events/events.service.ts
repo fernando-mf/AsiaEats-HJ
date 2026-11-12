@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { Event, GetByEntityQuery, StoredEvent } from './events.models.js';
 import { InvalidParamsError } from '#domain/errors.js';
@@ -15,19 +15,22 @@ export interface EventSubscriber {
   handle(event: Event): Promise<void>;
 }
 
-// The subscribers EventsService notifies, provided by the domain module.
-export const EVENT_SUBSCRIBERS = Symbol('EVENT_SUBSCRIBERS');
-
 // EventsService is the subject: publish records the event in the append-only log (R-ORD-05),
 // then notifies every subscriber in turn. Publishing runs inside the command's transaction, so
 // a subscriber that fails rolls the state change back with it: the change and its consequences
 // are saved together or not at all.
+//
+// Subscribers attach themselves with subscribe() when the app starts, rather than being
+// injected into EventsService, so a subscriber can also publish events of its own.
 @Injectable()
 export class EventsService {
-  constructor(
-    private readonly events: EventRepository,
-    @Optional() @Inject(EVENT_SUBSCRIBERS) private readonly subscribers: readonly EventSubscriber[] = [],
-  ) {}
+  private readonly subscribers: EventSubscriber[] = [];
+
+  constructor(private readonly events: EventRepository) {}
+
+  subscribe(subscriber: EventSubscriber): void {
+    if (!this.subscribers.includes(subscriber)) this.subscribers.push(subscriber);
+  }
 
   async publish(event: Event): Promise<void> {
     await this.events.append(event);

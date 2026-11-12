@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { NotFoundError } from '#domain/errors.js';
+import type { EventsService } from '#domain/events/index.js';
 import {
   type Order,
   OrderPlacedEvent,
@@ -58,10 +59,20 @@ function newLedger(current: Order) {
     load: async () => ({ deliveryFee: 3, serviceFee: 2, smallOrderThreshold: 15, smallOrderSurcharge: 2.5 }),
   };
 
-  return { service: new LedgerService(ledger, orders, new PricingService(source)), entries };
+  const events = { subscribe: vi.fn(), publish: vi.fn() } as unknown as EventsService;
+
+  return { service: new LedgerService(ledger, orders, new PricingService(source), events), entries, events };
 }
 
 describe('LedgerService', () => {
+  it('subscribes to the published events when the app starts', () => {
+    const { service, events } = newLedger(order(OrderStatus.Placed));
+
+    service.onModuleInit();
+
+    expect(events.subscribe).toHaveBeenCalledWith(service);
+  });
+
   it("charges a delivered order its fare and records the order's final state and timestamps", async () => {
     const { service, entries } = newLedger(order(OrderStatus.Delivered));
     const event = statusChanged(OrderStatus.PickedUp, OrderStatus.Delivered);

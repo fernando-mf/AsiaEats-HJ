@@ -7,14 +7,20 @@ class SomethingHappenedEvent extends Event {
   readonly eventType = 'thing.happened';
 }
 
+function newEvents() {
+  const calls: string[] = [];
+  const repository = {
+    append: vi.fn(async () => {
+      calls.push('append');
+    }),
+  } as unknown as EventRepository;
+
+  return { service: new EventsService(repository), repository, calls };
+}
+
 describe('EventsService', () => {
-  it('records the event, then notifies every subscriber with it, in order', async () => {
-    const calls: string[] = [];
-    const repository = {
-      append: vi.fn(async () => {
-        calls.push('append');
-      }),
-    } as unknown as EventRepository;
+  it('records the event, then notifies every subscriber with it, in the order they subscribed', async () => {
+    const { service, calls } = newEvents();
     const subscriber = (name: string): EventSubscriber => ({
       handle: vi.fn(async () => {
         calls.push(name);
@@ -22,27 +28,38 @@ describe('EventsService', () => {
     });
     const first = subscriber('first');
     const second = subscriber('second');
+    service.subscribe(first);
+    service.subscribe(second);
     const event = new SomethingHappenedEvent({ entityId: 'thing-1' });
 
-    await new EventsService(repository, [first, second]).publish(event);
+    await service.publish(event);
 
     expect(calls).toEqual(['append', 'first', 'second']);
     expect(first.handle).toHaveBeenCalledWith(event);
   });
 
-  it("passes a subscriber's failure on, so the command's transaction rolls back", async () => {
-    const repository = { append: vi.fn() } as unknown as EventRepository;
-    const failing: EventSubscriber = { handle: vi.fn().mockRejectedValue(new Error('ledger down')) };
+  it('notifies a subscriber once, even if it subscribes twice', async () => {
+    const { service } = newEvents();
+    const subscriber: EventSubscriber = { handle: vi.fn() };
+    service.subscribe(subscriber);
+    service.subscribe(subscriber);
 
-    await expect(
-      new EventsService(repository, [failing]).publish(new SomethingHappenedEvent({ entityId: 'thing-1' })),
-    ).rejects.toThrow('ledger down');
+    await service.publish(new SomethingHappenedEvent({ entityId: 'thing-1' }));
+
+    expect(subscriber.handle).toHaveBeenCalledOnce();
+  });
+
+  it("passes a subscriber's failure on, so the command's transaction rolls back", async () => {
+    const { service } = newEvents();
+    service.subscribe({ handle: vi.fn().mockRejectedValue(new Error('ledger down')) });
+
+    await expect(service.publish(new SomethingHappenedEvent({ entityId: 'thing-1' }))).rejects.toThrow('ledger down');
   });
 
   it('works without subscribers', async () => {
-    const repository = { append: vi.fn() } as unknown as EventRepository;
+    const { service, repository } = newEvents();
 
-    await new EventsService(repository).publish(new SomethingHappenedEvent({ entityId: 'thing-1' }));
+    await service.publish(new SomethingHappenedEvent({ entityId: 'thing-1' }));
 
     expect(repository.append).toHaveBeenCalledOnce();
   });

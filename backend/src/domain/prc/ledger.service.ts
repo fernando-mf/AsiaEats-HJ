@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { NotFoundError } from '#domain/errors.js';
-import type { Event, EventSubscriber } from '#domain/events/index.js';
+import { type Event, type EventSubscriber, EventsService } from '#domain/events/index.js';
 import { OrderRepository, OrderStatus, OrderStatusChangedEvent } from '#domain/ord/index.js';
 import { LedgerEntry, LedgerEntryKind, type OrderSummary, summaryOf } from './ledger.models.js';
 import { FareComponentKind } from './pricing.models.js';
@@ -24,12 +24,18 @@ const FINAL_STATUSES: readonly OrderStatus[] = [OrderStatus.Delivered, OrderStat
 // that entry is its order summary (R-PRC-02); a rejected or cancelled one is recorded with
 // nothing charged.
 @Injectable()
-export class LedgerService implements EventSubscriber {
+export class LedgerService implements EventSubscriber, OnModuleInit {
   constructor(
     private readonly ledger: LedgerRepository,
     private readonly orders: OrderRepository,
     private readonly pricing: PricingService,
+    private readonly events: EventsService,
   ) {}
+
+  // Attach to the published events when the app starts.
+  onModuleInit(): void {
+    this.events.subscribe(this);
+  }
 
   async handle(event: Event): Promise<void> {
     if (!(event instanceof OrderStatusChangedEvent)) return;
