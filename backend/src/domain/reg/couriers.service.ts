@@ -4,6 +4,7 @@ import { EventsService } from '#domain/events/index.js';
 import { InvalidParamsError } from '#domain/errors.js';
 import { type Account, AccountRole, type Actor } from './accounts.models.js';
 import type { AccountCreationHandler } from './accounts.handlers.js';
+import { CourierStateMachine } from './couriers.statemachine.js';
 import {
   Courier,
   CourierCreatedEvent,
@@ -80,5 +81,29 @@ export class CouriersService implements AccountCreationHandler {
     courier.updatedAt = new Date();
 
     return await this.repository.update(courier);
+  }
+
+  async goOnline(courierId: string): Promise<void> {
+    await this.updateCourierStatus(courierId, CourierStatus.Idle);
+
+    // TODO: retry assignment of the orders waiting in the dispatch queue (order dispatcher task).
+  }
+
+  async goOffline(courierId: string): Promise<void> {
+    await this.updateCourierStatus(courierId, CourierStatus.Offline);
+
+    // TODO: if the courier was assigned an order, mark it stalled so only an operator can
+    // reassign it (stalled order handling task).
+  }
+
+  private async updateCourierStatus(courierId: string, targetState: CourierStatus): Promise<void> {
+    const courier = await this.repository.getByAccountId(courierId);
+    const event = new CourierStateMachine(courier).transition(targetState);
+    if (!event) {
+      return;
+    }
+
+    await this.repository.update(courier);
+    await this.events.publish(event);
   }
 }

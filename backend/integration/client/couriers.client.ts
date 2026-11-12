@@ -17,4 +17,12 @@ export class CouriersClient {
   updatePosition(request: CourierPositionUpdateRequest): Promise<CourierResponse> {
     return this.http.request('PUT', '/couriers/me/position', request);
   }
+
+  goOnline(): Promise<void> {
+    return this.http.request('POST', '/couriers/me/online');
+  }
+
+  goOffline(): Promise<void> {
+    return this.http.request('POST', '/couriers/me/offline');
+  }
 }

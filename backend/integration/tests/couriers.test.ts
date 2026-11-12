@@ -81,6 +81,29 @@ describe('couriers', () => {
       expect(courier.position).toEqual({ latitude: 45.5, longitude: -73.5 });
     });
   });
+
+  describe('goOnline / goOffline', () => {
+    it('goes online then offline', async () => {
+      await purgeDatabase();
+
+      const client = new Client();
+      await openSessionAsCourier(client);
+
+      await client.couriers.goOnline();
+      expect((await client.couriers.me()).status).toBe(CourierStatus.Idle);
+
+      // going online again changes nothing
+      await client.couriers.goOnline();
+      expect((await client.couriers.me()).status).toBe(CourierStatus.Idle);
+
+      await client.couriers.goOffline();
+      expect((await client.couriers.me()).status).toBe(CourierStatus.Offline);
+
+      // going offline again changes nothing
+      await client.couriers.goOffline();
+      expect((await client.couriers.me()).status).toBe(CourierStatus.Offline);
+    });
+  });
 });
 
 function normalizeCourier(c: CourierResponse) {
