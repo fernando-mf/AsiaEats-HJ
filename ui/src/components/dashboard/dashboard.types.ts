@@ -70,6 +70,35 @@ export type Order = {
   lines: OrderLine[];
   createdAt: string;
   updatedAt?: string;
+  // What the order was charged, set once it is delivered (R-PRC-02, R-PRC-03); null before.
+  billing?: BillingDetails | null;
+};
+
+export type FareComponentKind = 'subtotal' | 'delivery_fee' | 'service_fee' | 'small_order_surcharge';
+
+// One part of a fare, in dollars. The small-order surcharge is only listed when it was charged.
+export type FareComponent = {
+  kind: FareComponentKind;
+  amount: number;
+};
+
+export type BillingDetails = {
+  orderId: string;
+  summary: {
+    lines: OrderLine[];
+    fare: { components: FareComponent[]; total: number };
+    placedAt: string;
+    deliveredAt: string;
+  };
+  ledger: {
+    // delivered, or refunded once refunded.
+    finalState: string;
+    placedAt: string;
+    deliveredAt: string;
+    // What the delivery was charged; a refund doesn't change it.
+    totalCharge: number;
+    refund: { amount: number; refundedAt: string } | null;
+  };
 };
 
 // One entry of the event log (GET /events): a state change and who made it.

@@ -415,6 +415,65 @@
   color: var(--text-3);
 }
 
+.past-order-total.is-refunded {
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+
+/* A delivered order's row opens its receipt. */
+.past-order--button {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.past-order--button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.past-order-item.is-open .past-order {
+  background: var(--surface-2);
+}
+
+.order-receipt {
+  display: grid;
+  gap: 8px;
+  padding: 8px 14px 14px 74px;
+}
+
+.order-fare {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.order-fare-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.order-fare-row .mono {
+  color: var(--text);
+}
+
+.order-fare-refund {
+  font-weight: 560;
+}
+
+.order-receipt-note {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
 .past-orders-empty {
   margin: 0;
   padding: 24px 14px;
@@ -550,5 +609,9 @@
 
   .past-order-date {
     display: none;
+  }
+
+  .order-receipt {
+    padding-left: 14px;
   }
 }
