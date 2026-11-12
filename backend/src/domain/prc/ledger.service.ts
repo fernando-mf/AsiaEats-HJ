@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { NotFoundError } from '#domain/errors.js';
 import type { Event, EventSubscriber } from '#domain/events/index.js';
-import { type Order, OrderRepository, OrderStatus, OrderStatusChangedEvent } from '#domain/ord/index.js';
-import { LedgerEntry, LedgerEntryKind, type OrderSummary } from './ledger.models.js';
-import { Fare, FareComponentKind } from './pricing.models.js';
+import { OrderRepository, OrderStatus, OrderStatusChangedEvent } from '#domain/ord/index.js';
+import { LedgerEntry, LedgerEntryKind, type OrderSummary, summaryOf } from './ledger.models.js';
+import { FareComponentKind } from './pricing.models.js';
 import { PricingService } from './pricing.service.js';
 
 export abstract class LedgerRepository {
   abstract record(entry: LedgerEntry): Promise<LedgerEntry>;
   abstract findByOrder(orderId: string, kind: LedgerEntryKind): Promise<LedgerEntry | undefined>;
+  // Every entry of these orders, charges and refunds, in one query.
+  abstract findByOrders(orderIds: readonly string[]): Promise<LedgerEntry[]>;
 }
 
 // The statuses an order can't leave; reaching one closes the order and records it.
@@ -71,23 +73,4 @@ export class LedgerService implements EventSubscriber {
     const order = await this.orders.getById(orderId);
     return summaryOf(order, entry);
   }
-}
-
-function summaryOf(order: Order, entry: LedgerEntry): OrderSummary {
-  const parts = [
-    { kind: FareComponentKind.Subtotal, amount: entry.subtotal },
-    { kind: FareComponentKind.DeliveryFee, amount: entry.deliveryFee },
-    { kind: FareComponentKind.ServiceFee, amount: entry.serviceFee },
-    { kind: FareComponentKind.SmallOrderSurcharge, amount: entry.smallOrderSurcharge },
-  ];
-
-  return {
-    orderId: order.id,
-    restaurantId: order.restaurantId,
-    lines: order.lines,
-    // The surcharge only appears when it was charged, as when the fare was computed.
-    fare: new Fare(parts.filter(part => part.kind !== FareComponentKind.SmallOrderSurcharge || part.amount > 0)),
-    placedAt: entry.orderPlacedAt,
-    deliveredAt: entry.orderClosedAt,
-  };
 }

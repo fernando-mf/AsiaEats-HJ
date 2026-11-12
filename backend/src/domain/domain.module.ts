@@ -3,6 +3,7 @@ import { EnvService } from './env/env.service.js';
 import { EVENT_SUBSCRIBERS, EventsService } from './events/events.service.js';
 import { OrdersService } from './ord/orders.service.js';
 import { RestaurantsService } from './ord/restaurants.service.js';
+import { BillingService } from './prc/billing.service.js';
 import { LedgerService } from './prc/ledger.service.js';
 import { PricingService } from './prc/pricing.service.js';
 import { ACCOUNT_CREATION_HANDLERS, DefaultAccountCreationHandler } from './reg/accounts.handlers.js';
@@ -13,6 +14,7 @@ import { CustomersService } from './reg/customers.service.js';
 @Module({
   providers: [
     AccountsService,
+    BillingService,
     CouriersService,
     CustomersService,
     DefaultAccountCreationHandler,
@@ -36,6 +38,7 @@ import { CustomersService } from './reg/customers.service.js';
   ],
   exports: [
     AccountsService,
+    BillingService,
     CouriersService,
     CustomersService,
     EnvService,

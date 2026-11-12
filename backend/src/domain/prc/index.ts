@@ -1,3 +1,4 @@
+export * from './billing.service.js';
 export * from './fare.calculator.js';
 export * from './fare.rules.js';
 export * from './ledger.models.js';

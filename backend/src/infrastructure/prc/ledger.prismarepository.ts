@@ -42,6 +42,18 @@ export class PrismaLedgerRepository extends LedgerRepository {
     const row = await this.db.client().ledgerEntry.findUnique({ where: { orderId_kind: { orderId, kind } } });
     return row ? toLedgerEntry(row) : undefined;
   }
+
+  async findByOrders(orderIds: readonly string[]): Promise<LedgerEntry[]> {
+    try {
+      const rows = await this.db.client().ledgerEntry.findMany({
+        where: { orderId: { in: [...orderIds] } },
+        orderBy: [{ recordedAt: 'asc' }, { id: 'asc' }],
+      });
+      return rows.map(toLedgerEntry);
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
 }
 
 type Money = { toNumber(): number };

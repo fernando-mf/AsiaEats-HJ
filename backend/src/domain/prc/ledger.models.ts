@@ -1,5 +1,5 @@
-import type { OrderLine, OrderStatus } from '#domain/ord/index.js';
-import type { Fare } from './pricing.models.js';
+import type { Order, OrderLine, OrderStatus } from '#domain/ord/index.js';
+import { Fare, FareComponentKind } from './pricing.models.js';
 
 // A charge records what an order cost when it reached its final state; a refund (R-PRC-05) is
 // a separate entry that reverses a delivered order's charge.
@@ -41,3 +41,37 @@ export type OrderSummary = {
   placedAt: Date;
   deliveredAt: Date;
 };
+
+// BillingDetails is what an order shows about its billing once it is delivered (R-PRC-02,
+// R-PRC-03): its summary, and its ledger data.
+export type BillingDetails = {
+  orderId: string;
+  summary: OrderSummary;
+  ledger: {
+    finalState: OrderStatus;
+    placedAt: Date;
+    deliveredAt: Date;
+    totalCharge: number;
+  };
+};
+
+// summaryOf builds a delivered order's summary from its charge: the fare it was charged, even if
+// the pricing values have changed since.
+export function summaryOf(order: Order, charge: LedgerEntry): OrderSummary {
+  const parts = [
+    { kind: FareComponentKind.Subtotal, amount: charge.subtotal },
+    { kind: FareComponentKind.DeliveryFee, amount: charge.deliveryFee },
+    { kind: FareComponentKind.ServiceFee, amount: charge.serviceFee },
+    { kind: FareComponentKind.SmallOrderSurcharge, amount: charge.smallOrderSurcharge },
+  ];
+
+  return {
+    orderId: order.id,
+    restaurantId: order.restaurantId,
+    lines: order.lines,
+    // The surcharge only appears when it was charged, as when the fare was computed.
+    fare: new Fare(parts.filter(part => part.kind !== FareComponentKind.SmallOrderSurcharge || part.amount > 0)),
+    placedAt: charge.orderPlacedAt,
+    deliveredAt: charge.orderClosedAt,
+  };
+}
