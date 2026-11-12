@@ -46,6 +46,7 @@ function newLedger(current: Order) {
   const entries: LedgerEntry[] = [];
   const ledger = {
     record: vi.fn(async (entry: LedgerEntry) => {
+      entry.id = `entry-${entries.length + 1}`;
       entries.push(entry);
       return entry;
     }),
@@ -150,6 +151,42 @@ describe('LedgerService', () => {
     await service.handle(statusChanged(OrderStatus.Placed, OrderStatus.Cancelled));
 
     await expect(service.getSummary('order-1')).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it('announces the recorded entry, then the summary of a delivered order, as the deliverer', async () => {
+    const { service, events, entries } = newLedger(order(OrderStatus.Delivered));
+
+    await service.handle(statusChanged(OrderStatus.PickedUp, OrderStatus.Delivered));
+
+    const published = vi.mocked(events.publish).mock.calls.map(([event]) => event);
+    expect(published.map(event => event.eventType)).toEqual(['ledger_entry.recorded', 'order.summary_created']);
+    expect(published[0]).toMatchObject({
+      entityType: 'ledger_entry',
+      entityId: entries[0].id,
+      payload: { orderId: 'order-1', kind: LedgerEntryKind.Charge, orderStatus: OrderStatus.Delivered, total: 20.25 },
+      actor,
+    });
+    expect(published[1]).toMatchObject({ entityType: 'order', entityId: 'order-1', payload: { total: 20.25 }, actor });
+  });
+
+  it('announces the entry of a cancelled order, but no summary', async () => {
+    const { service, events } = newLedger(order(OrderStatus.Cancelled));
+
+    await service.handle(statusChanged(OrderStatus.Placed, OrderStatus.Cancelled));
+
+    const published = vi.mocked(events.publish).mock.calls.map(([event]) => event.eventType);
+    expect(published).toEqual(['ledger_entry.recorded']);
+  });
+
+  it('announces nothing when the order was already recorded', async () => {
+    const { service, events } = newLedger(order(OrderStatus.Delivered));
+    const event = statusChanged(OrderStatus.PickedUp, OrderStatus.Delivered);
+    await service.handle(event);
+    vi.mocked(events.publish).mockClear();
+
+    await service.handle(event);
+
+    expect(events.publish).not.toHaveBeenCalled();
   });
 
   it('lists every entry of the ledger, refunds included, most recent first', async () => {

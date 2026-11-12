@@ -1,3 +1,4 @@
+import { Event } from '#domain/events/index.js';
 import type { Order, OrderLine, OrderStatus } from '#domain/ord/index.js';
 import { Fare, FareComponentKind } from './pricing.models.js';
 
@@ -74,4 +75,22 @@ export function summaryOf(order: Order, charge: LedgerEntry): OrderSummary {
     placedAt: charge.orderPlacedAt,
     deliveredAt: charge.orderClosedAt,
   };
+}
+
+// Recorded each time an entry is added to the ledger (R-PRC-03).
+export class LedgerEntryRecordedEvent extends Event<{
+  orderId: string;
+  kind: LedgerEntryKind;
+  orderStatus: OrderStatus;
+  total: number;
+}> {
+  readonly entityType = 'ledger_entry';
+  readonly eventType = 'ledger_entry.recorded';
+}
+
+// Recorded when a delivered order's summary is created (R-PRC-02). It belongs to the order, so it
+// appears in the order's event history next to its status changes.
+export class OrderSummaryCreatedEvent extends Event<{ total: number }> {
+  readonly entityType = 'order';
+  readonly eventType = 'order.summary_created';
 }

@@ -2,7 +2,15 @@ import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { NotFoundError } from '#domain/errors.js';
 import { type Event, type EventSubscriber, EventsService } from '#domain/events/index.js';
 import { OrderRepository, OrderStatus, OrderStatusChangedEvent } from '#domain/ord/index.js';
-import { LedgerEntry, LedgerEntryKind, type OrderSummary, summaryOf } from './ledger.models.js';
+import type { Actor } from '#domain/reg/index.js';
+import {
+  LedgerEntry,
+  LedgerEntryKind,
+  LedgerEntryRecordedEvent,
+  type OrderSummary,
+  OrderSummaryCreatedEvent,
+  summaryOf,
+} from './ledger.models.js';
 import { FareComponentKind } from './pricing.models.js';
 import { PricingService } from './pricing.service.js';
 
@@ -41,11 +49,12 @@ export class LedgerService implements EventSubscriber, OnModuleInit {
     if (!(event instanceof OrderStatusChangedEvent)) return;
     if (!FINAL_STATUSES.includes(event.payload.newStatus)) return;
 
-    await this.recordCharge(event.entityId, event.occurredAt);
+    await this.recordCharge(event.entityId, event.occurredAt, event.actor);
   }
 
-  // recordCharge records an order's charge once; recording it again returns the first entry.
-  async recordCharge(orderId: string, closedAt: Date): Promise<LedgerEntry> {
+  // recordCharge records an order's charge once; recording it again returns the first entry and
+  // publishes nothing. The events it publishes carry the actor of the change that closed the order.
+  async recordCharge(orderId: string, closedAt: Date, actor: Actor | null = null): Promise<LedgerEntry> {
     const existing = await this.ledger.findByOrder(orderId, LedgerEntryKind.Charge);
     if (existing) return existing;
 
@@ -67,7 +76,27 @@ export class LedgerService implements EventSubscriber, OnModuleInit {
     entry.orderClosedAt = closedAt;
     entry.recordedAt = new Date();
 
-    return this.ledger.record(entry);
+    const recorded = await this.ledger.record(entry);
+    await this.events.publish(
+      new LedgerEntryRecordedEvent({
+        entityId: recorded.id,
+        payload: {
+          orderId: recorded.orderId,
+          kind: recorded.kind,
+          orderStatus: recorded.orderStatus,
+          total: recorded.total,
+        },
+        actor,
+      }),
+    );
+    // A delivered order's charge is its summary (R-PRC-02).
+    if (fare) {
+      await this.events.publish(
+        new OrderSummaryCreatedEvent({ entityId: recorded.orderId, payload: { total: recorded.total }, actor }),
+      );
+    }
+
+    return recorded;
   }
 
   // list returns the whole ledger, refunds included, for the operator to audit (R-PRC-03). Who may
