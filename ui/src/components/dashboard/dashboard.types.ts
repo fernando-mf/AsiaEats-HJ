@@ -101,6 +101,28 @@ export type BillingDetails = {
   };
 };
 
+// One entry of the billing ledger (GET /ledger, R-PRC-03): what an order was charged when it
+// reached its final state, or a refund of that charge. Amounts are in dollars; a refund's are
+// negative. Rejected and cancelled orders are recorded with nothing charged.
+export type LedgerEntry = {
+  id: string;
+  orderId: string;
+  kind: 'charge' | 'refund';
+  // The order's state when the entry was recorded: delivered, rejected, cancelled or refunded.
+  orderStatus: string;
+  customerId: string;
+  restaurantId: string;
+  subtotal: number;
+  deliveryFee: number;
+  serviceFee: number;
+  smallOrderSurcharge: number;
+  total: number;
+  orderPlacedAt: string;
+  // When the order reached the state above.
+  orderClosedAt: string;
+  recordedAt: string;
+};
+
 // One entry of the event log (GET /events): a state change and who made it.
 export type StoredEvent = {
   id: string;

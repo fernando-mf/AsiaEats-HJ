@@ -2,15 +2,19 @@ const DASHBOARD_SESSION_KEY = 'eatchinese.dashboard.v1';
 
 export type CustomerPage = 'restaurants' | 'menu' | 'cart' | 'orders' | 'profile';
 export type RestaurantPage = 'overview' | 'orders' | 'menu' | 'profile';
+export type OperatorPage = 'overview' | 'orders' | 'ledger';
 
 export type DashboardSession = {
   customerPage: CustomerPage;
   restaurantPage: RestaurantPage;
   selectedRestaurantId: string;
+  // Optional so a session saved before the operator's page was kept still reads.
+  operatorPage?: OperatorPage;
 };
 
 const customerPages: CustomerPage[] = ['restaurants', 'menu', 'cart', 'orders', 'profile'];
 const restaurantPages: RestaurantPage[] = ['overview', 'orders', 'menu', 'profile'];
+const operatorPages: OperatorPage[] = ['overview', 'orders', 'ledger'];
 
 function isDashboardSession(value: unknown): value is DashboardSession {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
@@ -21,7 +25,8 @@ function isDashboardSession(value: unknown): value is DashboardSession {
     customerPages.includes(candidate.customerPage as CustomerPage) &&
     typeof candidate.restaurantPage === 'string' &&
     restaurantPages.includes(candidate.restaurantPage as RestaurantPage) &&
-    typeof candidate.selectedRestaurantId === 'string'
+    typeof candidate.selectedRestaurantId === 'string' &&
+    (candidate.operatorPage === undefined || operatorPages.includes(candidate.operatorPage))
   );
 }
 

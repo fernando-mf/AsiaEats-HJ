@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ApiError, apiErrorMessage, requestJson } from '../../shared/api/client';
+import { readDashboardSession, writeDashboardSession } from '../../shared/dashboard/dashboardSession';
 import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
 import { ConfirmDialog } from '../feedback/ConfirmDialog';
+import { OperatorLedger } from '../operator/OperatorLedger';
 import { OperatorOrders } from '../operator/OperatorOrders';
 import { OperatorOverview } from '../operator/OperatorOverview';
 import { orderNumber } from '../restaurant/orderTime';
@@ -10,6 +12,7 @@ import { OperatorSidebar, type OperatorPage } from '../operator/OperatorSidebar'
 import { RestoreDialog } from '../operator/RestoreDialog';
 import type {
   Account,
+  LedgerEntry,
   Order,
   Restaurant,
   RestaurantStatus,
@@ -47,7 +50,9 @@ export function OperatorDashboard({
   onBackgroundError,
   children,
 }: OperatorDashboardProps) {
-  const [page, setPage] = useState<OperatorPage>('overview');
+  // The page survives a browser refresh, as on the customer and restaurant dashboards.
+  const [restoredDashboard] = useState(readDashboardSession);
+  const [page, setPage] = useState<OperatorPage>(restoredDashboard?.operatorPage ?? 'overview');
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [updatedAt, setUpdatedAt] = useState<Date>();
@@ -57,6 +62,9 @@ export function OperatorDashboard({
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
   // The delivered order waiting for the operator to confirm its refund.
   const [refundTarget, setRefundTarget] = useState<Order | null>(null);
+  // The ledger, read each time its page opens: undefined until then, null if it could not be read.
+  const [ledger, setLedger] = useState<LedgerEntry[] | null>();
+  const [ledgerUpdatedAt, setLedgerUpdatedAt] = useState<Date>();
   // The selected order's events: null when they could not be loaded.
   const [orderEvents, setOrderEvents] = useState<{ orderId: string; events: StoredEvent[] | null }>();
   // The background refresh reads busy through a ref so the timer isn't restarted on every action.
@@ -85,9 +93,27 @@ export function OperatorDashboard({
     if (result) apply(result);
   }, [apply, fetchAll, run]);
 
+  // A failed read shows the backend's error as a toast (through run) and an error in the page.
+  const loadLedger = useCallback(async () => {
+    const result = await run(() => requestJson<LedgerEntry[]>('/ledger'));
+    setLedger(result ?? null);
+    if (result) setLedgerUpdatedAt(new Date());
+  }, [run]);
+
+  // After a refresh on the ledger page, its entries are read once the orders are.
   useEffect(() => {
-    void load();
-  }, [load]);
+    void load().then(() => (restoredDashboard?.operatorPage === 'ledger' ? loadLedger() : undefined));
+  }, [load, loadLedger, restoredDashboard]);
+
+  // Keep the other dashboards' saved pages; only the operator's page changes here.
+  useEffect(() => {
+    writeDashboardSession({
+      customerPage: restoredDashboard?.customerPage ?? 'restaurants',
+      restaurantPage: restoredDashboard?.restaurantPage ?? 'overview',
+      selectedRestaurantId: restoredDashboard?.selectedRestaurantId ?? '',
+      operatorPage: page,
+    });
+  }, [page, restoredDashboard]);
 
   // Orders change without the operator doing anything: refresh quietly every 15 s, skipping
   // while an action runs. Other failures are left to the next manual action; a session that is
@@ -124,6 +150,11 @@ export function OperatorDashboard({
 
   // Keep showing the previous history of the same order while it reloads.
   const events = orderEvents?.orderId === selectedOrderId ? orderEvents.events : undefined;
+
+  function changePage(next: OperatorPage) {
+    setPage(next);
+    if (next === 'ledger') void loadLedger();
+  }
 
   function openOrder(orderId: string) {
     setSelectedOrderId(orderId);
@@ -191,7 +222,7 @@ export function OperatorDashboard({
         page={page}
         waitingCount={orders.filter(order => order.status === 'placed').length}
         busy={busy}
-        onPageChange={setPage}
+        onPageChange={changePage}
         onRestore={() => setRestoreOpen(true)}
         onLogout={onLogout}
       />
@@ -221,6 +252,18 @@ export function OperatorDashboard({
             onRefresh={() => void load()}
             onCancel={setCancelTarget}
             onRefund={setRefundTarget}
+          />
+        ) : null}
+
+        {page === 'ledger' ? (
+          <OperatorLedger
+            entries={ledger}
+            orders={orders}
+            restaurants={restaurants}
+            updatedAt={ledgerUpdatedAt}
+            busy={busy}
+            onRefresh={() => void loadLedger()}
+            onOpenOrder={openOrder}
           />
         ) : null}
 

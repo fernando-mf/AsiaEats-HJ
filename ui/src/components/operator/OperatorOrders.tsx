@@ -36,6 +36,11 @@ const tabStatuses: Record<Tab, string[]> = {
   stopped: ['rejected', 'cancelled'],
 };
 
+// The tab an order is listed under.
+function tabOf(order: Order): Tab {
+  return (Object.keys(tabStatuses) as Tab[]).find(tab => tabStatuses[tab].includes(order.status)) ?? 'active';
+}
+
 const uncharged = (order: Order) => order.status === 'rejected' || order.status === 'cancelled';
 
 const placedFormat = new Intl.DateTimeFormat('en-CA', {
@@ -61,7 +66,11 @@ export function OperatorOrders({
   onCancel,
   onRefund,
 }: OperatorOrdersProps) {
-  const [tab, setTab] = useState<Tab>('active');
+  // An order opened from another page (the ledger, the overview) opens on the tab it is listed under.
+  const [tab, setTab] = useState<Tab>(() => {
+    const opened = orders.find(order => order.id === selectedId);
+    return opened ? tabOf(opened) : 'active';
+  });
   const [query, setQuery] = useState('');
   const search = query.trim().toLowerCase();
 
