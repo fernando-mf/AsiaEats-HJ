@@ -1,4 +1,6 @@
 import { OmitType } from '@nestjs/swagger';
+import { Order, OrderLine, OrderStatus } from '#domain/ord/index.js';
+import { FareComponentKind } from '#domain/prc/index.js';
 import { Account, Courier, CourierSummary, Customer } from '#domain/reg/index.js';
 
 export class FieldErrorResponse {
@@ -36,3 +38,42 @@ export class StatusResponse {
 }
 
 export type CourierSummaryResponse = CourierSummary;
+
+export class FareComponentResponse {
+  kind: FareComponentKind;
+  // In dollars.
+  amount: number;
+}
+
+export class FareResponse {
+  components: FareComponentResponse[];
+  total: number;
+}
+
+export class OrderSummaryResponse {
+  orderId: string;
+  restaurantId: string;
+  lines: OrderLine[];
+  fare: FareResponse;
+  placedAt: Date;
+  deliveredAt: Date;
+}
+
+export class BillingLedgerResponse {
+  finalState: OrderStatus;
+  placedAt: Date;
+  deliveredAt: Date;
+  totalCharge: number;
+}
+
+export class BillingDetailsResponse {
+  orderId: string;
+  summary: OrderSummaryResponse;
+  ledger: BillingLedgerResponse;
+}
+
+// An order as the orders routes return it: with its billing details once it is delivered (R-PRC-02,
+// R-PRC-03), null before that, and always null for couriers.
+export class OrderResponse extends Order {
+  billing: BillingDetailsResponse | null;
+}

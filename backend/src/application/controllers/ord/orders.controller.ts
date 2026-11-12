@@ -32,7 +32,9 @@ import { StartPreparingCommand } from '#application/commands/ord/start-preparing
 import { Command } from '#application/commands/command.js';
 import { CurrentActor } from '#application/auth/current-actor.decorator.js';
 import { ApiRoles, getApiRoles } from '#application/controllers/api-roles.decorator.js';
-import { ErrorResponse } from '#application/controllers/responses.dto.js';
+import { ErrorResponse, OrderResponse } from '#application/controllers/responses.dto.js';
+import { BillingService } from '#domain/prc/index.js';
+import type { OrderWithBilling } from '#application/commands/ord/order-billing.js';
 
 @ApiTags('orders')
 @ApiBearerAuth()
@@ -42,6 +44,7 @@ export class OrdersController {
 
   constructor(
     private readonly service: OrdersService,
+    private readonly billing: BillingService,
     private readonly commandRunner: CommandRunner,
   ) {}
 
@@ -65,14 +68,14 @@ export class OrdersController {
 
   @Get()
   @ApiRoles(AccountRole.Customer, AccountRole.Restaurant, AccountRole.Operator)
-  @ApiOperation({ summary: 'Get orders' })
-  @ApiOkResponse({ type: [Order] })
+  @ApiOperation({ summary: 'Get orders', description: 'Delivered orders include their billing details.' })
+  @ApiOkResponse({ type: [OrderResponse] })
   @ApiBadRequestResponse({ type: ErrorResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
   find(@CurrentActor() actor: Actor, @Query() query: OrderSearchRequest) {
     const request = OrderSearchRequest.initialize(query);
 
-    let command: Command<Order[]> = new FindOrdersCommand(this.service, actor, request);
+    let command: Command<OrderWithBilling[]> = new FindOrdersCommand(this.service, this.billing, actor, request);
     command = new AuthorizedCommand(command, actor, getApiRoles(this.find));
     command = new LoggedCommand(command, this.logger, actor);
 
@@ -81,12 +84,12 @@ export class OrdersController {
 
   @Get(':id')
   @ApiRoles(AccountRole.Customer, AccountRole.Restaurant, AccountRole.Operator)
-  @ApiOperation({ summary: 'Get order' })
-  @ApiOkResponse({ type: Order })
+  @ApiOperation({ summary: 'Get order', description: 'A delivered order includes its billing details.' })
+  @ApiOkResponse({ type: OrderResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
   @ApiNotFoundResponse({ type: ErrorResponse })
   getById(@CurrentActor() actor: Actor, @Param('id') id: string) {
-    let command: Command<Order> = new GetOrderCommand(this.service, actor, id);
+    let command: Command<OrderWithBilling> = new GetOrderCommand(this.service, this.billing, actor, id);
     command = new AuthorizedCommand(command, actor, getApiRoles(this.getById));
     command = new LoggedCommand(command, this.logger, actor);
 
