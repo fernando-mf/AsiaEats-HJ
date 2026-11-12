@@ -11,6 +11,7 @@ type OrderPanelProps = {
   busy: string | null;
   onClose: () => void;
   onCancel: (order: Order) => void;
+  onRefund: (order: Order) => void;
 };
 
 // Orders that reached one of these can't change any more, so they can't be cancelled.
@@ -57,7 +58,7 @@ function eventActor(event: StoredEvent, order: Order, restaurants: Restaurant[])
 
 // OrderPanel shows one order to the operator: what was ordered and where it goes, every state
 // change recorded for it with its event id (R-ORD-05), and a way to cancel it.
-export function OrderPanel({ order, restaurants, events, busy, onClose, onCancel }: OrderPanelProps) {
+export function OrderPanel({ order, restaurants, events, busy, onClose, onCancel, onRefund }: OrderPanelProps) {
   const restaurant = restaurants.find(item => item.id === order.restaurantId);
   const address = order.deliveryAddress;
   const cancellable = !finalStatuses.includes(order.status);
@@ -174,6 +175,18 @@ export function OrderPanel({ order, restaurants, events, busy, onClose, onCancel
           onClick={() => onCancel(order)}
         >
           Cancel order
+        </button>
+      ) : null}
+
+      {/* Only a delivered order can be refunded (R-PRC-05); the backend refuses any other. */}
+      {order.status === 'delivered' ? (
+        <button
+          className="danger-button operator-cancel"
+          type="button"
+          disabled={busy !== null}
+          onClick={() => onRefund(order)}
+        >
+          Refund order
         </button>
       ) : null}
     </aside>

@@ -18,6 +18,7 @@ type OperatorOrdersProps = {
   onSelect: (orderId: string | null) => void;
   onRefresh: () => void;
   onCancel: (order: Order) => void;
+  onRefund: (order: Order) => void;
 };
 
 type Tab = 'active' | 'completed' | 'stopped';
@@ -58,6 +59,7 @@ export function OperatorOrders({
   onSelect,
   onRefresh,
   onCancel,
+  onRefund,
 }: OperatorOrdersProps) {
   const [tab, setTab] = useState<Tab>('active');
   const [query, setQuery] = useState('');
@@ -190,6 +192,7 @@ export function OperatorOrders({
             busy={busy}
             onClose={() => onSelect(null)}
             onCancel={onCancel}
+            onRefund={onRefund}
           />
         ) : null}
       </div>

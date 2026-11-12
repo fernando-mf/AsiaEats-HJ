@@ -5,6 +5,7 @@ import { ConfirmDialog } from '../feedback/ConfirmDialog';
 import { OperatorOrders } from '../operator/OperatorOrders';
 import { OperatorOverview } from '../operator/OperatorOverview';
 import { orderNumber } from '../restaurant/orderTime';
+import { chargedTotal, formatMoney } from './dashboard.utils';
 import { OperatorSidebar, type OperatorPage } from '../operator/OperatorSidebar';
 import { RestoreDialog } from '../operator/RestoreDialog';
 import type {
@@ -54,6 +55,8 @@ export function OperatorDashboard({
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   // The order waiting for the operator to confirm its cancellation.
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
+  // The delivered order waiting for the operator to confirm its refund.
+  const [refundTarget, setRefundTarget] = useState<Order | null>(null);
   // The selected order's events: null when they could not be loaded.
   const [orderEvents, setOrderEvents] = useState<{ orderId: string; events: StoredEvent[] | null }>();
   // The background refresh reads busy through a ref so the timer isn't restarted on every action.
@@ -136,6 +139,19 @@ export function OperatorDashboard({
     showToast(`Order ${orderNumber(order)} cancelled.`);
   }
 
+  // Operators may refund a delivered order, after confirming (R-PRC-05). The refund route returns
+  // the order without its billing, so it is read again to show the refund at once.
+  async function refundOrder(order: Order) {
+    const result = await run(async () => {
+      await requestJson<Order>(`/orders/${order.id}/refund`, { method: 'POST' });
+      return requestJson<Order>(`/orders/${order.id}`);
+    });
+    setRefundTarget(null);
+    if (!result) return;
+    setOrders(current => current.map(item => (item.id === result.id ? result : item)));
+    showToast(`Order ${orderNumber(order)} refunded.`);
+  }
+
   async function changeStatus(restaurant: Restaurant, status: RestaurantStatus) {
     const result = await run(() =>
       requestJson<Restaurant>(`/restaurants/${restaurant.id}/status`, { method: 'PUT', body: { status } }),
@@ -204,6 +220,7 @@ export function OperatorDashboard({
             onSelect={setSelectedOrderId}
             onRefresh={() => void load()}
             onCancel={setCancelTarget}
+            onRefund={setRefundTarget}
           />
         ) : null}
 
@@ -227,6 +244,26 @@ export function OperatorDashboard({
             {cancelTarget.customerName}’s order from{' '}
             {restaurants.find(restaurant => restaurant.id === cancelTarget.restaurantId)?.name ?? 'the restaurant'} is
             cancelled and leaves the restaurant’s board. This can’t be undone.
+          </p>
+        ) : null}
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={refundTarget !== null}
+        title={refundTarget ? `Refund order ${orderNumber(refundTarget)}?` : 'Refund order?'}
+        confirmLabel="Refund order"
+        busyLabel="Refunding…"
+        cancelLabel="Keep charge"
+        busy={busy !== null}
+        onCancel={() => setRefundTarget(null)}
+        onConfirm={() => {
+          if (refundTarget) void refundOrder(refundTarget);
+        }}
+      >
+        {refundTarget ? (
+          <p>
+            {refundTarget.customerName} gets back the {formatMoney(chargedTotal(refundTarget))} charged for this order.
+            The ledger keeps the charge and records the refund next to it. This can’t be undone.
           </p>
         ) : null}
       </ConfirmDialog>
