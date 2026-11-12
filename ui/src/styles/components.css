@@ -408,6 +408,12 @@ input:-webkit-autofill:focus {
   background: var(--surface-2);
 }
 
+/* An amount that was charged, then refunded. */
+.money-refunded {
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+
 /* ---------- Dish placeholder art ---------- */
 /* A muted color block with a line-drawn dish icon, used where a photo would go. */
 .dish-art {
