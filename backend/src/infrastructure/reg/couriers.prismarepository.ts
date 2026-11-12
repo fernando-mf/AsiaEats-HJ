@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DuplicateEntityError, InternalError, NotFoundError } from '#domain/errors.js';
 import { Courier, type CourierFilter, CourierRepository, CourierStatus, Position } from '#domain/reg/index.js';
+import { Prisma } from '#infrastructure/generated/prisma/client.js';
 import { PrismaService } from '#infrastructure/prisma.service.js';
 import { type AccountRow, toAccountModel } from './accounts.prismarepository.js';
 
@@ -54,6 +55,30 @@ export class PrismaCourierRepository extends CourierRepository {
       });
       return rows.map(toCourier);
     } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
+
+  async findClosestIdle(origin: Position): Promise<Courier | null> {
+    try {
+      const rows = await this.db.client().$queryRaw<{ account_id: string }[]>(Prisma.sql`
+        SELECT account_id
+        FROM couriers
+        WHERE status = 'idle' AND latitude IS NOT NULL AND longitude IS NOT NULL
+        ORDER BY earth_distance(
+                   ll_to_earth(latitude, longitude),
+                   ll_to_earth(${origin.latitude}::float8, ${origin.longitude}::float8)
+                 ) ASC,
+                 account_id ASC
+        LIMIT 1`);
+      if (rows.length === 0) {
+        return null;
+      }
+      return await this.getByAccountId(rows[0].account_id);
+    } catch (err) {
+      if (err instanceof NotFoundError) {
+        return null;
+      }
       throw new InternalError(err as Error);
     }
   }
