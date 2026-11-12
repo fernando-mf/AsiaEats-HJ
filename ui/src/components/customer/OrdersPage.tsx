@@ -3,7 +3,7 @@ import { DishArt } from '../food/DishArt';
 import { dishKind } from '../food/dishKind';
 import { IconCheck, IconChevronRight, IconClock, IconPin, IconSearch } from '../icons/Icons';
 import type { BillingDetails, FareComponentKind, Order, Restaurant } from '../dashboard/dashboard.types';
-import { formatMoney, orderTotal } from '../dashboard/dashboard.utils';
+import { chargedTotal, formatMoney, orderTotal } from '../dashboard/dashboard.utils';
 import { orderNumber } from '../restaurant/orderTime';
 import './orders.css';
 
@@ -41,7 +41,7 @@ function CancelButton({ order, busy, onCancel }: CancelProps & { order: Order })
   );
 }
 
-type PastFilter = 'all' | 'delivered' | 'cancelled' | 'rejected';
+type PastFilter = 'all' | 'delivered' | 'refunded' | 'cancelled' | 'rejected';
 
 const steps = ['placed', 'accepted', 'preparing', 'ready', 'picked_up', 'delivered'] as const;
 const activeStatuses = ['placed', 'accepted', 'preparing', 'ready', 'picked_up'];
@@ -285,7 +285,7 @@ function PastOrderRow({ order, restaurantName }: { order: Order; restaurantName:
         className={`mono past-order-total${uncharged ? ' is-uncharged' : ''}${refunded ? ' is-refunded' : ''}`}
         title={refunded ? 'Refunded' : undefined}
       >
-        {uncharged ? 'Not charged' : formatMoney(billing ? billing.ledger.totalCharge : orderTotal(order))}
+        {uncharged ? 'Not charged' : formatMoney(chargedTotal(order))}
       </span>
     </>
   );
@@ -332,9 +332,11 @@ export function OrdersPage({
     const created = new Date(order.createdAt);
     return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth();
   });
+  // What was charged for this month's orders, fees included once delivered; refunds don't lower it.
   const monthOrdered = thisMonth
     .filter(order => !unchargedStatuses.includes(order.status))
-    .reduce((sum, order) => sum + orderTotal(order), 0);
+    .reduce((sum, order) => sum + chargedTotal(order), 0);
+  const monthRefunded = thisMonth.reduce((sum, order) => sum + (order.billing?.ledger.refund?.amount ?? 0), 0);
   const monthUncharged = thisMonth.filter(order => unchargedStatuses.includes(order.status)).length;
 
   const orderCounts = new Map<string, number>();
@@ -388,7 +390,7 @@ export function OrdersPage({
           <div className="past-orders-head">
             <h2>Past orders</h2>
             <div className="segmented" role="group" aria-label="Filter past orders">
-              {(['all', 'delivered', 'cancelled', 'rejected'] as const).map(option => (
+              {(['all', 'delivered', 'refunded', 'cancelled', 'rejected'] as const).map(option => (
                 <button key={option} type="button" aria-pressed={filter === option} onClick={() => setFilter(option)}>
                   {option.charAt(0).toUpperCase() + option.slice(1)}
                 </button>
@@ -418,6 +420,12 @@ export function OrdersPage({
               <span>Ordered</span>
               <span className="mono">{formatMoney(monthOrdered)}</span>
             </div>
+            {monthRefunded > 0 ? (
+              <div className="orders-summary-row">
+                <span>Refunded</span>
+                <span className="mono">−{formatMoney(monthRefunded)}</span>
+              </div>
+            ) : null}
             <div className="orders-summary-row">
               <span>Cancelled or rejected</span>
               <span className="mono">
