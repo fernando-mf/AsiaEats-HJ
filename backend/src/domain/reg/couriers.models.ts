@@ -71,3 +71,11 @@ export class CourierCreatedEvent extends Event<ReturnType<Courier['toJSON']>> {
   readonly entityType = 'courier';
   readonly eventType = 'courier.created';
 }
+
+export class CourierStatusChangedEvent extends Event<{
+  previousStatus: CourierStatus;
+  newStatus: CourierStatus;
+}> {
+  readonly entityType = 'courier';
+  readonly eventType = 'courier.status_changed';
+}

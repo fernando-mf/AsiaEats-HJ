@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Logger, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Logger, Post, Put, Query } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiConflictResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -19,6 +21,7 @@ import {
 import { CommandRunner } from '#application/commands/command-runner.js';
 import { AuthorizedCommand } from '#application/commands/decorators/authorized-command.js';
 import { LoggedCommand } from '#application/commands/decorators/logged-command.js';
+import { CourierGoOfflineCommand, CourierGoOnlineCommand } from '#application/commands/reg/courier-duty.commands.js';
 import { FindCouriersCommand } from '#application/commands/reg/find-couriers.command.js';
 import { GetCourierCommand } from '#application/commands/reg/get-courier.command.js';
 import { UpdateCourierPositionCommand } from '#application/commands/reg/update-courier-position.command.js';
@@ -78,6 +81,35 @@ export class CouriersController {
 
     let command: Command<Courier> = new UpdateCourierPositionCommand(this.service, actor, request);
     command = new AuthorizedCommand(command, actor, getApiRoles(this.updatePosition));
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Post('me/online')
+  @HttpCode(204)
+  @ApiRoles(AccountRole.Courier)
+  @ApiOperation({ summary: 'Go on duty' })
+  @ApiNoContentResponse()
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  goOnline(@CurrentActor() actor: Actor) {
+    let command: Command<void> = new CourierGoOnlineCommand(this.service, actor);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.goOnline));
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Post('me/offline')
+  @HttpCode(204)
+  @ApiRoles(AccountRole.Courier)
+  @ApiOperation({ summary: 'Go off duty' })
+  @ApiNoContentResponse()
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiConflictResponse({ type: ErrorResponse, description: 'The courier is carrying an order' })
+  goOffline(@CurrentActor() actor: Actor) {
+    let command: Command<void> = new CourierGoOfflineCommand(this.service, actor);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.goOffline));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);
