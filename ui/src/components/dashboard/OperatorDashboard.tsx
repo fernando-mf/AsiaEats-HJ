@@ -170,13 +170,10 @@ export function OperatorDashboard({
     showToast(`Order ${orderNumber(order)} cancelled.`);
   }
 
-  // Operators may refund a delivered order, after confirming (R-PRC-05). The refund route returns
-  // the order without its billing, so it is read again to show the refund at once.
+  // Operators may refund a delivered order, after confirming (R-PRC-05). The route returns the
+  // order with its billing, refund included, so it shows as refunded at once.
   async function refundOrder(order: Order) {
-    const result = await run(async () => {
-      await requestJson<Order>(`/orders/${order.id}/refund`, { method: 'POST' });
-      return requestJson<Order>(`/orders/${order.id}`);
-    });
+    const result = await run(() => requestJson<Order>(`/orders/${order.id}/refund`, { method: 'POST' }));
     setRefundTarget(null);
     if (!result) return;
     setOrders(current => current.map(item => (item.id === result.id ? result : item)));

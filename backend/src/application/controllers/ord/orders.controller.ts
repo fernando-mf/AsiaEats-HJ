@@ -185,15 +185,15 @@ export class OrdersController {
   @ApiOperation({
     summary: 'Refund order',
     description:
-      'Moves a delivered order to refunded and records the refund as its own ledger entry; the charge is left unchanged.',
+      'Moves a delivered order to refunded and records the refund as its own ledger entry; the charge is left unchanged. Returns the order with its billing details, refund included.',
   })
   @HttpCode(200)
-  @ApiOkResponse({ type: Order })
+  @ApiOkResponse({ type: OrderResponse })
   @ApiUnauthorizedResponse({ type: ErrorResponse })
   @ApiNotFoundResponse({ type: ErrorResponse })
   @ApiConflictResponse({ type: ErrorResponse })
   refund(@CurrentActor() actor: Actor, @Param('id') id: string) {
-    let command: Command<Order> = new RefundOrderCommand(this.service, actor, id);
+    let command: Command<OrderWithBilling> = new RefundOrderCommand(this.service, this.billing, actor, id);
     command = new AuthorizedCommand(command, actor, getApiRoles(this.refund));
     command = new LoggedCommand(command, this.logger, actor);
 

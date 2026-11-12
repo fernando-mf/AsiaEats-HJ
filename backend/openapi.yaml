@@ -928,7 +928,7 @@ paths:
   /api/orders/{id}/refund:
     post:
       description: |-
-        Moves a delivered order to refunded and records the refund as its own ledger entry; the charge is left unchanged.
+        Moves a delivered order to refunded and records the refund as its own ledger entry; the charge is left unchanged. Returns the order with its billing details, refund included.
 
         **Allowed roles:** `operator`
       operationId: OrdersController_refund
@@ -944,7 +944,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Order"
+                $ref: "#/components/schemas/OrderResponse"
         "401":
           description: ""
           content:
