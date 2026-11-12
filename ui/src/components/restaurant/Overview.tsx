@@ -61,8 +61,12 @@ export function Overview({
   const preparing = orders.filter(order => order.status === 'preparing').sort(byOldest);
   const ready = orders.filter(order => order.status === 'ready').sort(byOldest);
   const soldOut = menu.filter(item => item.status === 'sold_out');
-  // Cancelled and rejected orders are never charged, so they don't count toward revenue.
-  const revenue = todays.filter(order => !isUncharged(order)).reduce((sum, order) => sum + orderTotal(order), 0);
+  // The restaurant's revenue is its food: each order's subtotal, since the delivery and service fees
+  // go to the platform. Cancelled and rejected orders were never charged, and a refunded order's
+  // charge was given back, so neither counts.
+  const revenue = todays
+    .filter(order => !isUncharged(order) && order.status !== 'refunded')
+    .reduce((sum, order) => sum + orderTotal(order), 0);
 
   const stats = [
     {
@@ -74,7 +78,7 @@ export function Overview({
     {
       label: 'Revenue today',
       value: formatMoney(revenue),
-      note: 'Excludes rejected and cancelled',
+      note: 'Food only · excludes rejected, cancelled and refunded',
       icon: <IconBag size={16} />,
     },
     {
