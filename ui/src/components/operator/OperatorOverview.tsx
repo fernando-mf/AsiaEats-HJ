@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { neighbourhoodShortName } from '../../shared/locations/montrealNeighbourhoods';
 import type { Order, Restaurant, RestaurantStatus } from '../dashboard/dashboard.types';
-import { formatMoney, orderTotal } from '../dashboard/dashboard.utils';
+import { chargedTotal, formatMoney } from '../dashboard/dashboard.utils';
 import { IconAlert, IconClock, IconPause, IconPlay, IconReceipt, IconStore } from '../icons/Icons';
 import { isSameDay, orderNumber, timeInStatus, useNow } from '../restaurant/orderTime';
 // The page header and stat cards share the restaurant overview's styles.
@@ -93,9 +93,11 @@ export function OperatorOverview({
   const active = orders.filter(order => activeStatuses.includes(order.status));
   const todays = orders.filter(order => isSameDay(order.createdAt, today));
   const refusedToday = todays.filter(order => refusedStatuses.includes(order.status));
+  // What today's orders bring in: the amount charged once delivered (items until then), leaving
+  // out refused orders and refunded ones, whose charge was given back.
   const todaysValue = todays
-    .filter(order => !refusedStatuses.includes(order.status))
-    .reduce((sum, order) => sum + orderTotal(order), 0);
+    .filter(order => !refusedStatuses.includes(order.status) && order.status !== 'refunded')
+    .reduce((sum, order) => sum + chargedTotal(order), 0);
   const openCount = restaurants.filter(restaurant => restaurant.status === 'open').length;
   const restaurantName = (id: string) => restaurants.find(restaurant => restaurant.id === id)?.name ?? 'Restaurant';
 
@@ -140,7 +142,7 @@ export function OperatorOverview({
           label="Orders today"
           icon={<IconClock size={16} />}
           value={String(todays.length)}
-          note={`${formatMoney(todaysValue)} not counting refused orders`}
+          note={`${formatMoney(todaysValue)} not counting refused or refunded orders`}
         />
         <StatCard
           label="Refused today"
