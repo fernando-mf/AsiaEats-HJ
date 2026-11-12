@@ -13,6 +13,11 @@ export function orderTotal(order: Order) {
   return order.lines.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0);
 }
 
+// Rejected and cancelled orders are never charged: the ledger records them with nothing owed.
+export function isUncharged(order: Order) {
+  return order.status === 'rejected' || order.status === 'cancelled';
+}
+
 // What the order was charged once delivered (the fare, fees included), or its items' total
 // before that. A refund doesn't change it.
 export function chargedTotal(order: Order) {

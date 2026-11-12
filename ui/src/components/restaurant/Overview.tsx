@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import type { RestaurantPage } from '../../shared/dashboard/dashboardSession';
 import { IconArrowRight, IconBag, IconCheck, IconClock, IconMenuBook, IconPencil, IconReceipt } from '../icons/Icons';
 import type { Account, MenuItem, Order, OrderAction, Restaurant } from '../dashboard/dashboard.types';
-import { formatMoney, orderTotal } from '../dashboard/dashboard.utils';
+import { formatMoney, isUncharged, orderTotal } from '../dashboard/dashboard.utils';
 import { isSameDay, orderNumber, timeInStatus, useNow } from './orderTime';
 import { RejectDialog } from './RejectDialog';
 import './restaurant-overview.css';
@@ -18,8 +18,6 @@ type OverviewProps = {
   onNavigate: (page: RestaurantPage) => void;
 };
 
-// Cancelled and rejected orders are never charged, so they don't count toward revenue.
-const uncharged = ['cancelled', 'rejected'];
 // Columns show the few most urgent orders; the full list is on the Orders board.
 const columnLimit = 3;
 // Dishes shown in the availability card; the rest are on the Menu page.
@@ -63,9 +61,8 @@ export function Overview({
   const preparing = orders.filter(order => order.status === 'preparing').sort(byOldest);
   const ready = orders.filter(order => order.status === 'ready').sort(byOldest);
   const soldOut = menu.filter(item => item.status === 'sold_out');
-  const revenue = todays
-    .filter(order => !uncharged.includes(order.status))
-    .reduce((sum, order) => sum + orderTotal(order), 0);
+  // Cancelled and rejected orders are never charged, so they don't count toward revenue.
+  const revenue = todays.filter(order => !isUncharged(order)).reduce((sum, order) => sum + orderTotal(order), 0);
 
   const stats = [
     {

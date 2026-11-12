@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { IconCheck, IconClock, IconPause, IconPlay, IconSearch } from '../icons/Icons';
 import type { Order, OrderAction, Restaurant } from '../dashboard/dashboard.types';
-import { chargedTotal, formatMoney, orderTotal } from '../dashboard/dashboard.utils';
+import { chargedTotal, formatMoney, isUncharged, orderTotal } from '../dashboard/dashboard.utils';
 import { orderNumber, timeInStatus, useNow } from './orderTime';
 import { RejectDialog } from './RejectDialog';
 import './restaurant-orders.css';
@@ -297,7 +297,7 @@ function OrderCard({ order, queuePosition, now, busy, onAction, onReject }: Orde
 
 function HistoryRow({ order }: { order: Order }) {
   const items = order.lines.map(line => (line.quantity > 1 ? `${line.quantity}× ${line.name}` : line.name)).join(' · ');
-  const uncharged = order.status === 'rejected' || order.status === 'cancelled';
+  const uncharged = isUncharged(order);
   const ledger = order.billing?.ledger;
 
   return (

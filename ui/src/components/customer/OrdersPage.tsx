@@ -3,7 +3,7 @@ import { DishArt } from '../food/DishArt';
 import { dishKind } from '../food/dishKind';
 import { IconCheck, IconChevronRight, IconClock, IconPin, IconSearch } from '../icons/Icons';
 import type { BillingDetails, FareComponentKind, Order, Restaurant } from '../dashboard/dashboard.types';
-import { chargedTotal, formatMoney, orderTotal } from '../dashboard/dashboard.utils';
+import { chargedTotal, formatMoney, isUncharged, orderTotal } from '../dashboard/dashboard.utils';
 import { orderNumber } from '../restaurant/orderTime';
 import './orders.css';
 
@@ -45,7 +45,6 @@ type PastFilter = 'all' | 'delivered' | 'refunded' | 'cancelled' | 'rejected';
 
 const steps = ['placed', 'accepted', 'preparing', 'ready', 'picked_up', 'delivered'] as const;
 const activeStatuses = ['placed', 'accepted', 'preparing', 'ready', 'picked_up'];
-const unchargedStatuses = ['cancelled', 'rejected'];
 
 const statusMessages: Record<string, string> = {
   placed: 'Waiting for the restaurant to accept',
@@ -264,7 +263,7 @@ function OrderReceipt({ order, billing }: { order: Order; billing: BillingDetail
 function PastOrderRow({ order, restaurantName }: { order: Order; restaurantName: string }) {
   const [open, setOpen] = useState(false);
   const billing = order.billing ?? null;
-  const uncharged = unchargedStatuses.includes(order.status);
+  const uncharged = isUncharged(order);
   const refunded = billing?.ledger.refund != null;
   const summary = order.rejectionReason
     ? `${itemSummary(order)} · rejected: ${order.rejectionReason}`
@@ -334,10 +333,10 @@ export function OrdersPage({
   });
   // What was charged for this month's orders, fees included once delivered; refunds don't lower it.
   const monthOrdered = thisMonth
-    .filter(order => !unchargedStatuses.includes(order.status))
+    .filter(order => !isUncharged(order))
     .reduce((sum, order) => sum + chargedTotal(order), 0);
   const monthRefunded = thisMonth.reduce((sum, order) => sum + (order.billing?.ledger.refund?.amount ?? 0), 0);
-  const monthUncharged = thisMonth.filter(order => unchargedStatuses.includes(order.status)).length;
+  const monthUncharged = thisMonth.filter(order => isUncharged(order)).length;
 
   const orderCounts = new Map<string, number>();
   orders.forEach(order => orderCounts.set(order.restaurantId, (orderCounts.get(order.restaurantId) ?? 0) + 1));

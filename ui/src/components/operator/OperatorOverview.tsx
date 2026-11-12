@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { neighbourhoodShortName } from '../../shared/locations/montrealNeighbourhoods';
 import type { Order, Restaurant, RestaurantStatus } from '../dashboard/dashboard.types';
-import { chargedTotal, formatMoney } from '../dashboard/dashboard.utils';
+import { chargedTotal, formatMoney, isUncharged } from '../dashboard/dashboard.utils';
 import { IconAlert, IconClock, IconPause, IconPlay, IconReceipt, IconStore } from '../icons/Icons';
 import { isSameDay, orderNumber, timeInStatus, useNow } from '../restaurant/orderTime';
 // The page header and stat cards share the restaurant overview's styles.
@@ -21,7 +21,6 @@ type OperatorOverviewProps = {
 
 // Orders the restaurant still has to work on; picked-up orders belong to delivery (DLV).
 const activeStatuses = ['placed', 'accepted', 'preparing', 'ready'];
-const refusedStatuses = ['rejected', 'cancelled'];
 // A placed order waiting this long for the restaurant to accept it needs attention.
 const SLOW_ACCEPT_MINUTES = 5;
 
@@ -92,11 +91,12 @@ export function OperatorOverview({
 
   const active = orders.filter(order => activeStatuses.includes(order.status));
   const todays = orders.filter(order => isSameDay(order.createdAt, today));
-  const refusedToday = todays.filter(order => refusedStatuses.includes(order.status));
+  // Refused orders (rejected or cancelled) are the ones never charged.
+  const refusedToday = todays.filter(order => isUncharged(order));
   // What today's orders bring in: the amount charged once delivered (items until then), leaving
   // out refused orders and refunded ones, whose charge was given back.
   const todaysValue = todays
-    .filter(order => !refusedStatuses.includes(order.status) && order.status !== 'refunded')
+    .filter(order => !isUncharged(order) && order.status !== 'refunded')
     .reduce((sum, order) => sum + chargedTotal(order), 0);
   const openCount = restaurants.filter(restaurant => restaurant.status === 'open').length;
   const restaurantName = (id: string) => restaurants.find(restaurant => restaurant.id === id)?.name ?? 'Restaurant';

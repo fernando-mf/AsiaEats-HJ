@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Order, Restaurant, StoredEvent } from '../dashboard/dashboard.types';
-import { chargedTotal, formatMoney } from '../dashboard/dashboard.utils';
+import { chargedTotal, formatMoney, isUncharged } from '../dashboard/dashboard.utils';
 import { IconSearch } from '../icons/Icons';
 import { orderNumber } from '../restaurant/orderTime';
 import { OrderPanel } from './OrderPanel';
@@ -40,8 +40,6 @@ const tabStatuses: Record<Tab, string[]> = {
 function tabOf(order: Order): Tab {
   return (Object.keys(tabStatuses) as Tab[]).find(tab => tabStatuses[tab].includes(order.status)) ?? 'active';
 }
-
-const uncharged = (order: Order) => order.status === 'rejected' || order.status === 'cancelled';
 
 const placedFormat = new Intl.DateTimeFormat('en-CA', {
   month: 'short',
@@ -173,9 +171,9 @@ export function OperatorOrders({
                       <td>{order.customerName}</td>
                       <td className="operator-muted">{restaurantName(order.restaurantId)}</td>
                       <td
-                        className={`is-number mono${uncharged(order) ? ' operator-muted' : ''}${order.billing?.ledger.refund ? ' money-refunded' : ''}`}
+                        className={`is-number mono${isUncharged(order) ? ' operator-muted' : ''}${order.billing?.ledger.refund ? ' money-refunded' : ''}`}
                       >
-                        {uncharged(order) ? 'Not charged' : formatMoney(chargedTotal(order))}
+                        {isUncharged(order) ? 'Not charged' : formatMoney(chargedTotal(order))}
                       </td>
                       <td>
                         <span className={`order-status status-pill-${order.status}`}>
