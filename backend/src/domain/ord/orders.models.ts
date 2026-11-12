@@ -21,6 +21,8 @@ export enum OrderStatus {
   Ready = 'ready',
   PickedUp = 'picked_up',
   Delivered = 'delivered',
+  // A delivered order the operator refunded (R-PRC-05). Terminal.
+  Refunded = 'refunded',
   Rejected = 'rejected',
   Cancelled = 'cancelled',
 }

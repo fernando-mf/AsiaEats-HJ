@@ -33,6 +33,11 @@ export abstract class OrderState {
     return this.refuse(OrderStatus.Delivered);
   }
 
+  // Only an operator may refund, and only a delivered order (DeliveredState, R-PRC-05).
+  refund(_actor: Actor): OrderState {
+    return this.refuse(OrderStatus.Refunded);
+  }
+
   // An operator may cancel any order that isn't finished; customers only while it is placed
   // (PlacedState); restaurants never.
   cancel(actor: Actor): OrderState {
@@ -94,16 +99,25 @@ class PickedUpState extends OrderState {
   }
 }
 
-// The terminal states: delivered, rejected and cancelled allow nothing, not even an operator's
-// cancellation.
+// The states where the order's journey is over: nothing can cancel them, not even an operator.
 abstract class FinalState extends OrderState {
   cancel(): OrderState {
     return this.refuse(OrderStatus.Cancelled);
   }
 }
 
+// A delivered order allows one last move: an operator's refund (R-PRC-05).
 class DeliveredState extends FinalState {
   readonly status = OrderStatus.Delivered;
+
+  refund(actor: Actor): OrderState {
+    if (actor.role === AccountRole.Operator) return REFUNDED;
+    return super.refund(actor);
+  }
+}
+
+class RefundedState extends FinalState {
+  readonly status = OrderStatus.Refunded;
 }
 
 class RejectedState extends FinalState {
@@ -120,6 +134,7 @@ const PREPARING = new PreparingState();
 const READY = new ReadyState();
 const PICKED_UP = new PickedUpState();
 const DELIVERED = new DeliveredState();
+const REFUNDED = new RefundedState();
 const REJECTED = new RejectedState();
 const CANCELLED = new CancelledState();
 
@@ -130,6 +145,7 @@ const STATES: Record<OrderStatus, OrderState> = {
   [OrderStatus.Ready]: READY,
   [OrderStatus.PickedUp]: PICKED_UP,
   [OrderStatus.Delivered]: DELIVERED,
+  [OrderStatus.Refunded]: REFUNDED,
   [OrderStatus.Rejected]: REJECTED,
   [OrderStatus.Cancelled]: CANCELLED,
 };

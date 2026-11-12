@@ -127,6 +127,7 @@ enum OrderStatus {
   ready
   picked_up
   delivered
+  refunded
   rejected
   cancelled
 

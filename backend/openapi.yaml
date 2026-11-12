@@ -1720,6 +1720,7 @@ components:
             - ready
             - picked_up
             - delivered
+            - refunded
             - rejected
             - cancelled
         customerId:
@@ -1827,6 +1828,7 @@ components:
             - ready
             - picked_up
             - delivered
+            - refunded
             - rejected
             - cancelled
           type: string
@@ -1922,6 +1924,7 @@ components:
             - ready
             - picked_up
             - delivered
+            - refunded
             - rejected
             - cancelled
         placedAt:
@@ -1969,6 +1972,7 @@ components:
             - ready
             - picked_up
             - delivered
+            - refunded
             - rejected
             - cancelled
           type: string
