@@ -116,7 +116,8 @@ needed.
 ## Pricing
 
 An order's fare is computed from its lines and the `pricing` values in
-[`backend/config/seed.json`](./backend/config/seed.json), which are not written into the code (R-PRC-01):
+[`backend/config/seed.json`](./backend/config/seed.json), which are not written into the code (R-PRC-01). The API reads
+them when it starts and refuses to start if one is missing or invalid; restart it after changing them.
 
 | Value                   | Amount |
 | ----------------------- | ------ |
