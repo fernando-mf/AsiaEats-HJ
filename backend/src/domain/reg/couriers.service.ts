@@ -19,6 +19,7 @@ export abstract class CourierRepository {
   abstract create(courier: Courier): Promise<Courier>;
   abstract getByAccountId(accountId: string): Promise<Courier>;
   abstract list(filter?: CourierFilter): Promise<Courier[]>;
+  abstract findClosestIdle(origin: Position): Promise<Courier | null>;
   abstract update(courier: Courier): Promise<Courier>;
 }
 
@@ -43,6 +44,10 @@ export class CouriersService implements AccountCreationHandler {
 
     const couriers = await this.repository.list({ status: request.status });
     return couriers.map(c => ({ id: c.account.id, position: c.position, status: c.status }));
+  }
+
+  findClosestAvailable(origin: Position): Promise<Courier | null> {
+    return this.repository.findClosestIdle(origin);
   }
 
   // handleAccountCreation creates a default Courier entry linked to the given Account.
