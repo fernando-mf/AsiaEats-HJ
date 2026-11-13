@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { ApiError, apiErrorMessage, requestJson } from '../../shared/api/client';
 import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
 import { ConfirmDialog } from '../feedback/ConfirmDialog';
+import { CityMap } from '../operator/CityMap';
 import { OperatorOrders } from '../operator/OperatorOrders';
 import { OperatorOverview } from '../operator/OperatorOverview';
 import { orderNumber } from '../restaurant/orderTime';
@@ -9,6 +10,7 @@ import { OperatorSidebar, type OperatorPage } from '../operator/OperatorSidebar'
 import { RestoreDialog } from '../operator/RestoreDialog';
 import type {
   Account,
+  CourierSummary,
   Order,
   Restaurant,
   RestaurantStatus,
@@ -49,6 +51,7 @@ export function OperatorDashboard({
   const [page, setPage] = useState<OperatorPage>('overview');
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [couriers, setCouriers] = useState<CourierSummary[]>([]);
   const [updatedAt, setUpdatedAt] = useState<Date>();
   const [restoreOpen, setRestoreOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -64,18 +67,23 @@ export function OperatorDashboard({
   useScrollToTop(page);
 
   const fetchAll = useCallback(async () => {
-    const [allRestaurants, allOrders] = await Promise.all([
+    const [allRestaurants, allOrders, allCouriers] = await Promise.all([
       requestJson<Restaurant[]>('/restaurants'),
       requestJson<Order[]>('/orders'),
+      requestJson<CourierSummary[]>('/couriers'),
     ]);
-    return { restaurants: allRestaurants, orders: allOrders };
+    return { restaurants: allRestaurants, orders: allOrders, couriers: allCouriers };
   }, []);
 
-  const apply = useCallback((result: { restaurants: Restaurant[]; orders: Order[] }) => {
-    setRestaurants(result.restaurants);
-    setOrders(result.orders);
-    setUpdatedAt(new Date());
-  }, []);
+  const apply = useCallback(
+    (result: { restaurants: Restaurant[]; orders: Order[]; couriers: CourierSummary[] }) => {
+      setRestaurants(result.restaurants);
+      setOrders(result.orders);
+      setCouriers(result.couriers);
+      setUpdatedAt(new Date());
+    },
+    [],
+  );
 
   const load = useCallback(async () => {
     const result = await run(fetchAll);
@@ -204,6 +212,17 @@ export function OperatorDashboard({
             onSelect={setSelectedOrderId}
             onRefresh={() => void load()}
             onCancel={setCancelTarget}
+          />
+        ) : null}
+
+        {page === 'map' ? (
+          <CityMap
+            couriers={couriers}
+            restaurants={restaurants}
+            orders={orders}
+            updatedAt={updatedAt}
+            busy={busy}
+            onRefresh={() => void load()}
           />
         ) : null}
 

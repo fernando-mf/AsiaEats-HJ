@@ -31,6 +31,11 @@ const routes: Array<[Method, RegExp, string]> = [
   ['POST', new RegExp(`^/orders/${ID}/cancel$`), 'CancelOrderCommand'],
   ['POST', /^\/env\/reset$/, 'ResetEnvCommand'],
   ['GET', /^\/events$/, 'GetEventsByEntityCommand'],
+  ['GET', /^\/couriers$/, 'FindCouriersCommand'],
+  ['GET', /^\/couriers\/me$/, 'GetCourierCommand'],
+  ['PUT', /^\/couriers\/me\/position$/, 'UpdateCourierPositionCommand'],
+  ['POST', /^\/couriers\/me\/online$/, 'CourierGoOnlineCommand'],
+  ['POST', /^\/couriers\/me\/offline$/, 'CourierGoOfflineCommand'],
 ];
 
 // commandName returns the backend command name for a request, or "METHOD /path"

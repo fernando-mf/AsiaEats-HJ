@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 import { BrandMark } from '../brand/BrandMark';
 import type { Account } from '../dashboard/dashboard.types';
 import { initials } from '../dashboard/dashboard.utils';
-import { IconGrid, IconReceipt, IconRestore, IconSignOut } from '../icons/Icons';
+import { IconGrid, IconMap, IconReceipt, IconRestore, IconSignOut } from '../icons/Icons';
 // The operator portal shares the restaurant portal's sidebar layout and styles.
 import '../restaurant/restaurant-shell.css';
 import './operator.css';
 
-export type OperatorPage = 'overview' | 'orders';
+export type OperatorPage = 'overview' | 'orders' | 'map';
 
 type OperatorSidebarProps = {
   account: Account;
@@ -23,6 +23,7 @@ type OperatorSidebarProps = {
 const links: Array<{ page: OperatorPage; label: string; icon: ReactNode }> = [
   { page: 'overview', label: 'Overview', icon: <IconGrid size={17} /> },
   { page: 'orders', label: 'Orders', icon: <IconReceipt size={17} /> },
+  { page: 'map', label: 'City Map', icon: <IconMap size={17} /> },
 ];
 
 // OperatorSidebar is the operator console's navigation: its pages, the demo controls that

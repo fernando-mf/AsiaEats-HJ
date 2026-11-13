@@ -94,3 +94,11 @@ export type MenuItemValues = Pick<MenuItem, 'name' | 'price' | 'status'>;
 export type OrderAction = 'accept' | 'reject' | 'prepare' | 'ready';
 export type RunAction = <T>(action: () => Promise<T>) => Promise<T | undefined>;
 export type ShowToast = (message: string, variant?: ToastVariant, action?: ToastAction) => void;
+
+export type CourierStatus = 'offline' | 'idle' | 'assigned' | 'carrying';
+
+export type CourierSummary = {
+  id: string;
+  position: Position | null;
+  status: CourierStatus;
+};
