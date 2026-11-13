@@ -205,6 +205,30 @@
   text-decoration: underline;
 }
 
+/* ---------- Ledger ---------- */
+.operator-ledger-total {
+  font-weight: 600;
+}
+
+.operator-ledger-who {
+  display: grid;
+  gap: 1px;
+}
+
+.operator-ledger-who small {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+/* Refunds stand apart from charges: an amber edge and amber amounts. */
+.operator-ledger-table tbody tr.is-refund > :first-child {
+  box-shadow: inset 3px 0 0 var(--amber-ink);
+}
+
+.operator-ledger-table tbody tr.is-refund .mono:not(.operator-order-link) {
+  color: var(--amber-ink);
+}
+
 /* Stays in view while the table scrolls. */
 .card.operator-order-panel {
   position: sticky;

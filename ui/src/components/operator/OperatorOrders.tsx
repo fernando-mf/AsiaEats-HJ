@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Order, Restaurant, StoredEvent } from '../dashboard/dashboard.types';
-import { formatMoney, orderTotal } from '../dashboard/dashboard.utils';
+import { chargedTotal, formatMoney, isUncharged } from '../dashboard/dashboard.utils';
 import { IconSearch } from '../icons/Icons';
 import { orderNumber } from '../restaurant/orderTime';
 import { OrderPanel } from './OrderPanel';
@@ -18,6 +18,7 @@ type OperatorOrdersProps = {
   onSelect: (orderId: string | null) => void;
   onRefresh: () => void;
   onCancel: (order: Order) => void;
+  onRefund: (order: Order) => void;
 };
 
 type Tab = 'active' | 'completed' | 'stopped';
@@ -31,9 +32,14 @@ const tabs: Array<[Tab, string]> = [
 // The same split as the restaurant orders board.
 const tabStatuses: Record<Tab, string[]> = {
   active: ['placed', 'accepted', 'preparing', 'ready'],
-  completed: ['picked_up', 'delivered'],
+  completed: ['picked_up', 'delivered', 'refunded'],
   stopped: ['rejected', 'cancelled'],
 };
+
+// The tab an order is listed under.
+function tabOf(order: Order): Tab {
+  return (Object.keys(tabStatuses) as Tab[]).find(tab => tabStatuses[tab].includes(order.status)) ?? 'active';
+}
 
 const placedFormat = new Intl.DateTimeFormat('en-CA', {
   month: 'short',
@@ -56,8 +62,13 @@ export function OperatorOrders({
   onSelect,
   onRefresh,
   onCancel,
+  onRefund,
 }: OperatorOrdersProps) {
-  const [tab, setTab] = useState<Tab>('active');
+  // An order opened from another page (the ledger, the overview) opens on the tab it is listed under.
+  const [tab, setTab] = useState<Tab>(() => {
+    const opened = orders.find(order => order.id === selectedId);
+    return opened ? tabOf(opened) : 'active';
+  });
   const [query, setQuery] = useState('');
   const search = query.trim().toLowerCase();
 
@@ -159,7 +170,11 @@ export function OperatorOrders({
                       </th>
                       <td>{order.customerName}</td>
                       <td className="operator-muted">{restaurantName(order.restaurantId)}</td>
-                      <td className="is-number mono">{formatMoney(orderTotal(order))}</td>
+                      <td
+                        className={`is-number mono${isUncharged(order) ? ' operator-muted' : ''}${order.billing?.ledger.refund ? ' money-refunded' : ''}`}
+                      >
+                        {isUncharged(order) ? 'Not charged' : formatMoney(chargedTotal(order))}
+                      </td>
                       <td>
                         <span className={`order-status status-pill-${order.status}`}>
                           {order.status.replace('_', ' ')}
@@ -184,6 +199,7 @@ export function OperatorOrders({
             busy={busy}
             onClose={() => onSelect(null)}
             onCancel={onCancel}
+            onRefund={onRefund}
           />
         ) : null}
       </div>

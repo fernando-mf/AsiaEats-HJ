@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { DishArt } from '../food/DishArt';
 import { dishKind } from '../food/dishKind';
 import { IconCheck, IconChevronRight, IconClock, IconPin, IconSearch } from '../icons/Icons';
-import type { Order, Restaurant } from '../dashboard/dashboard.types';
-import { formatMoney, orderTotal } from '../dashboard/dashboard.utils';
+import type { BillingDetails, FareComponentKind, Order, Restaurant } from '../dashboard/dashboard.types';
+import { chargedTotal, formatMoney, isUncharged, orderTotal } from '../dashboard/dashboard.utils';
 import { orderNumber } from '../restaurant/orderTime';
 import './orders.css';
 
@@ -41,11 +41,10 @@ function CancelButton({ order, busy, onCancel }: CancelProps & { order: Order })
   );
 }
 
-type PastFilter = 'all' | 'delivered' | 'cancelled' | 'rejected';
+type PastFilter = 'all' | 'delivered' | 'refunded' | 'cancelled' | 'rejected';
 
 const steps = ['placed', 'accepted', 'preparing', 'ready', 'picked_up', 'delivered'] as const;
 const activeStatuses = ['placed', 'accepted', 'preparing', 'ready', 'picked_up'];
-const unchargedStatuses = ['cancelled', 'rejected'];
 
 const statusMessages: Record<string, string> = {
   placed: 'Waiting for the restaurant to accept',
@@ -210,14 +209,68 @@ function CompactOrder({
   );
 }
 
+const fareLabels: Record<FareComponentKind, string> = {
+  subtotal: 'Subtotal',
+  delivery_fee: 'Delivery fee',
+  service_fee: 'Service fee',
+  small_order_surcharge: 'Small-order surcharge',
+};
+
+// What a delivered order was charged, part by part (R-PRC-02), and its refund if it had one.
+function OrderReceipt({ order, billing }: { order: Order; billing: BillingDetails }) {
+  const { fare } = billing.summary;
+  const { refund } = billing.ledger;
+
+  return (
+    <div className="order-receipt" id={`receipt-${order.id}`}>
+      <div className="order-lines">
+        {billing.summary.lines.map(line => (
+          <div className="order-line" key={line.id}>
+            <span className="mono">{line.quantity}×</span>
+            <span>{line.name}</span>
+            <span className="mono">{formatMoney(line.unitPrice * line.quantity)}</span>
+          </div>
+        ))}
+        <div className="order-fare">
+          {fare.components.map(component => (
+            <div className="order-fare-row" key={component.kind}>
+              <span>{fareLabels[component.kind]}</span>
+              <span className="mono">{formatMoney(component.amount)}</span>
+            </div>
+          ))}
+        </div>
+        <div className="order-lines-total">
+          <span>Total charged</span>
+          <span className="mono">{formatMoney(billing.ledger.totalCharge)}</span>
+        </div>
+        {refund ? (
+          <div className="order-fare-row order-fare-refund">
+            <span>Refunded {dayFormat.format(new Date(refund.refundedAt))}</span>
+            <span className="mono">−{formatMoney(refund.amount)}</span>
+          </div>
+        ) : null}
+      </div>
+      <span className="order-receipt-note mono">
+        Placed {dayFormat.format(new Date(billing.ledger.placedAt))}{' '}
+        {timeFormat.format(new Date(billing.ledger.placedAt))} · delivered{' '}
+        {dayFormat.format(new Date(billing.ledger.deliveredAt))}{' '}
+        {timeFormat.format(new Date(billing.ledger.deliveredAt))}
+      </span>
+    </div>
+  );
+}
+
 function PastOrderRow({ order, restaurantName }: { order: Order; restaurantName: string }) {
-  const uncharged = unchargedStatuses.includes(order.status);
+  const [open, setOpen] = useState(false);
+  const billing = order.billing ?? null;
+  const uncharged = isUncharged(order);
+  const refunded = billing?.ledger.refund != null;
   const summary = order.rejectionReason
     ? `${itemSummary(order)} · rejected: ${order.rejectionReason}`
     : itemSummary(order);
 
-  return (
-    <div className="past-order">
+  const cells = (
+    <>
       <OrderThumb order={order} />
       <div className="past-order-main">
         <strong>{restaurantName}</strong>
@@ -227,9 +280,30 @@ function PastOrderRow({ order, restaurantName }: { order: Order; restaurantName:
       <span>
         <StatusPill status={order.status} />
       </span>
-      <span className={`mono past-order-total${uncharged ? ' is-uncharged' : ''}`}>
-        {uncharged ? 'Not charged' : formatMoney(orderTotal(order))}
+      <span
+        className={`mono past-order-total${uncharged ? ' is-uncharged' : ''}${refunded ? ' is-refunded' : ''}`}
+        title={refunded ? 'Refunded' : undefined}
+      >
+        {uncharged ? 'Not charged' : formatMoney(chargedTotal(order))}
       </span>
+    </>
+  );
+
+  // Only delivered orders have billing details to open.
+  if (!billing) return <div className="past-order">{cells}</div>;
+
+  return (
+    <div className={`past-order-item${open ? ' is-open' : ''}`}>
+      <button
+        className="past-order past-order--button"
+        type="button"
+        aria-expanded={open}
+        aria-controls={`receipt-${order.id}`}
+        onClick={() => setOpen(value => !value)}
+      >
+        {cells}
+      </button>
+      {open ? <OrderReceipt order={order} billing={billing} /> : null}
     </div>
   );
 }
@@ -257,10 +331,12 @@ export function OrdersPage({
     const created = new Date(order.createdAt);
     return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth();
   });
+  // What was charged for this month's orders, fees included once delivered; refunds don't lower it.
   const monthOrdered = thisMonth
-    .filter(order => !unchargedStatuses.includes(order.status))
-    .reduce((sum, order) => sum + orderTotal(order), 0);
-  const monthUncharged = thisMonth.filter(order => unchargedStatuses.includes(order.status)).length;
+    .filter(order => !isUncharged(order))
+    .reduce((sum, order) => sum + chargedTotal(order), 0);
+  const monthRefunded = thisMonth.reduce((sum, order) => sum + (order.billing?.ledger.refund?.amount ?? 0), 0);
+  const monthUncharged = thisMonth.filter(order => isUncharged(order)).length;
 
   const orderCounts = new Map<string, number>();
   orders.forEach(order => orderCounts.set(order.restaurantId, (orderCounts.get(order.restaurantId) ?? 0) + 1));
@@ -313,7 +389,7 @@ export function OrdersPage({
           <div className="past-orders-head">
             <h2>Past orders</h2>
             <div className="segmented" role="group" aria-label="Filter past orders">
-              {(['all', 'delivered', 'cancelled', 'rejected'] as const).map(option => (
+              {(['all', 'delivered', 'refunded', 'cancelled', 'rejected'] as const).map(option => (
                 <button key={option} type="button" aria-pressed={filter === option} onClick={() => setFilter(option)}>
                   {option.charAt(0).toUpperCase() + option.slice(1)}
                 </button>
@@ -343,6 +419,12 @@ export function OrdersPage({
               <span>Ordered</span>
               <span className="mono">{formatMoney(monthOrdered)}</span>
             </div>
+            {monthRefunded > 0 ? (
+              <div className="orders-summary-row">
+                <span>Refunded</span>
+                <span className="mono">−{formatMoney(monthRefunded)}</span>
+              </div>
+            ) : null}
             <div className="orders-summary-row">
               <span>Cancelled or rejected</span>
               <span className="mono">

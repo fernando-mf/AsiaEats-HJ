@@ -1,6 +1,8 @@
 /* Customer Orders page: in-progress orders, past orders and a side summary. */
 .orders-page {
   display: grid;
+  /* minmax(0, …) lets the page shrink to the screen instead of growing to its widest row. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
 }
 
@@ -32,6 +34,8 @@
 
 .orders-section {
   display: grid;
+  /* One column that can shrink: a compact order's single row would otherwise widen every card. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
 }
 
@@ -368,6 +372,12 @@
   padding: 0 12px 8px;
 }
 
+/* The status filters wrap onto a second line on narrow screens. */
+.past-orders-head .segmented {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
 .past-order {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 64px 112px 96px;
@@ -413,6 +423,65 @@
 
 .past-order-total.is-uncharged {
   color: var(--text-3);
+}
+
+.past-order-total.is-refunded {
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+
+/* A delivered order's row opens its receipt. */
+.past-order--button {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.past-order--button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.past-order-item.is-open .past-order {
+  background: var(--surface-2);
+}
+
+.order-receipt {
+  display: grid;
+  gap: 8px;
+  padding: 8px 14px 14px 74px;
+}
+
+.order-fare {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.order-fare-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.order-fare-row .mono {
+  color: var(--text);
+}
+
+.order-fare-refund {
+  font-weight: 560;
+}
+
+.order-receipt-note {
+  color: var(--text-3);
+  font-size: 12px;
 }
 
 .past-orders-empty {
@@ -522,7 +591,7 @@
 @media (max-width: 1000px) {
   .orders-grid,
   .order-live-body {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .order-compact-note {
@@ -533,6 +602,26 @@
 @media (max-width: 640px) {
   .order-live-head {
     flex-wrap: wrap;
+  }
+
+  /* A compact order puts its total and cancel button on a second line. */
+  .order-compact {
+    flex-wrap: wrap;
+  }
+
+  .order-compact-main {
+    flex-basis: calc(100% - 60px);
+  }
+
+  .order-compact-main > div {
+    flex-wrap: wrap;
+  }
+
+  .order-compact-total {
+    width: auto;
+    margin-left: 60px;
+    margin-right: auto;
+    text-align: left;
   }
 
   .order-step-label {
@@ -550,5 +639,9 @@
 
   .past-order-date {
     display: none;
+  }
+
+  .order-receipt {
+    padding-left: 14px;
   }
 }

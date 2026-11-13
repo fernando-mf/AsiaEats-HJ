@@ -37,20 +37,15 @@ const routes: Array<[Method, RegExp, string]> = [
   ['POST', new RegExp(`^/orders/${ID}/prepare$`), 'StartPreparingCommand'],
   ['POST', new RegExp(`^/orders/${ID}/ready$`), 'MarkOrderReadyCommand'],
   ['POST', new RegExp(`^/orders/${ID}/cancel$`), 'CancelOrderCommand'],
+  ['POST', new RegExp(`^/orders/${ID}/refund$`), 'RefundOrderCommand'],
   ['POST', /^\/env\/reset$/, 'ResetEnvCommand'],
   ['GET', /^\/events$/, 'GetEventsByEntityCommand'],
+  ['GET', /^\/ledger$/, 'ListLedgerCommand'],
+  // The courier commands not listed above: the operator's courier and assignment views.
   ['GET', /^\/couriers$/, 'FindCouriersCommand'],
-  ['GET', /^\/couriers\/me$/, 'GetCourierCommand'],
   ['PUT', /^\/couriers\/me\/position$/, 'UpdateCourierPositionCommand'],
-  ['POST', /^\/couriers\/me\/online$/, 'CourierGoOnlineCommand'],
-  ['POST', /^\/couriers\/me\/offline$/, 'CourierGoOfflineCommand'],
   ['GET', /^\/order-assignments$/, 'FindAssignmentsCommand'],
-  ['POST', new RegExp(`^/order-assignments/${ID}/accept$`), 'AcceptAssignmentCommand'],
-  ['POST', new RegExp(`^/order-assignments/${ID}/decline$`), 'DeclineAssignmentCommand'],
-  ['POST', new RegExp(`^/order-assignments/${ID}/pickup$`), 'PickupAssignmentCommand'],
-  ['POST', new RegExp(`^/order-assignments/${ID}/deliver$`), 'DeliverAssignmentCommand'],
   ['POST', new RegExp(`^/order-assignments/${ID}/reassign$`), 'ReassignAssignmentCommand'],
-  ['GET', /^\/couriers\/me\/assignment$/, 'GetCurrentAssignmentCommand'],
 ];
 
 // commandName returns the backend command name for a request, or "METHOD /path"

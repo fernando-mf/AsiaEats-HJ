@@ -103,6 +103,8 @@ describe('OrderStateMachine', () => {
       ready: (machine: OrderStateMachine) => machine.ready(),
       pickUp: (machine: OrderStateMachine) => machine.pickUp(),
       deliver: (machine: OrderStateMachine) => machine.deliver(),
+      // Refused here from every status: only an operator may refund (tested below).
+      refund: (machine: OrderStateMachine) => machine.refund(),
     };
     const allowed: Record<OrderStatus, Partial<Record<keyof typeof actions, OrderStatus>>> = {
       [OrderStatus.Placed]: { accept: OrderStatus.Accepted, reject: OrderStatus.Rejected },
@@ -111,6 +113,7 @@ describe('OrderStateMachine', () => {
       [OrderStatus.Ready]: { pickUp: OrderStatus.PickedUp },
       [OrderStatus.PickedUp]: { deliver: OrderStatus.Delivered },
       [OrderStatus.Delivered]: {},
+      [OrderStatus.Refunded]: {},
       [OrderStatus.Rejected]: {},
       [OrderStatus.Cancelled]: {},
     };
@@ -139,5 +142,41 @@ describe('OrderStateMachine', () => {
     const machine = new OrderStateMachine(actor, newOrder(OrderStatus.Delivered));
 
     expect(() => machine.cancel()).toThrow(InvalidOrderTransitionError);
+  });
+
+  it('lets an operator refund a delivered order, and nothing else (R-PRC-05)', () => {
+    const operator = { id: 'operator-1', role: AccountRole.Operator };
+    const order = newOrder(OrderStatus.Delivered);
+
+    const event = new OrderStateMachine(operator, order).refund();
+
+    expect(order.status).toBe(OrderStatus.Refunded);
+    expect(event.payload).toEqual({ previousStatus: OrderStatus.Delivered, newStatus: OrderStatus.Refunded });
+    expect(event.actor).toEqual(operator);
+
+    for (const status of Object.values(OrderStatus).filter(status => status !== OrderStatus.Delivered)) {
+      const other = newOrder(status);
+      expect(() => new OrderStateMachine(operator, other).refund(), `${status} must not be refundable`).toThrow(
+        InvalidOrderTransitionError,
+      );
+      expect(other.status).toBe(status);
+    }
+  });
+
+  it('does not let a customer refund their own delivered order', () => {
+    expect(() => new OrderStateMachine(actor, newOrder(OrderStatus.Delivered)).refund()).toThrow(
+      InvalidOrderTransitionError,
+    );
+  });
+
+  it('allows nothing from refunded, not even an operator cancelling', () => {
+    const operator = { id: 'operator-1', role: AccountRole.Operator };
+
+    expect(() => new OrderStateMachine(operator, newOrder(OrderStatus.Refunded)).cancel()).toThrow(
+      InvalidOrderTransitionError,
+    );
+    expect(() => new OrderStateMachine(operator, newOrder(OrderStatus.Refunded)).refund()).toThrow(
+      InvalidOrderTransitionError,
+    );
   });
 });

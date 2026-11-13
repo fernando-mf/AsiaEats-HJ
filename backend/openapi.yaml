@@ -576,6 +576,42 @@ paths:
         - events
       x-roles:
         - operator
+  /api/ledger:
+    get:
+      description: |-
+        Every ledger entry, charges and refunds, most recent first.
+
+        **Allowed roles:** `operator`
+      operationId: LedgerController_list
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LedgerEntry"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: List the billing ledger
+      tags:
+        - ledger
+      x-roles:
+        - operator
   /api/orders:
     post:
       description: "**Allowed roles:** `customer`"
@@ -632,7 +668,10 @@ paths:
       x-roles:
         - customer
     get:
-      description: "**Allowed roles:** `customer`, `restaurant`, `operator`"
+      description: |-
+        Delivered orders include their billing details.
+
+        **Allowed roles:** `customer`, `restaurant`, `operator`
       operationId: OrdersController_find
       parameters:
         - name: restaurantId
@@ -655,7 +694,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Order"
+                  $ref: "#/components/schemas/OrderResponse"
         "400":
           description: ""
           content:
@@ -685,7 +724,10 @@ paths:
         - operator
   /api/orders/{id}:
     get:
-      description: "**Allowed roles:** `customer`, `restaurant`, `operator`"
+      description: |-
+        A delivered order includes its billing details.
+
+        **Allowed roles:** `customer`, `restaurant`, `operator`
       operationId: OrdersController_getById
       parameters:
         - name: id
@@ -699,7 +741,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Order"
+                $ref: "#/components/schemas/OrderResponse"
         "401":
           description: ""
           content:
@@ -979,6 +1021,57 @@ paths:
         - orders
       x-roles:
         - customer
+        - operator
+  /api/orders/{id}/refund:
+    post:
+      description: |-
+        Moves a delivered order to refunded and records the refund as its own ledger entry; the charge is left unchanged. Returns the order with its billing details, refund included.
+
+        **Allowed roles:** `operator`
+      operationId: OrdersController_refund
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Refund order
+      tags:
+        - orders
+      x-roles:
         - operator
   /api/order-assignments:
     get:
@@ -2013,6 +2106,7 @@ components:
             - ready
             - picked_up
             - delivered
+            - refunded
             - rejected
             - cancelled
           type: string
@@ -2184,6 +2278,68 @@ components:
         - payload
         - actor
         - occurredAt
+    LedgerEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        kind:
+          type: string
+          enum:
+            - charge
+            - refund
+        orderStatus:
+          type: string
+          enum:
+            - placed
+            - accepted
+            - preparing
+            - ready
+            - picked_up
+            - delivered
+            - refunded
+            - rejected
+            - cancelled
+        customerId:
+          type: string
+        restaurantId:
+          type: string
+        subtotal:
+          type: number
+        deliveryFee:
+          type: number
+        serviceFee:
+          type: number
+        smallOrderSurcharge:
+          type: number
+        total:
+          type: number
+        orderPlacedAt:
+          format: date-time
+          type: string
+        orderClosedAt:
+          format: date-time
+          type: string
+        recordedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - orderId
+        - kind
+        - orderStatus
+        - customerId
+        - restaurantId
+        - subtotal
+        - deliveryFee
+        - serviceFee
+        - smallOrderSurcharge
+        - total
+        - orderPlacedAt
+        - orderClosedAt
+        - recordedAt
     OrderItemRequest:
       type: object
       properties:
@@ -2210,6 +2366,173 @@ components:
       required:
         - restaurantId
         - items
+    FareComponentResponse:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+            - subtotal
+            - delivery_fee
+            - service_fee
+            - small_order_surcharge
+        amount:
+          type: number
+      required:
+        - kind
+        - amount
+    FareResponse:
+      type: object
+      properties:
+        components:
+          type: array
+          items:
+            $ref: "#/components/schemas/FareComponentResponse"
+        total:
+          type: number
+      required:
+        - components
+        - total
+    OrderSummaryResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+        restaurantId:
+          type: string
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderLine"
+        fare:
+          $ref: "#/components/schemas/FareResponse"
+        placedAt:
+          format: date-time
+          type: string
+        deliveredAt:
+          format: date-time
+          type: string
+      required:
+        - orderId
+        - restaurantId
+        - lines
+        - fare
+        - placedAt
+        - deliveredAt
+    BillingRefundResponse:
+      type: object
+      properties:
+        amount:
+          type: number
+        refundedAt:
+          format: date-time
+          type: string
+      required:
+        - amount
+        - refundedAt
+    BillingLedgerResponse:
+      type: object
+      properties:
+        finalState:
+          type: string
+          enum:
+            - placed
+            - accepted
+            - preparing
+            - ready
+            - picked_up
+            - delivered
+            - refunded
+            - rejected
+            - cancelled
+        placedAt:
+          format: date-time
+          type: string
+        deliveredAt:
+          format: date-time
+          type: string
+        totalCharge:
+          type: number
+        refund:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/BillingRefundResponse"
+      required:
+        - finalState
+        - placedAt
+        - deliveredAt
+        - totalCharge
+        - refund
+    BillingDetailsResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+        summary:
+          $ref: "#/components/schemas/OrderSummaryResponse"
+        ledger:
+          $ref: "#/components/schemas/BillingLedgerResponse"
+      required:
+        - orderId
+        - summary
+        - ledger
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string
+        customerName:
+          type: string
+        restaurantId:
+          type: string
+        status:
+          enum:
+            - placed
+            - accepted
+            - preparing
+            - ready
+            - picked_up
+            - delivered
+            - refunded
+            - rejected
+            - cancelled
+          type: string
+        rejectionReason:
+          type: string
+        deliveryAddress:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/Address"
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderLine"
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+        billing:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/BillingDetailsResponse"
+      required:
+        - id
+        - customerId
+        - customerName
+        - restaurantId
+        - status
+        - deliveryAddress
+        - lines
+        - createdAt
+        - updatedAt
+        - billing
     OrderRejectionRequest:
       type: object
       properties:

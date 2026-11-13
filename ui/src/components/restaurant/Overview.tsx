@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import type { RestaurantPage } from '../../shared/dashboard/dashboardSession';
 import { IconArrowRight, IconBag, IconCheck, IconClock, IconMenuBook, IconPencil, IconReceipt } from '../icons/Icons';
 import type { Account, MenuItem, Order, OrderAction, Restaurant } from '../dashboard/dashboard.types';
-import { formatMoney, orderTotal } from '../dashboard/dashboard.utils';
+import { formatMoney, isUncharged, orderTotal } from '../dashboard/dashboard.utils';
 import { isSameDay, orderNumber, timeInStatus, useNow } from './orderTime';
 import { RejectDialog } from './RejectDialog';
 import './restaurant-overview.css';
@@ -18,8 +18,6 @@ type OverviewProps = {
   onNavigate: (page: RestaurantPage) => void;
 };
 
-// Cancelled and rejected orders are never charged, so they don't count toward revenue.
-const uncharged = ['cancelled', 'rejected'];
 // Columns show the few most urgent orders; the full list is on the Orders board.
 const columnLimit = 3;
 // Dishes shown in the availability card; the rest are on the Menu page.
@@ -63,8 +61,11 @@ export function Overview({
   const preparing = orders.filter(order => order.status === 'preparing').sort(byOldest);
   const ready = orders.filter(order => order.status === 'ready').sort(byOldest);
   const soldOut = menu.filter(item => item.status === 'sold_out');
+  // The restaurant's revenue is its food: each order's subtotal, since the delivery and service fees
+  // go to the platform. Cancelled and rejected orders were never charged, and a refunded order's
+  // charge was given back, so neither counts.
   const revenue = todays
-    .filter(order => !uncharged.includes(order.status))
+    .filter(order => !isUncharged(order) && order.status !== 'refunded')
     .reduce((sum, order) => sum + orderTotal(order), 0);
 
   const stats = [
@@ -77,7 +78,7 @@ export function Overview({
     {
       label: 'Revenue today',
       value: formatMoney(revenue),
-      note: 'Excludes rejected and cancelled',
+      note: 'Food only · excludes rejected, cancelled and refunded',
       icon: <IconBag size={16} />,
     },
     {

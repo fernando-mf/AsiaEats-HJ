@@ -3,6 +3,7 @@ import { DuplicateEntityError, InternalError, NotFoundError } from '#domain/erro
 import {
   MenuItem,
   MenuItemStatus,
+  OrderStatus,
   Restaurant,
   type RestaurantFilter,
   RestaurantRepository,
@@ -132,6 +133,19 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
       });
 
       return toRestaurantModel(row);
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
+
+  async countOrdersInProgress(restaurantId: string): Promise<number> {
+    try {
+      return await this.db.client().order.count({
+        where: {
+          restaurantId,
+          status: { in: [OrderStatus.Placed, OrderStatus.Accepted, OrderStatus.Preparing] },
+        },
+      });
     } catch (err) {
       throw new InternalError(err as Error);
     }

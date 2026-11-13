@@ -1,5 +1,5 @@
 import type { Order, Restaurant, StoredEvent } from '../dashboard/dashboard.types';
-import { formatMoney, orderTotal } from '../dashboard/dashboard.utils';
+import { chargedTotal, formatMoney } from '../dashboard/dashboard.utils';
 import { IconClose } from '../icons/Icons';
 import { orderNumber } from '../restaurant/orderTime';
 
@@ -11,10 +11,11 @@ type OrderPanelProps = {
   busy: string | null;
   onClose: () => void;
   onCancel: (order: Order) => void;
+  onRefund: (order: Order) => void;
 };
 
 // Orders that reached one of these can't change any more, so they can't be cancelled.
-const finalStatuses = ['delivered', 'rejected', 'cancelled'];
+const finalStatuses = ['delivered', 'rejected', 'cancelled', 'refunded'];
 
 const dateTimeFormat = new Intl.DateTimeFormat('en-CA', {
   month: 'short',
@@ -38,6 +39,7 @@ function statusLabel(status: string) {
 // What the event did, e.g. "Placed", "Accepted", "Rejected".
 function eventTitle(event: StoredEvent) {
   if (event.eventType === 'order.placed') return 'Placed';
+  if (event.eventType === 'order.summary_created') return 'Summary created';
   const next = event.payload.newStatus;
   return typeof next === 'string' ? statusLabel(next) : event.eventType;
 }
@@ -56,10 +58,11 @@ function eventActor(event: StoredEvent, order: Order, restaurants: Restaurant[])
 
 // OrderPanel shows one order to the operator: what was ordered and where it goes, every state
 // change recorded for it with its event id (R-ORD-05), and a way to cancel it.
-export function OrderPanel({ order, restaurants, events, busy, onClose, onCancel }: OrderPanelProps) {
+export function OrderPanel({ order, restaurants, events, busy, onClose, onCancel, onRefund }: OrderPanelProps) {
   const restaurant = restaurants.find(item => item.id === order.restaurantId);
   const address = order.deliveryAddress;
   const cancellable = !finalStatuses.includes(order.status);
+  const ledger = order.billing?.ledger;
 
   return (
     <aside className="card operator-order-panel" aria-labelledby="operator-order-title">
@@ -88,6 +91,20 @@ export function OrderPanel({ order, restaurants, events, busy, onClose, onCancel
           <dt>Placed</dt>
           <dd>{dateTimeFormat.format(new Date(order.createdAt))}</dd>
         </div>
+        {ledger ? (
+          <div>
+            <dt>Delivered</dt>
+            <dd>{dateTimeFormat.format(new Date(ledger.deliveredAt))}</dd>
+          </div>
+        ) : null}
+        {ledger?.refund ? (
+          <div>
+            <dt>Refunded</dt>
+            <dd>
+              {dateTimeFormat.format(new Date(ledger.refund.refundedAt))} · {formatMoney(ledger.refund.amount)}
+            </dd>
+          </div>
+        ) : null}
         <div>
           <dt>Deliver to</dt>
           <dd>{address ? `${address.street}, ${address.city} ${address.postalCode}` : 'No address recorded'}</dd>
@@ -113,8 +130,8 @@ export function OrderPanel({ order, restaurants, events, busy, onClose, onCancel
           ))}
         </ul>
         <div className="operator-lines-total">
-          <span>Total</span>
-          <span className="mono">{formatMoney(orderTotal(order))}</span>
+          <span>{ledger ? 'Total charged' : 'Total'}</span>
+          <span className="mono">{formatMoney(chargedTotal(order))}</span>
         </div>
       </section>
 
@@ -158,6 +175,18 @@ export function OrderPanel({ order, restaurants, events, busy, onClose, onCancel
           onClick={() => onCancel(order)}
         >
           Cancel order
+        </button>
+      ) : null}
+
+      {/* Only a delivered order can be refunded (R-PRC-05); the backend refuses any other. */}
+      {order.status === 'delivered' ? (
+        <button
+          className="danger-button operator-cancel"
+          type="button"
+          disabled={busy !== null}
+          onClick={() => onRefund(order)}
+        >
+          Refund order
         </button>
       ) : null}
     </aside>

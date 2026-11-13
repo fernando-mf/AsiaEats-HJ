@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { IconCheck, IconClock, IconPause, IconPlay, IconSearch } from '../icons/Icons';
 import type { Order, OrderAction, Restaurant } from '../dashboard/dashboard.types';
-import { formatMoney, orderTotal } from '../dashboard/dashboard.utils';
+import { chargedTotal, formatMoney, isUncharged, orderTotal } from '../dashboard/dashboard.utils';
 import { orderNumber, timeInStatus, useNow } from './orderTime';
 import { RejectDialog } from './RejectDialog';
 import './restaurant-orders.css';
@@ -29,7 +29,7 @@ const columns: Array<{ status: Column; label: string; pill: string; empty: strin
 
 const tabStatuses: Record<Tab, string[]> = {
   active: ['placed', 'accepted', 'preparing', 'ready'],
-  completed: ['picked_up', 'delivered'],
+  completed: ['picked_up', 'delivered', 'refunded'],
   stopped: ['rejected', 'cancelled'],
 };
 
@@ -297,7 +297,8 @@ function OrderCard({ order, queuePosition, now, busy, onAction, onReject }: Orde
 
 function HistoryRow({ order }: { order: Order }) {
   const items = order.lines.map(line => (line.quantity > 1 ? `${line.quantity}× ${line.name}` : line.name)).join(' · ');
-  const uncharged = order.status === 'rejected' || order.status === 'cancelled';
+  const uncharged = isUncharged(order);
+  const ledger = order.billing?.ledger;
 
   return (
     <div className="board-history-row">
@@ -305,11 +306,21 @@ function HistoryRow({ order }: { order: Order }) {
       <div className="board-history-main">
         <span title={items}>{items}</span>
         {order.rejectionReason ? <small>Reason: {order.rejectionReason}</small> : null}
+        {ledger ? (
+          <small>
+            Delivered {dayTimeFormat.format(new Date(ledger.deliveredAt))}
+            {ledger.refund ? ` · refunded ${dayTimeFormat.format(new Date(ledger.refund.refundedAt))}` : ''}
+          </small>
+        ) : null}
       </div>
-      <span className="mono board-history-date">{dayTimeFormat.format(new Date(order.createdAt))}</span>
+      <span className="mono board-history-date" title="Placed">
+        {dayTimeFormat.format(new Date(order.createdAt))}
+      </span>
       <span className={`order-status status-pill-${order.status}`}>{order.status.replace('_', ' ')}</span>
-      <span className={`mono board-history-total${uncharged ? ' is-uncharged' : ''}`}>
-        {uncharged ? 'Not charged' : formatMoney(orderTotal(order))}
+      <span
+        className={`mono board-history-total${uncharged ? ' is-uncharged' : ''}${ledger?.refund ? ' money-refunded' : ''}`}
+      >
+        {uncharged ? 'Not charged' : formatMoney(chargedTotal(order))}
       </span>
     </div>
   );

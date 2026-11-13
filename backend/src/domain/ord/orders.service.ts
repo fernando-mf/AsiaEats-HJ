@@ -196,6 +196,14 @@ export class OrdersService {
     return this.repository.listAccepted(restaurant.id);
   }
 
+  // refund moves a delivered order to refunded (R-PRC-05); the state machine refuses any other
+  // order and any role but the operator. PRC records the refund entry when it sees the change.
+  async refund(actor: Actor, id: string): Promise<Order> {
+    const order = await this.repository.getById(id);
+
+    return this.transition(order, actor, machine => machine.refund());
+  }
+
   async cancel(actor: Actor, id: string): Promise<Order> {
     const order = await this.getById(actor, id);
 

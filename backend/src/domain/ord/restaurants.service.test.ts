@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ForbiddenError } from '#domain/errors.js';
+import { ConflictError, ForbiddenError } from '#domain/errors.js';
 import type { EventsService } from '#domain/events/index.js';
 import { AccountRole } from '#domain/reg/index.js';
 import {
@@ -8,6 +8,7 @@ import {
   MenuItemUpdateRequest,
   type Restaurant,
   RestaurantStatus,
+  RestaurantStatusUpdateRequest,
 } from './restaurants.models.js';
 import { type RestaurantRepository, RestaurantsService } from './restaurants.service.js';
 
@@ -127,5 +128,49 @@ describe('RestaurantsService.updateMenuItem events (R-ORD-05)', () => {
 
     expect(updateMenuItem).not.toHaveBeenCalled();
     expect(publish).not.toHaveBeenCalled();
+  });
+});
+
+describe('RestaurantsService.updateStatus', () => {
+  const owner = { id: restaurant.ownerId, role: AccountRole.Restaurant };
+
+  function newStatusChanger(ordersInProgress: number) {
+    const repository = {
+      getById: vi.fn(async () => ({ ...restaurant })),
+      countOrdersInProgress: vi.fn().mockResolvedValue(ordersInProgress),
+      updateStatus: vi.fn(async (updated: Restaurant) => updated),
+    } as unknown as RestaurantRepository;
+    const events = { publish: vi.fn() } as unknown as EventsService;
+
+    return { service: new RestaurantsService(repository, events), repository, events };
+  }
+
+  const to = (status: RestaurantStatus) => RestaurantStatusUpdateRequest.initialize({ status });
+
+  it('refuses to close a restaurant that still has orders to accept or prepare', async () => {
+    const { service, repository, events } = newStatusChanger(2);
+
+    await expect(service.updateStatus(owner, restaurant.id, to(RestaurantStatus.Closed))).rejects.toBeInstanceOf(
+      ConflictError,
+    );
+    expect(repository.updateStatus).not.toHaveBeenCalled();
+    expect(events.publish).not.toHaveBeenCalled();
+  });
+
+  it('closes a restaurant once it has no orders left to accept or prepare', async () => {
+    const { service } = newStatusChanger(0);
+
+    const updated = await service.updateStatus(owner, restaurant.id, to(RestaurantStatus.Closed));
+
+    expect(updated.status).toBe(RestaurantStatus.Closed);
+  });
+
+  it('pauses a restaurant even while it has orders in progress, which it must still finish', async () => {
+    const { service, repository } = newStatusChanger(2);
+
+    const updated = await service.updateStatus(owner, restaurant.id, to(RestaurantStatus.Paused));
+
+    expect(updated.status).toBe(RestaurantStatus.Paused);
+    expect(repository.countOrdersInProgress).not.toHaveBeenCalled();
   });
 });

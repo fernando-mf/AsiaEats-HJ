@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { EventsService } from '#domain/events/index.js';
-import { ForbiddenError, InvalidParamsError } from '#domain/errors.js';
+import { ConflictError, ForbiddenError, InvalidParamsError } from '#domain/errors.js';
 import { AccountRole, type Actor } from '#domain/reg/index.js';
 import {
   MenuItem,
@@ -32,6 +32,8 @@ export abstract class RestaurantRepository {
   abstract getById(id: string): Promise<Restaurant>;
   abstract getByOwnerId(ownerId: string): Promise<Restaurant>;
   abstract list(filter?: RestaurantFilter): Promise<RestaurantSearchResult[]>;
+  // How many of the restaurant's orders are still placed, accepted or preparing.
+  abstract countOrdersInProgress(restaurantId: string): Promise<number>;
 
   abstract createMenuItem(menuItem: MenuItem): Promise<MenuItem>;
   abstract getMenuItem(restaurantId: string, itemId: string): Promise<MenuItem>;
@@ -117,9 +119,15 @@ export class RestaurantsService {
       return restaurant;
     }
 
-    // Pausing or closing only stops new orders: placing one requires an open restaurant
-    // (R-ORD-02). Orders already in flight stay on the board and must still be finished, as the
-    // project description asks of a paused restaurant, so the status change doesn't touch them.
+    // Pausing stops new orders only (R-ORD-02): a paused restaurant must still finish the orders it
+    // has. Closing it is refused while it still has orders to accept or prepare (placed, accepted
+    // or preparing), so none is left behind; pause first and finish them.
+    if (
+      request.status === RestaurantStatus.Closed &&
+      (await this.repository.countOrdersInProgress(restaurant.id)) > 0
+    ) {
+      throw new ConflictError('the restaurant still has orders to accept or prepare; pause it and finish them first');
+    }
 
     restaurant.status = request.status;
     restaurant.updatedAt = new Date();

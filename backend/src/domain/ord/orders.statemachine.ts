@@ -46,6 +46,10 @@ export class OrderStateMachine {
     return this.moveTo(this.state.deliver());
   }
 
+  refund(): OrderStatusChangedEvent {
+    return this.moveTo(this.state.refund(this.actor));
+  }
+
   private moveTo(next: OrderState, extra: { reason?: string } = {}): OrderStatusChangedEvent {
     const previousStatus = this.state.status;
     this.state = next;

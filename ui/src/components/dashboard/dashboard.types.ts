@@ -81,6 +81,57 @@ export type Order = {
   lines: OrderLine[];
   createdAt: string;
   updatedAt?: string;
+  // What the order was charged, set once it is delivered (R-PRC-02, R-PRC-03); null before.
+  billing?: BillingDetails | null;
+};
+
+export type FareComponentKind = 'subtotal' | 'delivery_fee' | 'service_fee' | 'small_order_surcharge';
+
+// One part of a fare, in dollars. The small-order surcharge is only listed when it was charged.
+export type FareComponent = {
+  kind: FareComponentKind;
+  amount: number;
+};
+
+export type BillingDetails = {
+  orderId: string;
+  summary: {
+    lines: OrderLine[];
+    fare: { components: FareComponent[]; total: number };
+    placedAt: string;
+    deliveredAt: string;
+  };
+  ledger: {
+    // delivered, or refunded once refunded.
+    finalState: string;
+    placedAt: string;
+    deliveredAt: string;
+    // What the delivery was charged; a refund doesn't change it.
+    totalCharge: number;
+    refund: { amount: number; refundedAt: string } | null;
+  };
+};
+
+// One entry of the billing ledger (GET /ledger, R-PRC-03): what an order was charged when it
+// reached its final state, or a refund of that charge. Amounts are in dollars; a refund's are
+// negative. Rejected and cancelled orders are recorded with nothing charged.
+export type LedgerEntry = {
+  id: string;
+  orderId: string;
+  kind: 'charge' | 'refund';
+  // The order's state when the entry was recorded: delivered, rejected, cancelled or refunded.
+  orderStatus: string;
+  customerId: string;
+  restaurantId: string;
+  subtotal: number;
+  deliveryFee: number;
+  serviceFee: number;
+  smallOrderSurcharge: number;
+  total: number;
+  orderPlacedAt: string;
+  // When the order reached the state above.
+  orderClosedAt: string;
+  recordedAt: string;
 };
 
 // Status of the courier's active assignment. "offered" waits for the courier to accept or
@@ -119,8 +170,7 @@ export type OrderAction = 'accept' | 'reject' | 'prepare' | 'ready';
 export type RunAction = <T>(action: () => Promise<T>) => Promise<T | undefined>;
 export type ShowToast = (message: string, variant?: ToastVariant, action?: ToastAction) => void;
 
-export type CourierStatus = 'offline' | 'idle' | 'assigned' | 'carrying';
-
+// A courier as the operator's city map shows it; CourierStatus is defined with CourierProfile above.
 export type CourierSummary = {
   id: string;
   position: Position | null;

@@ -128,6 +128,7 @@ enum OrderStatus {
   ready
   picked_up
   delivered
+  refunded
   rejected
   cancelled
 
@@ -150,14 +151,50 @@ model Order {
   createdAt          DateTime    @map("created_at")
   updatedAt          DateTime    @map("updated_at")
 
-  customer   Account     @relation(fields: [customerId], references: [id])
-  restaurant Restaurant  @relation(fields: [restaurantId], references: [id])
-  lines      OrderLine[]
-  assignment DeliveryAssignment?
+  customer      Account             @relation(fields: [customerId], references: [id])
+  restaurant    Restaurant          @relation(fields: [restaurantId], references: [id])
+  lines         OrderLine[]
+  ledgerEntries LedgerEntry[]
+  assignment    DeliveryAssignment?
 
   @@index([customerId])
   @@index([restaurantId])
   @@map("orders")
+}
+
+enum LedgerEntryKind {
+  charge
+  refund
+
+  @@map("ledger_entry_kind")
+}
+
+// The ledger (R-PRC-03): one charge per order that reached its final state, with the fare's
+// breakdown, and a separate refund entry for a refunded order (R-PRC-05). Entries are only
+// ever added.
+model LedgerEntry {
+  id                  String          @id @default(uuid(7)) @db.Uuid
+  orderId             String          @map("order_id") @db.Uuid
+  kind                LedgerEntryKind
+  orderStatus         OrderStatus     @map("order_status")
+  customerId          String          @map("customer_id") @db.Uuid
+  restaurantId        String          @map("restaurant_id") @db.Uuid
+  subtotal            Decimal         @db.Decimal(10, 2)
+  deliveryFee         Decimal         @map("delivery_fee") @db.Decimal(10, 2)
+  serviceFee          Decimal         @map("service_fee") @db.Decimal(10, 2)
+  smallOrderSurcharge Decimal         @map("small_order_surcharge") @db.Decimal(10, 2)
+  total               Decimal         @db.Decimal(10, 2)
+  orderPlacedAt       DateTime        @map("order_placed_at")
+  orderClosedAt       DateTime        @map("order_closed_at")
+  recordedAt          DateTime        @map("recorded_at")
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  // An order has at most one charge and one refund.
+  @@unique([orderId, kind])
+  @@index([customerId])
+  @@index([restaurantId])
+  @@map("ledger_entries")
 }
 
 model OrderLine {

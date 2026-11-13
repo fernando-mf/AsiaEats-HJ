@@ -380,6 +380,7 @@ input:-webkit-autofill:focus {
 
 .pill--amber,
 .order-status.status-pill-preparing,
+.order-status.status-pill-refunded,
 .restaurant-status.status-paused {
   color: var(--amber-ink);
   background: var(--amber-soft);
@@ -405,6 +406,12 @@ input:-webkit-autofill:focus {
 .restaurant-status.status-closed {
   color: var(--text-2);
   background: var(--surface-2);
+}
+
+/* An amount that was charged, then refunded. */
+.money-refunded {
+  color: var(--text-3);
+  text-decoration: line-through;
 }
 
 /* ---------- Dish placeholder art ---------- */
