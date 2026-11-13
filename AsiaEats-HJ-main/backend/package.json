@@ -1,0 +1,61 @@
+{
+  "name": "backend",
+  "version": "0.0.0",
+  "private": true,
+  "description": "EatChinese NestJS API",
+  "type": "module",
+  "imports": {
+    "#application/*": {
+      "source": "./src/application/*",
+      "default": "./dist/application/*"
+    },
+    "#domain/*": {
+      "source": "./src/domain/*",
+      "default": "./dist/domain/*"
+    },
+    "#infrastructure/*": {
+      "source": "./src/infrastructure/*",
+      "default": "./dist/infrastructure/*"
+    }
+  },
+  "scripts": {
+    "build": "pnpm db:generate && nest build",
+    "dev": "nest start --watch --env-file .env",
+    "start": "node dist/application/main.js",
+    "seed": "pnpm build && node integration/seed.ts",
+    "openapi": "pnpm build && node --env-file-if-exists=.env dist/application/openapi.js",
+    "deps:up": "docker compose -f integration/docker-compose.yml up",
+    "deps:down": "docker compose -f integration/docker-compose.yml down",
+    "db:generate": "prisma generate --config integration/prisma/prisma.config.ts",
+    "db:migrate": "prisma migrate dev --config integration/prisma/prisma.config.ts",
+    "db:deploy": "prisma migrate deploy --config integration/prisma/prisma.config.ts",
+    "postinstall": "pnpm db:generate",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@nestjs/common": "^12.0.1",
+    "@nestjs/config": "^12.0.1",
+    "@nestjs/core": "^12.0.1",
+    "@nestjs/jwt": "^12.0.3",
+    "@nestjs/platform-express": "^12.0.1",
+    "@nestjs/swagger": "^12.0.2",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "uuid": "^14.0.3",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^12.0.0",
+    "@nestjs/schematics": "^12.0.0",
+    "@types/node": "^24.19.2",
+    "prisma": "7.10.0",
+    "typescript": "^6.0.2",
+    "vitest": "^5.0.5"
+  }
+}

@@ -1,0 +1,20 @@
+:root {
+  color-scheme: dark;
+  --color-background: #0a1110;
+  --color-surface: #111a18;
+  --color-surface-secondary: #172320;
+  --color-border: #22322e;
+  --color-border-strong: #30443f;
+  --color-text: #e7f0ed;
+  --color-text-secondary: #9aaea7;
+  --color-primary: #0e7468;
+  --color-primary-hover: #0a5d54;
+  --color-primary-soft: #10302b;
+  --color-accent: #178a5c;
+  --color-error: #f29a8d;
+  --color-error-soft: #2a1917;
+  --color-focus: #5dc2ad;
+  --font-body: 'Geist', 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-display: 'Avenir Next', 'Segoe UI', sans-serif;
+  --shadow-elevated: 0 24px 56px rgba(0, 0, 0, 0.28);
+}

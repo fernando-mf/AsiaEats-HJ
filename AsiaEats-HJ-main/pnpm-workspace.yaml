@@ -1,0 +1,7 @@
+packages:
+  - backend
+  - ui
+allowBuilds:
+  '@prisma/engines': true
+  prisma: true
+  '@scarf/scarf': false

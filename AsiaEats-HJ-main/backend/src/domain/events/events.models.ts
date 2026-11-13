@@ -1,0 +1,53 @@
+import { plainToInstance } from 'class-transformer';
+import { IsNotEmpty, IsString } from 'class-validator';
+import { v7 as uuidv7 } from 'uuid';
+import type { Actor } from '#domain/reg/index.js';
+
+type EventParams<TPayload> = {
+  entityId: string;
+  payload?: TPayload;
+  actor?: Actor | null;
+};
+
+// Event represents a domain event. Other modules' events inherit from this one
+export abstract class Event<TPayload = object> {
+  readonly id = uuidv7();
+
+  abstract readonly entityType: string;
+  abstract readonly eventType: string;
+  readonly occurredAt = new Date();
+
+  readonly entityId: string;
+  readonly payload: TPayload;
+  readonly actor: Actor | null;
+
+  constructor(params: EventParams<TPayload>) {
+    this.entityId = params.entityId;
+    this.payload = params.payload ?? (null as TPayload);
+    this.actor = params.actor ?? null;
+  }
+}
+
+export class StoredEvent {
+  id: string;
+  entityType: string;
+  entityId: string;
+  eventType: string;
+  payload: Record<string, unknown>;
+  actor: Actor | null;
+  occurredAt: Date;
+}
+
+export class GetByEntityQuery {
+  @IsString()
+  @IsNotEmpty()
+  entityType: string;
+
+  @IsString()
+  @IsNotEmpty()
+  entityId: string;
+
+  static initialize(raw: GetByEntityQuery): GetByEntityQuery {
+    return plainToInstance(GetByEntityQuery, raw);
+  }
+}
