@@ -65,6 +65,10 @@ export class PrismaCourierRepository extends CourierRepository {
         SELECT account_id
         FROM couriers
         WHERE status = 'idle' AND latitude IS NOT NULL AND longitude IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM delivery_assignments d
+            WHERE d.courier_id = couriers.account_id AND d.status = 'offered'
+          )
         ORDER BY earth_distance(
                    ll_to_earth(latitude, longitude),
                    ll_to_earth(${origin.latitude}::float8, ${origin.longitude}::float8)

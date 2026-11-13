@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { AssignmentStatus } from '#domain/dlv/index.js';
 import { CourierStatus } from '#domain/reg/index.js';
-import { createReadyOrder, purgeDatabase, putCourierOnline } from './helpers.ts';
+import { createReadyOrder, getAssignmentByOrderId, purgeDatabase, putCourierOnline } from './helpers.ts';
 
-// A courier that was offered an order is reserved, so its status shows whether an offer happened.
 async function statusOf(courier: Awaited<ReturnType<typeof putCourierOnline>>) {
   return (await courier.couriers.me()).status;
 }
@@ -10,12 +10,14 @@ async function statusOf(courier: Awaited<ReturnType<typeof putCourierOnline>>) {
 describe('dispatcher retry', () => {
   it('offers a queued order when a courier goes online', async () => {
     await purgeDatabase();
-
-    await createReadyOrder('a');
+    const { orderId } = await createReadyOrder('o1');
+    expect((await getAssignmentByOrderId(orderId)).status).toBe(AssignmentStatus.Queued);
 
     const courier = await putCourierOnline('courier1');
 
-    expect(await statusOf(courier)).toBe(CourierStatus.Assigned);
+    const assignment = await getAssignmentByOrderId(orderId);
+    expect(assignment.status).toBe(AssignmentStatus.Offered);
+    expect(assignment.courierId).toBe((await courier.couriers.me()).account.id);
   });
 
   it('does nothing when the queue is empty', async () => {
@@ -26,18 +28,21 @@ describe('dispatcher retry', () => {
     expect(await statusOf(courier)).toBe(CourierStatus.Idle);
   });
 
-  it('stops retrying once no idle courier is left', async () => {
+  it('keeps an order queued while no courier is idle', async () => {
     await purgeDatabase();
-
-    await createReadyOrder('first');
-    await createReadyOrder('second');
-    await createReadyOrder('third');
-
+    const first = await createReadyOrder('o1');
     const courier1 = await putCourierOnline('courier1');
+    await courier1.assignments.accept((await getAssignmentByOrderId(first.orderId)).id);
+    expect(await statusOf(courier1)).toBe(CourierStatus.Assigned);
+
+    const second = await createReadyOrder('o2');
+    expect((await getAssignmentByOrderId(second.orderId)).status).toBe(AssignmentStatus.Queued);
+
     const courier2 = await putCourierOnline('courier2');
 
-    expect(await statusOf(courier1)).toBe(CourierStatus.Assigned);
-    expect(await statusOf(courier2)).toBe(CourierStatus.Assigned);
+    const assignment = await getAssignmentByOrderId(second.orderId);
+    expect(assignment.status).toBe(AssignmentStatus.Offered);
+    expect(assignment.courierId).toBe((await courier2.couriers.me()).account.id);
   });
 
   // TODO(#121): once assignments can be listed, assert that the oldest queued order is offered first.
@@ -46,6 +51,6 @@ describe('dispatcher retry', () => {
   // TODO(stalled-order task): once an assignment can be stalled through the API, assert it is not retried.
   it.todo('does not retry a stalled order');
 
-  // TODO(#123): once a delivery can be completed through the API, assert a queued order is offered then.
+  // TODO(delivery completion task): once a delivery can be completed through the API, assert a queued order is offered then.
   it.todo('offers a queued order when a courier finishes a delivery');
 });
