@@ -7,7 +7,12 @@ import {
   RestaurantsService,
   type Order,
 } from '#domain/ord/index.js';
-import { CouriersService } from '#domain/reg/index.js';
+import {
+  CouriersService,
+  CourierStatus,
+  CourierStatusChangedEvent,
+  InvalidCourierTransitionError,
+} from '#domain/reg/index.js';
 import {
   Assignment,
   AssignmentOfferedEvent,
@@ -19,6 +24,7 @@ export abstract class AssignmentRepository {
   abstract create(assignment: Assignment): Promise<Assignment>;
   abstract update(assignment: Assignment): Promise<Assignment>;
   abstract findByOrderId(orderId: string): Promise<Assignment | null>;
+  abstract findQueued(): Promise<Assignment[]>; // oldest first
 }
 
 @Injectable()
@@ -35,6 +41,37 @@ export class DispatcherService implements OnModuleInit {
 
   onModuleInit(): void {
     this.events.subscribe('order.status_changed', event => this.onOrderStatusChanged(event));
+    this.events.subscribe('courier.status_changed', event => this.onCourierStatusChanged(event));
+  }
+
+  async onCourierStatusChanged(event: Event): Promise<void> {
+    if (!(event instanceof CourierStatusChangedEvent)) {
+      return;
+    }
+    if (event.payload.newStatus !== CourierStatus.Idle) {
+      return;
+    }
+
+    await this.retryQueued();
+  }
+
+  async retryQueued(): Promise<void> {
+    const queued = await this.repository.findQueued();
+    for (const assignment of queued) {
+      try {
+        const order = await this.orders.getForDispatch(assignment.orderId);
+        const result = await this.tryOffer(assignment, order);
+        if (result.status === AssignmentStatus.Queued) {
+          return;
+        }
+        this.logger.log(`order ${order.id} dispatched on retry: ${result.status}`);
+      } catch (err) {
+        if (err instanceof InvalidCourierTransitionError) {
+          return;
+        }
+        this.logger.error(`retry of assignment ${assignment.id} failed: ${err}`);
+      }
+    }
   }
 
   async onOrderStatusChanged(event: Event): Promise<void> {
@@ -61,6 +98,10 @@ export class DispatcherService implements OnModuleInit {
 
     const assignment = await this.queue(order);
 
+    return this.tryOffer(assignment, order);
+  }
+
+  private async tryOffer(assignment: Assignment, order: Order): Promise<Assignment> {
     const restaurant = await this.restaurants.getById(order.restaurantId);
     const courier = await this.couriers.findClosestAvailable(restaurant.position);
     if (!courier) {

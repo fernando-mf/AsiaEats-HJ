@@ -122,6 +122,10 @@ export class OrdersService {
     }
   }
 
+  getForDispatch(id: string): Promise<Order> {
+    return this.repository.getById(id);
+  }
+
   async find(actor: Actor, request: OrderSearchRequest): Promise<Order[]> {
     const errors = await validate(request);
     if (errors.length > 0) {

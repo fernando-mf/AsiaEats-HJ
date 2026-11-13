@@ -100,8 +100,6 @@ export class CouriersService implements AccountCreationHandler {
 
   async goOnline(courierId: string): Promise<void> {
     await this.updateCourierStatus(courierId, CourierStatus.Idle);
-
-    // TODO: retry assignment of the orders waiting in the dispatch queue (order dispatcher task).
   }
 
   async goOffline(courierId: string): Promise<void> {

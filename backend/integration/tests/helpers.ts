@@ -1,9 +1,10 @@
 import { PrismaPg } from '@prisma/adapter-pg';
+import { RestaurantStatus } from '#domain/ord/index.js';
 import { AccountRole } from '#domain/reg/index.js';
 import { hashPassword } from '#domain/reg/accounts.helpers.js';
 import type { CourierResponse } from '#application/controllers/responses.dto.js';
 import { PrismaClient } from '#infrastructure/generated/prisma/client.js';
-import type { Client } from '../client/client.ts';
+import { Client } from '../client/client.ts';
 
 export async function createCourier(client: Client, username: string): Promise<CourierResponse> {
   const password = 'password123';
@@ -57,4 +58,55 @@ export async function purgeDatabase(): Promise<void> {
   } finally {
     await db.$disconnect();
   }
+}
+
+const RESTAURANT_POSITION = { latitude: 45.5, longitude: -73.56 };
+
+export async function createReadyOrder(name: string): Promise<{ orderId: string }> {
+  const password = 'password123';
+
+  const restaurantClient = new Client();
+  await restaurantClient.accounts.create({
+    role: AccountRole.Restaurant,
+    username: `${name}-owner`,
+    password,
+    name: `${name} owner`,
+  });
+  await restaurantClient.accounts.login({ username: `${name}-owner`, password });
+  const restaurant = await restaurantClient.restaurants.create({
+    name: `${name} restaurant`,
+    status: RestaurantStatus.Open,
+    position: RESTAURANT_POSITION,
+  });
+  const item = await restaurantClient.restaurants.createMenuItem(restaurant.id, { name: 'Dumplings', price: 9.5 });
+
+  const customerClient = new Client();
+  await customerClient.accounts.create({
+    role: AccountRole.Customer,
+    username: `${name}-customer`,
+    password,
+    name: `${name} customer`,
+  });
+  await customerClient.accounts.login({ username: `${name}-customer`, password });
+  await customerClient.customers.update({
+    address: { street: '1 Main St', city: 'Montreal', postalCode: 'H1H1H1', ...RESTAURANT_POSITION },
+  });
+  const order = await customerClient.orders.place({
+    restaurantId: restaurant.id,
+    items: [{ menuItemId: item.id, quantity: 1 }],
+  });
+
+  await restaurantClient.orders.accept(order.id);
+  await restaurantClient.orders.prepare(order.id);
+  await restaurantClient.orders.ready(order.id);
+
+  return { orderId: order.id };
+}
+
+export async function putCourierOnline(username: string): Promise<Client> {
+  const client = new Client();
+  await createCourier(client, username);
+  await client.couriers.updatePosition({ position: RESTAURANT_POSITION });
+  await client.couriers.goOnline();
+  return client;
 }
