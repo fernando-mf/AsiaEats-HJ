@@ -102,3 +102,15 @@ export type CourierSummary = {
   position: Position | null;
   status: CourierStatus;
 };
+
+export type AssignmentStatus = 'queued' | 'offered' | 'accepted' | 'stalled' | 'delivered';
+
+export type OrderAssignment = {
+  id: string;
+  orderId: string;
+  courierId: string | null;
+  status: AssignmentStatus;
+  declinedCourierIds?: string[];
+  createdAt: string;
+  updatedAt: string;
+};

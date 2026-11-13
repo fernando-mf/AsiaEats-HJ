@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { requestJson } from '../../shared/api/client';
 import { findNeighbourhood, montrealNeighbourhoods } from '../../shared/locations/montrealNeighbourhoods';
-import type { CourierSummary, Order, Restaurant } from '../dashboard/dashboard.types';
-import { IconAlert, IconClose, IconStore } from '../icons/Icons';
+import type { CourierSummary, Order, OrderAssignment, Position, Restaurant } from '../dashboard/dashboard.types';
+import { IconAlert, IconClose, IconPin, IconStore } from '../icons/Icons';
+import { orderNumber } from '../restaurant/orderTime';
 import {
   calculateDatasetBounds,
+  findCourierAssignment,
   getCourierMarkerStyle,
+  getDeliveryRouteDetails,
   getOnDutyCouriers,
   projectCoordinates,
+  type DeliveryRouteDetails,
 } from './cityMapUtils';
 import './city-map.css';
 
@@ -20,30 +24,44 @@ type CityMapProps = {
   couriers?: CourierSummary[];
   restaurants?: Restaurant[];
   orders?: Order[];
+  assignments?: OrderAssignment[];
   updatedAt?: Date;
   busy?: string | null;
   onRefresh?: () => void;
 };
 
-// CityMap renders the platform city map with live couriers and restaurant locations.
+type ActiveRoute = {
+  courier: CourierSummary & { position: Position };
+  details: DeliveryRouteDetails;
+};
+
+// CityMap renders the platform city map with live couriers, restaurants, and active delivery routes.
 export function CityMap({
   couriers: propCouriers,
   restaurants = [],
+  orders = [],
+  assignments: propAssignments,
   updatedAt: propUpdatedAt,
   busy = null,
   onRefresh,
 }: CityMapProps) {
   const [internalCouriers, setInternalCouriers] = useState<CourierSummary[]>([]);
+  const [internalAssignments, setInternalAssignments] = useState<OrderAssignment[]>([]);
   const [internalUpdatedAt, setInternalUpdatedAt] = useState<Date>();
   const [selectedCourierId, setSelectedCourierId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'idle' | 'assigned' | 'carrying'>('all');
   const [showRestaurants, setShowRestaurants] = useState(true);
+  const [showRoutes, setShowRoutes] = useState(true);
 
-  // If couriers are not passed via props, load directly from GET /api/couriers
-  const loadCouriers = useCallback(async () => {
+  // If couriers or assignments are not passed via props, load directly from API
+  const loadData = useCallback(async () => {
     try {
-      const data = await requestJson<CourierSummary[]>('/couriers');
-      setInternalCouriers(data);
+      const [couriersData, assignmentsData] = await Promise.all([
+        requestJson<CourierSummary[]>('/couriers'),
+        requestJson<OrderAssignment[]>('/order-assignments'),
+      ]);
+      setInternalCouriers(couriersData);
+      setInternalAssignments(assignmentsData);
       setInternalUpdatedAt(new Date());
     } catch {
       // Background / unauthenticated errors are handled at top level
@@ -51,12 +69,13 @@ export function CityMap({
   }, []);
 
   useEffect(() => {
-    if (!propCouriers) {
-      void loadCouriers();
+    if (!propCouriers || !propAssignments) {
+      void loadData();
     }
-  }, [loadCouriers, propCouriers]);
+  }, [loadData, propAssignments, propCouriers]);
 
   const couriers = propCouriers ?? internalCouriers;
+  const assignments = propAssignments ?? internalAssignments;
   const updatedAt = propUpdatedAt ?? internalUpdatedAt;
 
   // Filter couriers to on-duty only (not offline) with valid geographic coordinates
@@ -67,16 +86,38 @@ export function CityMap({
   const assignedCount = onDutyCouriers.filter(c => c.status === 'assigned').length;
   const carryingCount = onDutyCouriers.filter(c => c.status === 'carrying').length;
 
+  // Compute active delivery routes for couriers heading to pickup or customer
+  const activeRoutes = useMemo<ActiveRoute[]>(() => {
+    const routes: ActiveRoute[] = [];
+    for (const courier of onDutyCouriers) {
+      if (courier.status === 'assigned' || courier.status === 'carrying') {
+        const assignment = findCourierAssignment(courier.id, assignments);
+        if (assignment) {
+          const details = getDeliveryRouteDetails(courier, assignment, orders, restaurants);
+          if (details) {
+            routes.push({ courier, details });
+          }
+        }
+      }
+    }
+    return routes;
+  }, [assignments, onDutyCouriers, orders, restaurants]);
+
+  // Customer drop-off destinations to include in bounds
+  const customerDestinations = useMemo(() => {
+    return activeRoutes.filter(r => r.details.targetType === 'customer').map(r => r.details.targetPosition);
+  }, [activeRoutes]);
+
   // Apply state filter if selected
   const visibleCouriers = useMemo(() => {
     if (statusFilter === 'all') return onDutyCouriers;
     return onDutyCouriers.filter(c => c.status === statusFilter);
   }, [onDutyCouriers, statusFilter]);
 
-  // Dynamic dataset bounding box encompassing all on-duty couriers, restaurants, and landmark locations
+  // Dynamic dataset bounding box encompassing couriers, restaurants, customer destinations, and landmarks
   const bounds = useMemo(
-    () => calculateDatasetBounds(onDutyCouriers, showRestaurants ? restaurants : []),
-    [onDutyCouriers, restaurants, showRestaurants],
+    () => calculateDatasetBounds(onDutyCouriers, showRestaurants ? restaurants : [], customerDestinations),
+    [customerDestinations, onDutyCouriers, restaurants, showRestaurants],
   );
 
   // Selected courier details
@@ -84,6 +125,16 @@ export function CityMap({
     () => onDutyCouriers.find(c => c.id === selectedCourierId) ?? null,
     [onDutyCouriers, selectedCourierId],
   );
+
+  const selectedAssignment = useMemo(() => {
+    if (!selectedCourier) return undefined;
+    return findCourierAssignment(selectedCourier.id, assignments);
+  }, [assignments, selectedCourier]);
+
+  const selectedRouteDetails = useMemo(() => {
+    if (!selectedCourier || !selectedAssignment) return null;
+    return getDeliveryRouteDetails(selectedCourier, selectedAssignment, orders, restaurants);
+  }, [orders, restaurants, selectedAssignment, selectedCourier]);
 
   const selectedNeighbourhood = useMemo(() => {
     if (!selectedCourier) return undefined;
@@ -94,7 +145,7 @@ export function CityMap({
     if (onRefresh) {
       onRefresh();
     } else {
-      void loadCouriers();
+      void loadData();
     }
   }
 
@@ -108,7 +159,8 @@ export function CityMap({
           </p>
           <h1>City map</h1>
           <p>
-            {onDutyCouriers.length} on-duty couriers · {idleCount} idle · {assignedCount} assigned · {carryingCount} carrying
+            {onDutyCouriers.length} on-duty couriers · {idleCount} idle · {assignedCount} assigned · {carryingCount}{' '}
+            carrying · {activeRoutes.length} active deliveries
           </p>
         </div>
 
@@ -188,6 +240,14 @@ export function CityMap({
           >
             Restaurants
           </button>
+          <button
+            type="button"
+            className={`filter-chip ${showRoutes ? 'is-active' : ''}`}
+            onClick={() => setShowRoutes(!showRoutes)}
+            title="Toggle delivery routes visibility"
+          >
+            Routes ({activeRoutes.length})
+          </button>
         </div>
       </div>
 
@@ -203,8 +263,8 @@ export function CityMap({
               <div className="city-map-empty-text">
                 <strong>No on-duty couriers</strong>
                 <p>
-                  All couriers are currently offline. When a courier goes online, their live marker and status badge will
-                  appear on the map automatically.
+                  All couriers are currently offline. When a courier goes online, their live marker and status badge
+                  will appear on the map automatically.
                 </p>
               </div>
             </div>
@@ -229,11 +289,7 @@ export function CityMap({
           <rect width={MAP_WIDTH} height={MAP_HEIGHT} fill="url(#city-grid)" />
 
           {/* St. Lawrence River artistic landmark */}
-          <path
-            className="city-map-river"
-            d="M 550,650 Q 720,520 850,380 T 1000,180 L 1000,650 Z"
-            aria-hidden="true"
-          />
+          <path className="city-map-river" d="M 550,650 Q 720,520 850,380 T 1000,180 L 1000,650 Z" aria-hidden="true" />
 
           {/* Landmark Neighbourhood text labels */}
           <g className="city-map-neighbourhoods" aria-hidden="true">
@@ -244,12 +300,42 @@ export function CityMap({
                 MAP_WIDTH,
                 MAP_HEIGHT,
               );
-              // Avoid rendering labels out of bounds
               if (x < 30 || x > MAP_WIDTH - 30 || y < 20 || y > MAP_HEIGHT - 20) return null;
               return (
                 <text key={n.id} x={x} y={y + 14} className="city-map-neighbourhood-label">
                   {n.name.split(' (')[0]}
                 </text>
+              );
+            })}
+          </g>
+
+          {/* Active delivery routes (vector lines connecting couriers to their destination) */}
+          <g className="city-map-routes" aria-label="Active delivery routes">
+            {activeRoutes.map(({ courier, details }) => {
+              const isSelected = selectedCourierId === courier.id;
+              if (!showRoutes && !isSelected) return null;
+
+              const start = projectCoordinates(courier.position, bounds, MAP_WIDTH, MAP_HEIGHT);
+              const dest = projectCoordinates(details.targetPosition, bounds, MAP_WIDTH, MAP_HEIGHT);
+
+              return (
+                <g key={`route-${courier.id}`} className="city-map-route-group">
+                  <line
+                    className={`city-map-route-line is-${courier.status} ${isSelected ? 'is-selected' : ''}`}
+                    x1={start.x}
+                    y1={start.y}
+                    x2={dest.x}
+                    y2={dest.y}
+                  />
+                  {/* Customer delivery drop-off pin */}
+                  {details.targetType === 'customer' && (
+                    <g className="city-map-destination-pin" transform={`translate(${dest.x}, ${dest.y})`}>
+                      <title>{`Drop-off: ${details.targetLabel}`}</title>
+                      <circle className="destination-pin-bg" r="11" />
+                      <circle cx="0" cy="0" r="4" fill="var(--primary-ink, #2563eb)" />
+                    </g>
+                  )}
+                </g>
               );
             })}
           </g>
@@ -268,7 +354,6 @@ export function CityMap({
                   >
                     <title>{`${restaurant.name} - ${restaurant.status}`}</title>
                     <circle className="restaurant-marker-bg" r="11" />
-                    {/* Small store roof/body glyph */}
                     <path
                       d="M -5,-2 L 5,-2 L 4,4 L -4,4 Z M -6,-2 L 0,-6 L 6,-2"
                       fill="none"
@@ -305,13 +390,7 @@ export function CityMap({
 
                   {/* Pulsing halo ring for active courier markers */}
                   {courier.status === 'idle' && (
-                    <circle
-                      className="courier-pulse"
-                      r="14"
-                      fill="none"
-                      stroke={style.colorVar}
-                      strokeWidth="1.5"
-                    />
+                    <circle className="courier-pulse" r="14" fill="none" stroke={style.colorVar} strokeWidth="1.5" />
                   )}
 
                   {/* Distinct marker shape based on courier state:
@@ -319,32 +398,18 @@ export function CityMap({
                       - assigned: Diamond (45° rotated polygon)
                       - carrying: Rounded Square
                   */}
-                  {style.shape === 'circle' && (
-                    <circle className="courier-shape--idle" r="13" />
-                  )}
+                  {style.shape === 'circle' && <circle className="courier-shape--idle" r="13" />}
 
                   {style.shape === 'diamond' && (
-                    <polygon
-                      className="courier-shape--assigned"
-                      points="0,-14 14,0 0,14 -14,0"
-                    />
+                    <polygon className="courier-shape--assigned" points="0,-14 14,0 0,14 -14,0" />
                   )}
 
                   {style.shape === 'square' && (
-                    <rect
-                      className="courier-shape--carrying"
-                      x="-12"
-                      y="-12"
-                      width="24"
-                      height="24"
-                      rx="5"
-                    />
+                    <rect className="courier-shape--carrying" x="-12" y="-12" width="24" height="24" rx="5" />
                   )}
 
                   {/* Inner state icon glyph */}
-                  {courier.status === 'idle' && (
-                    <circle cx="0" cy="0" r="4.5" fill={style.colorVar} />
-                  )}
+                  {courier.status === 'idle' && <circle cx="0" cy="0" r="4.5" fill={style.colorVar} />}
 
                   {courier.status === 'assigned' && (
                     <path
@@ -356,12 +421,7 @@ export function CityMap({
                   )}
 
                   {courier.status === 'carrying' && (
-                    <path
-                      d="M -4,-2 L 4,-2 L 3,4 L -3,4 Z"
-                      fill="none"
-                      stroke={style.colorVar}
-                      strokeWidth="1.75"
-                    />
+                    <path d="M -4,-2 L 4,-2 L 3,4 L -3,4 Z" fill="none" stroke={style.colorVar} strokeWidth="1.75" />
                   )}
 
                   {/* Distinct state badge label attached below the marker */}
@@ -376,11 +436,7 @@ export function CityMap({
                       fill={style.bgVar}
                       stroke={style.colorVar}
                     />
-                    <text
-                      className="courier-marker-badge"
-                      y="3.5"
-                      fill={style.colorVar}
-                    >
+                    <text className="courier-marker-badge" y="3.5" fill={style.colorVar}>
                       {style.label.toUpperCase()}
                     </text>
                   </g>
@@ -429,6 +485,65 @@ export function CityMap({
                 </div>
               )}
             </div>
+
+            {/* Active Delivery assignment & destination details */}
+            {selectedRouteDetails && (
+              <div className="city-map-detail-delivery">
+                <div className="city-map-detail-delivery-title">
+                  <span>Live delivery</span>
+                  <span
+                    className={`pill ${selectedAssignment?.status === 'stalled' ? 'pill--warning' : 'pill--primary'}`}
+                  >
+                    {selectedAssignment?.status === 'stalled' ? 'Stalled' : selectedAssignment?.status}
+                  </span>
+                </div>
+
+                <div className="detail-row">
+                  <span className="detail-row-label">Order</span>
+                  <span className="detail-row-value mono">
+                    {selectedRouteDetails.order
+                      ? orderNumber(selectedRouteDetails.order)
+                      : selectedRouteDetails.assignment.orderId.slice(0, 8)}
+                  </span>
+                </div>
+
+                {selectedRouteDetails.restaurant && (
+                  <div className="detail-row">
+                    <span className="detail-row-label">Restaurant</span>
+                    <span className="detail-row-value">{selectedRouteDetails.restaurant.name}</span>
+                  </div>
+                )}
+
+                {selectedRouteDetails.order && (
+                  <div className="detail-row">
+                    <span className="detail-row-label">Customer</span>
+                    <span className="detail-row-value">{selectedRouteDetails.order.customerName}</span>
+                  </div>
+                )}
+
+                {selectedRouteDetails.order?.deliveryAddress && (
+                  <div className="detail-row">
+                    <span className="detail-row-label">Destination</span>
+                    <span className="detail-row-value">
+                      <IconPin size={12} className="inline-icon" /> {selectedRouteDetails.order.deliveryAddress.street}
+                    </span>
+                  </div>
+                )}
+
+                <div className="detail-row">
+                  <span className="detail-row-label">Phase</span>
+                  <span className="detail-row-value">
+                    {selectedAssignment?.status === 'stalled'
+                      ? 'Stalled · Needs reassignment'
+                      : selectedCourier.status === 'assigned'
+                        ? 'Heading to pickup'
+                        : selectedCourier.status === 'carrying'
+                          ? 'In transit to customer'
+                          : 'Assigned'}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

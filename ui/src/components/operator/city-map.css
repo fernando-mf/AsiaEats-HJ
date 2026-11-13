@@ -185,7 +185,9 @@
 /* Restaurant markers */
 .city-map-restaurant-marker {
   cursor: pointer;
-  transition: transform 160ms ease, opacity 160ms ease;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
 }
 
 .city-map-restaurant-marker:hover {
@@ -394,4 +396,79 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Live Delivery Route Lines & Waypoints */
+.city-map-routes {
+  pointer-events: none;
+}
+
+.city-map-route-line {
+  stroke-dasharray: 6 5;
+  stroke-width: 2.2;
+  animation: routeDash 1.2s linear infinite;
+  opacity: 0.75;
+}
+
+.city-map-route-line.is-assigned {
+  stroke: var(--amber-ink);
+}
+
+.city-map-route-line.is-carrying {
+  stroke: var(--primary-ink, #2563eb);
+}
+
+.city-map-route-line.is-selected {
+  stroke-width: 3.5;
+  opacity: 1;
+}
+
+@keyframes routeDash {
+  to {
+    stroke-dashoffset: -22;
+  }
+}
+
+/* Customer Destination Pin */
+.city-map-destination-pin {
+  cursor: default;
+}
+
+.destination-pin-bg {
+  fill: var(--surface);
+  stroke: var(--primary-ink, #2563eb);
+  stroke-width: 2;
+}
+
+.destination-pin-label {
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--text-2);
+  text-anchor: middle;
+}
+
+/* Delivery inspector card section */
+.city-map-detail-delivery {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.city-map-detail-delivery-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.city-map-detail-stalled {
+  color: var(--amber-ink);
+  font-weight: 600;
 }
