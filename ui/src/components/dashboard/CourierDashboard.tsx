@@ -49,8 +49,8 @@ async function fetchAssignment(): Promise<CourierAssignment | null> {
 
 // CourierDashboard is the courier's view of the dashboard (R-DASH-01). It shows the courier's
 // duty status and lets them go on or off duty (R-DLV-03), and shows the order offered to them so
-// they can accept or decline it (R-DLV-02). The pickup and delivery buttons (#137) go in the
-// assignment panel.
+// they can accept or decline it (R-DLV-02). Once accepted, the courier confirms pickup and
+// delivery from the assignment panel (R-DASH-05).
 export function CourierDashboard({
   account,
   busy,
@@ -93,19 +93,25 @@ export function CourierDashboard({
   }, [loadAll]);
 
   const status = profile?.status;
-  const idle = status === 'idle';
+  const onDuty = status !== undefined && status !== 'offline';
 
-  // A courier stays idle while an order is offered to them, so new offers (and offers that are
-  // withdrawn) are found by refreshing quietly every 15 s while idle, skipping while an action
-  // runs. Once the courier accepts (assigned) or goes off duty, polling stops.
+  // While on duty, the status and assignment can change without the courier doing anything: a
+  // new offer arrives or is withdrawn while idle, or the operator cancels or reassigns the order
+  // while the courier is assigned or carrying it. So both are refreshed quietly every 15 s,
+  // skipping while an action runs. Polling stops when the courier goes off duty.
   useEffect(() => {
-    if (!idle) return;
+    if (!onDuty) return;
     const timer = window.setInterval(() => {
       if (busyRef.current !== null) return;
-      fetchAssignment().then(setAssignment).catch(onBackgroundError);
+      Promise.all([requestJson<CourierProfile>('/couriers/me'), fetchAssignment()])
+        .then(([latestProfile, latestAssignment]) => {
+          setProfile(latestProfile);
+          setAssignment(latestAssignment);
+        })
+        .catch(onBackgroundError);
     }, 15_000);
     return () => window.clearInterval(timer);
-  }, [idle, onBackgroundError]);
+  }, [onDuty, onBackgroundError]);
 
   // Both duty routes answer 204 with no body, so the profile is loaded again to show the new status.
   async function changeDuty(duty: 'online' | 'offline') {
@@ -133,6 +139,20 @@ export function CourierDashboard({
         ? `Order accepted. Head to ${offer.restaurant.name} to pick it up.`
         : 'Offer declined. It will be offered to another courier.',
     );
+  }
+
+  // confirmStep confirms pickup or delivery. Both routes answer the plain assignment, and the
+  // courier's status changes too (assigned -> carrying -> idle), so both are loaded again. After
+  // delivery there is no active assignment, and a new offer may already be waiting.
+  async function confirmStep(current: CourierAssignment, step: 'pickup' | 'deliver') {
+    const done = await run(async () => {
+      await requestJson(`/order-assignments/${current.id}/${step}`, { method: 'POST' });
+      return true;
+    });
+    // Reload even after a failure: the order may have been cancelled or reassigned meanwhile.
+    await loadAll();
+    if (!done) return;
+    showToast(step === 'pickup' ? 'Order picked up. Deliver it to the customer.' : 'Order delivered.');
   }
 
   const canGoOffDuty = status !== undefined && status !== 'offline' && status !== 'carrying';
@@ -192,6 +212,8 @@ export function CourierDashboard({
             busy={busy}
             onAccept={offer => void answerOffer(offer, 'accept')}
             onDecline={offer => void answerOffer(offer, 'decline')}
+            onPickUp={current => void confirmStep(current, 'pickup')}
+            onDeliver={current => void confirmStep(current, 'deliver')}
           />
         ) : null}
       </div>
