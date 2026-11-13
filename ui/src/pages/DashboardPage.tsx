@@ -112,7 +112,14 @@ export function DashboardPage() {
           onLogout={logout}
         />
       ) : account?.role === 'courier' ? (
-        <CourierDashboard account={account} busy={busy} run={run} showToast={showToast} onLogout={logout} />
+        <CourierDashboard
+          account={account}
+          busy={busy}
+          run={run}
+          showToast={showToast}
+          onLogout={logout}
+          onBackgroundError={handleBackgroundError}
+        />
       ) : isRestaurant ? (
         <RestaurantDashboard
           account={account}

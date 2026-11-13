@@ -83,6 +83,19 @@ export type Order = {
   updatedAt?: string;
 };
 
+// Status of the courier's active assignment. "offered" waits for the courier to accept or
+// decline; "accepted" means the courier is assigned and heading to the restaurant.
+export type CourierAssignmentStatus = 'offered' | 'accepted';
+
+// Response of GET /couriers/me/assignment: the courier's active assignment with its order
+// and the restaurant to pick it up from.
+export type CourierAssignment = {
+  id: string;
+  status: CourierAssignmentStatus;
+  order: Order;
+  restaurant: Restaurant;
+};
+
 // One entry of the event log (GET /events): a state change and who made it.
 export type StoredEvent = {
   id: string;
