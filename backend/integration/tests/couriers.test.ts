@@ -7,6 +7,8 @@ import { CourierResponse } from '#application/controllers/responses.dto.js';
 describe('couriers', () => {
   describe('create', () => {
     it('success', async () => {
+      await purgeDatabase();
+
       const client = new Client();
 
       const username = `courier1`;

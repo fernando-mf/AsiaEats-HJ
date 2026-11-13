@@ -59,12 +59,17 @@ export class PrismaCourierRepository extends CourierRepository {
     }
   }
 
-  async findClosestIdle(origin: Position): Promise<Courier | null> {
+  async findClosestIdle(origin: Position, excludeIds: string[] = []): Promise<Courier | null> {
     try {
       const rows = await this.db.client().$queryRaw<{ account_id: string }[]>(Prisma.sql`
         SELECT account_id
         FROM couriers
         WHERE status = 'idle' AND latitude IS NOT NULL AND longitude IS NOT NULL
+          AND account_id <> ALL(${excludeIds}::uuid[])
+          AND NOT EXISTS (
+            SELECT 1 FROM delivery_assignments d
+            WHERE d.courier_id = couriers.account_id AND d.status = 'offered'
+          )
         ORDER BY earth_distance(
                    ll_to_earth(latitude, longitude),
                    ll_to_earth(${origin.latitude}::float8, ${origin.longitude}::float8)

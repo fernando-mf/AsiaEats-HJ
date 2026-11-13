@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+import { AssignmentRepository } from '#domain/dlv/index.js';
 import { EnvironmentRepository, SeedSource } from '#domain/env/index.js';
 import { EventRepository } from '#domain/events/index.js';
 import { AccountRepository, CourierRepository, CustomerProfileRepository } from '#domain/reg/index.js';
@@ -7,6 +8,7 @@ import { LedgerRepository, PricingSource } from '#domain/prc/index.js';
 import { TransactionRunner } from '#domain/transactions.js';
 import { PrismaService } from './prisma.service.js';
 import { PrismaTransactionRunner } from './prisma.transactions.js';
+import { PrismaAssignmentRepository } from './dlv/assignments.prismarepository.js';
 import { PrismaEnvironmentRepository } from './env/environment.prismarepository.js';
 import { FileSeedSource } from './env/seed.filesource.js';
 import { PrismaEventRepository } from './events/events.prismarepository.js';
@@ -23,6 +25,7 @@ import { FilePricingSource } from './prc/pricing.filesource.js';
   providers: [
     PrismaService,
     { provide: AccountRepository, useClass: PrismaAccountRepository },
+    { provide: AssignmentRepository, useClass: PrismaAssignmentRepository },
     { provide: CourierRepository, useClass: PrismaCourierRepository },
     { provide: CustomerProfileRepository, useClass: PrismaCustomerProfileRepository },
     { provide: EnvironmentRepository, useClass: PrismaEnvironmentRepository },
@@ -36,6 +39,7 @@ import { FilePricingSource } from './prc/pricing.filesource.js';
   ],
   exports: [
     AccountRepository,
+    AssignmentRepository,
     CourierRepository,
     CustomerProfileRepository,
     EnvironmentRepository,

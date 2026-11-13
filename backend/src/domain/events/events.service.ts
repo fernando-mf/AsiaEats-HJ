@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { Event, GetByEntityQuery, StoredEvent } from './events.models.js';
 import { InvalidParamsError } from '#domain/errors.js';
@@ -8,34 +8,43 @@ export abstract class EventRepository {
   abstract findByEntity(entityType: string, entityId: string): Promise<StoredEvent[]>;
 }
 
-// Observer pattern. An EventSubscriber reacts to the events other modules publish, without
-// the publisher knowing it exists: e.g. PRC records the ledger entry when ORD reports that an
-// order reached its final state.
-export interface EventSubscriber {
-  handle(event: Event): Promise<void>;
-}
+export type EventHandler = (event: Event) => Promise<void> | void;
 
-// EventsService is the subject: publish records the event in the append-only log (R-ORD-05),
-// then notifies every subscriber in turn. Publishing runs inside the command's transaction, so
-// a subscriber that fails rolls the state change back with it: the change and its consequences
-// are saved together or not at all.
-//
-// Subscribers attach themselves with subscribe() when the app starts, rather than being
-// injected into EventsService, so a subscriber can also publish events of its own.
+export type SubscribeOptions = {
+  // A critical handler's failure fails the publish, so the command's transaction rolls back and
+  // the state change is not saved without its consequence: e.g. an order is never delivered or
+  // refunded without its ledger entry (R-PRC-03, R-PRC-05). Other handlers' failures are logged
+  // and the command goes on.
+  critical?: boolean;
+};
+
+type Subscription = { handler: EventHandler; critical: boolean };
+
+// Observer pattern. EventsService is the subject: publish records the event in the append-only
+// log (R-ORD-05), then notifies the handlers subscribed to its type, in the command's transaction.
+// Modules subscribe when the app starts, so the publisher never knows who reacts to its events.
 @Injectable()
 export class EventsService {
-  private readonly subscribers: EventSubscriber[] = [];
+  private readonly logger = new Logger(EventsService.name);
+  private readonly handlers = new Map<string, Subscription[]>();
 
   constructor(private readonly events: EventRepository) {}
 
-  subscribe(subscriber: EventSubscriber): void {
-    if (!this.subscribers.includes(subscriber)) this.subscribers.push(subscriber);
+  subscribe(eventType: string, handler: EventHandler, options: SubscribeOptions = {}): void {
+    const subscription = { handler, critical: options.critical ?? false };
+    this.handlers.set(eventType, [...(this.handlers.get(eventType) ?? []), subscription]);
   }
 
   async publish(event: Event): Promise<void> {
     await this.events.append(event);
-    for (const subscriber of this.subscribers) {
-      await subscriber.handle(event);
+
+    for (const { handler, critical } of this.handlers.get(event.eventType) ?? []) {
+      try {
+        await handler(event);
+      } catch (err) {
+        if (critical) throw err;
+        this.logger.error(`handler for ${event.eventType} failed: ${err}`);
+      }
     }
   }
 

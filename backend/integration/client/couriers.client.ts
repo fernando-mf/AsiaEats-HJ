@@ -1,3 +1,4 @@
+import type { AssignmentComplete } from '#domain/dlv/index.js';
 import type { CourierPositionUpdateRequest, CourierStatus } from '#domain/reg/index.js';
 import type { CourierResponse, CourierSummaryResponse } from '#application/controllers/responses.dto.js';
 import type { HttpClient } from './api.ts';
@@ -12,6 +13,10 @@ export class CouriersClient {
 
   me(): Promise<CourierResponse> {
     return this.http.request('GET', '/couriers/me');
+  }
+
+  assignment(): Promise<AssignmentComplete> {
+    return this.http.request('GET', '/couriers/me/assignment');
   }
 
   updatePosition(request: CourierPositionUpdateRequest): Promise<CourierResponse> {

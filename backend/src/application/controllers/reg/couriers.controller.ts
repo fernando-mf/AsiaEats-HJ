@@ -4,11 +4,13 @@ import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { AssignmentComplete, DeliveryService } from '#domain/dlv/index.js';
 import {
   AccountRole,
   type Actor,
@@ -21,6 +23,7 @@ import {
 import { CommandRunner } from '#application/commands/command-runner.js';
 import { AuthorizedCommand } from '#application/commands/decorators/authorized-command.js';
 import { LoggedCommand } from '#application/commands/decorators/logged-command.js';
+import { GetCurrentAssignmentCommand } from '#application/commands/dlv/get-current-assignment.command.js';
 import { CourierGoOfflineCommand, CourierGoOnlineCommand } from '#application/commands/reg/courier-duty.commands.js';
 import { FindCouriersCommand } from '#application/commands/reg/find-couriers.command.js';
 import { GetCourierCommand } from '#application/commands/reg/get-courier.command.js';
@@ -38,6 +41,7 @@ export class CouriersController {
 
   constructor(
     private readonly service: CouriersService,
+    private readonly delivery: DeliveryService,
     private readonly commandRunner: CommandRunner,
   ) {}
 
@@ -65,6 +69,20 @@ export class CouriersController {
 
     let command: Command<CourierSummary[]> = new FindCouriersCommand(this.service, request);
     command = new AuthorizedCommand(command, actor, getApiRoles(this.find));
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Get('me/assignment')
+  @ApiRoles(AccountRole.Courier)
+  @ApiOperation({ summary: 'Get the courier current assignment' })
+  @ApiOkResponse({ type: AssignmentComplete })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse, description: 'No active assignment' })
+  getAssignment(@CurrentActor() actor: Actor) {
+    let command: Command<AssignmentComplete> = new GetCurrentAssignmentCommand(this.delivery, actor);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.getAssignment));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);

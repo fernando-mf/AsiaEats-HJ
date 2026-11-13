@@ -1,10 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Event } from './events.models.js';
-import { type EventRepository, type EventSubscriber, EventsService } from './events.service.js';
+import { type EventRepository, EventsService } from './events.service.js';
 
 class SomethingHappenedEvent extends Event {
   readonly entityType = 'thing';
   readonly eventType = 'thing.happened';
+}
+
+class SomethingElseEvent extends Event {
+  readonly entityType = 'thing';
+  readonly eventType = 'thing.else';
 }
 
 function newEvents() {
@@ -18,48 +23,57 @@ function newEvents() {
   return { service: new EventsService(repository), repository, calls };
 }
 
+const happened = () => new SomethingHappenedEvent({ entityId: 'thing-1' });
+
 describe('EventsService', () => {
-  it('records the event, then notifies every subscriber with it, in the order they subscribed', async () => {
+  it('records the event, then calls the handlers of its type, in the order they subscribed', async () => {
     const { service, calls } = newEvents();
-    const subscriber = (name: string): EventSubscriber => ({
-      handle: vi.fn(async () => {
-        calls.push(name);
-      }),
+    const first = vi.fn(() => {
+      calls.push('first');
     });
-    const first = subscriber('first');
-    const second = subscriber('second');
-    service.subscribe(first);
-    service.subscribe(second);
-    const event = new SomethingHappenedEvent({ entityId: 'thing-1' });
+    service.subscribe('thing.happened', first);
+    service.subscribe('thing.happened', () => {
+      calls.push('second');
+    });
+    const event = happened();
 
     await service.publish(event);
 
     expect(calls).toEqual(['append', 'first', 'second']);
-    expect(first.handle).toHaveBeenCalledWith(event);
+    expect(first).toHaveBeenCalledWith(event);
   });
 
-  it('notifies a subscriber once, even if it subscribes twice', async () => {
+  it('does not call handlers subscribed to another event type', async () => {
     const { service } = newEvents();
-    const subscriber: EventSubscriber = { handle: vi.fn() };
-    service.subscribe(subscriber);
-    service.subscribe(subscriber);
+    const handler = vi.fn();
+    service.subscribe('thing.happened', handler);
 
-    await service.publish(new SomethingHappenedEvent({ entityId: 'thing-1' }));
+    await service.publish(new SomethingElseEvent({ entityId: 'thing-1' }));
 
-    expect(subscriber.handle).toHaveBeenCalledOnce();
+    expect(handler).not.toHaveBeenCalled();
   });
 
-  it("passes a subscriber's failure on, so the command's transaction rolls back", async () => {
+  it("logs a handler's failure and goes on with the next handler", async () => {
     const { service } = newEvents();
-    service.subscribe({ handle: vi.fn().mockRejectedValue(new Error('ledger down')) });
+    const next = vi.fn();
+    service.subscribe('thing.happened', vi.fn().mockRejectedValue(new Error('dispatch down')));
+    service.subscribe('thing.happened', next);
 
-    await expect(service.publish(new SomethingHappenedEvent({ entityId: 'thing-1' }))).rejects.toThrow('ledger down');
+    await expect(service.publish(happened())).resolves.toBeUndefined();
+    expect(next).toHaveBeenCalledOnce();
   });
 
-  it('works without subscribers', async () => {
+  it("passes a critical handler's failure on, so the command's transaction rolls back", async () => {
+    const { service } = newEvents();
+    service.subscribe('thing.happened', vi.fn().mockRejectedValue(new Error('ledger down')), { critical: true });
+
+    await expect(service.publish(happened())).rejects.toThrow('ledger down');
+  });
+
+  it('works without handlers', async () => {
     const { service, repository } = newEvents();
 
-    await service.publish(new SomethingHappenedEvent({ entityId: 'thing-1' }));
+    await service.publish(happened());
 
     expect(repository.append).toHaveBeenCalledOnce();
   });

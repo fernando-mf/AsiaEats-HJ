@@ -9,6 +9,7 @@ import { AccountsController } from '#application/controllers/reg/accounts.contro
 import { AuthController } from '#application/controllers/reg/auth.controller.js';
 import { CouriersController } from '#application/controllers/reg/couriers.controller.js';
 import { CustomersController } from '#application/controllers/reg/customers.controller.js';
+import { OrderAssignmentsController } from '#application/controllers/dlv/order-assignments.controller.js';
 import { EnvController } from '#application/controllers/env/env.controller.js';
 import { EventsController } from '#application/controllers/events/events.controller.js';
 import { LedgerController } from '#application/controllers/prc/ledger.controller.js';
@@ -46,6 +47,7 @@ import { JwtAuthGuard } from '#application/auth/jwt-auth.guard.js';
     EventsController,
     LedgerController,
     OrdersController,
+    OrderAssignmentsController,
     RestaurantsController,
   ],
   providers: [

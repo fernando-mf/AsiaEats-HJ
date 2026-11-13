@@ -65,12 +65,16 @@ function newLedger(current: Order) {
 }
 
 describe('LedgerService', () => {
-  it('subscribes to the published events when the app starts', () => {
-    const { service, events } = newLedger(order(OrderStatus.Placed));
+  it('subscribes to order status changes as a critical handler when the app starts', async () => {
+    const { service, events, entries } = newLedger(order(OrderStatus.Delivered));
 
     service.onModuleInit();
 
-    expect(events.subscribe).toHaveBeenCalledWith(service);
+    expect(events.subscribe).toHaveBeenCalledWith('order.status_changed', expect.any(Function), { critical: true });
+    // The subscribed handler is the ledger's: calling it records the charge.
+    const [, handler] = vi.mocked(events.subscribe).mock.calls[0];
+    await handler(statusChanged(OrderStatus.PickedUp, OrderStatus.Delivered));
+    expect(entries).toHaveLength(1);
   });
 
   it("charges a delivered order its fare and records the order's final state and timestamps", async () => {

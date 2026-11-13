@@ -1,6 +1,6 @@
 import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { ConflictError } from '#domain/errors.js';
-import { type Event, type EventSubscriber, EventsService } from '#domain/events/index.js';
+import { type Event, EventsService } from '#domain/events/index.js';
 import { OrderRepository, OrderStatus, OrderStatusChangedEvent } from '#domain/ord/index.js';
 import type { Actor } from '#domain/reg/index.js';
 import { LedgerEntry, LedgerEntryKind, LedgerEntryRecordedEvent, OrderSummaryCreatedEvent } from './ledger.models.js';
@@ -25,7 +25,7 @@ const FINAL_STATUSES: readonly OrderStatus[] = [OrderStatus.Delivered, OrderStat
 // that entry is its order summary (R-PRC-02); a rejected or cancelled one is recorded with
 // nothing charged.
 @Injectable()
-export class LedgerService implements EventSubscriber, OnModuleInit {
+export class LedgerService implements OnModuleInit {
   constructor(
     private readonly ledger: LedgerRepository,
     private readonly orders: OrderRepository,
@@ -33,9 +33,11 @@ export class LedgerService implements EventSubscriber, OnModuleInit {
     private readonly events: EventsService,
   ) {}
 
-  // Attach to the published events when the app starts.
+  // Attach to order status changes when the app starts. The handler is critical: if the ledger
+  // entry can't be recorded, the status change fails with it, so no order is delivered or
+  // refunded without its entry.
   onModuleInit(): void {
-    this.events.subscribe(this);
+    this.events.subscribe('order.status_changed', event => this.handle(event), { critical: true });
   }
 
   async handle(event: Event): Promise<void> {

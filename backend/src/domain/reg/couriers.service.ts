@@ -4,6 +4,7 @@ import { EventsService } from '#domain/events/index.js';
 import { InvalidParamsError } from '#domain/errors.js';
 import { type Account, AccountRole, type Actor } from './accounts.models.js';
 import type { AccountCreationHandler } from './accounts.handlers.js';
+import { InvalidCourierTransitionError } from './couriers.errors.js';
 import { CourierStateMachine } from './couriers.statemachine.js';
 import {
   Courier,
@@ -20,7 +21,7 @@ export abstract class CourierRepository {
   abstract create(courier: Courier): Promise<Courier>;
   abstract getByAccountId(accountId: string): Promise<Courier>;
   abstract list(filter?: CourierFilter): Promise<Courier[]>;
-  abstract findClosestIdle(origin: Position): Promise<Courier | null>;
+  abstract findClosestIdle(origin: Position, excludeIds?: string[]): Promise<Courier | null>;
   abstract update(courier: Courier): Promise<Courier>;
 }
 
@@ -47,8 +48,17 @@ export class CouriersService implements AccountCreationHandler {
     return couriers.map(c => ({ id: c.account.id, position: c.position, status: c.status }));
   }
 
-  findClosestAvailable(origin: Position): Promise<Courier | null> {
-    return this.repository.findClosestIdle(origin);
+  findClosestAvailable(origin: Position, excludeIds: string[] = []): Promise<Courier | null> {
+    return this.repository.findClosestIdle(origin, excludeIds);
+  }
+
+  async assign(courierId: string): Promise<void> {
+    const courier = await this.repository.getByAccountId(courierId);
+    if (courier.status !== CourierStatus.Idle) {
+      throw new InvalidCourierTransitionError(courier.status, CourierStatus.Assigned);
+    }
+
+    await this.updateCourierStatus(courierId, CourierStatus.Assigned);
   }
 
   // handleAccountCreation creates a default Courier entry linked to the given Account.
@@ -90,15 +100,18 @@ export class CouriersService implements AccountCreationHandler {
 
   async goOnline(courierId: string): Promise<void> {
     await this.updateCourierStatus(courierId, CourierStatus.Idle);
-
-    // TODO: retry assignment of the orders waiting in the dispatch queue (order dispatcher task).
   }
 
   async goOffline(courierId: string): Promise<void> {
     await this.updateCourierStatus(courierId, CourierStatus.Offline);
+  }
 
-    // TODO: if the courier was assigned an order, mark it stalled so only an operator can
-    // reassign it (stalled order handling task).
+  async startCarrying(courierId: string): Promise<void> {
+    await this.updateCourierStatus(courierId, CourierStatus.Carrying);
+  }
+
+  async finishJob(courierId: string): Promise<void> {
+    await this.updateCourierStatus(courierId, CourierStatus.Idle);
   }
 
   private async updateCourierStatus(courierId: string, targetState: CourierStatus): Promise<void> {

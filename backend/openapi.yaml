@@ -284,6 +284,43 @@ paths:
         - couriers
       x-roles:
         - operator
+  /api/couriers/me/assignment:
+    get:
+      description: "**Allowed roles:** `courier`"
+      operationId: CouriersController_getAssignment
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignmentComplete"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: No active assignment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Get the courier current assignment
+      tags:
+        - couriers
+      x-roles:
+        - courier
   /api/couriers/me/position:
     put:
       description: "**Allowed roles:** `courier`"
@@ -323,6 +360,66 @@ paths:
       security:
         - bearer: []
       summary: Update courier position
+      tags:
+        - couriers
+      x-roles:
+        - courier
+  /api/couriers/me/online:
+    post:
+      description: "**Allowed roles:** `courier`"
+      operationId: CouriersController_goOnline
+      parameters: []
+      responses:
+        "204":
+          description: ""
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Go on duty
+      tags:
+        - couriers
+      x-roles:
+        - courier
+  /api/couriers/me/offline:
+    post:
+      description: "**Allowed roles:** `courier`"
+      operationId: CouriersController_goOffline
+      parameters: []
+      responses:
+        "204":
+          description: ""
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: The courier is carrying an order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Go off duty
       tags:
         - couriers
       x-roles:
@@ -974,6 +1071,312 @@ paths:
       summary: Refund order
       tags:
         - orders
+      x-roles:
+        - operator
+  /api/order-assignments:
+    get:
+      description: |-
+        A courier only gets their own assignments, the `courierId` query value is ignored.
+
+        **Allowed roles:** `operator`, `courier`
+      operationId: OrderAssignmentsController_find
+      parameters:
+        - name: status
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - queued
+              - offered
+              - accepted
+              - stalled
+              - delivered
+        - name: courierId
+          required: false
+          in: query
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Assignment"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `operator`, `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: List order assignments
+      tags:
+        - order-assignments
+      x-roles:
+        - operator
+        - courier
+  /api/order-assignments/{id}/accept:
+    post:
+      description: "**Allowed roles:** `courier`"
+      operationId: OrderAssignmentsController_accept
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not offered to this courier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Assignment is not offered, order is not ready, or the courier already holds an order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Accept the order offered to the courier
+      tags:
+        - order-assignments
+      x-roles:
+        - courier
+  /api/order-assignments/{id}/decline:
+    post:
+      description: "**Allowed roles:** `courier`"
+      operationId: OrderAssignmentsController_decline
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not offered to this courier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Assignment is not offered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Decline the order offered to the courier
+      tags:
+        - order-assignments
+      x-roles:
+        - courier
+  /api/order-assignments/{id}/pickup:
+    post:
+      description: "**Allowed roles:** `courier`"
+      operationId: OrderAssignmentsController_pickUp
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not assigned to this courier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Assignment is not accepted or order is not ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Confirm pickup of the order at the restaurant
+      tags:
+        - order-assignments
+      x-roles:
+        - courier
+  /api/order-assignments/{id}/deliver:
+    post:
+      description: "**Allowed roles:** `courier`"
+      operationId: OrderAssignmentsController_deliver
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not assigned to this courier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Courier is not carrying the order or order is not picked up
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Confirm delivery of the order to the customer
+      tags:
+        - order-assignments
+      x-roles:
+        - courier
+  /api/order-assignments/{id}/reassign:
+    post:
+      description: "**Allowed roles:** `operator`"
+      operationId: OrderAssignmentsController_reassign
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Assignment is not stalled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Reassign a stalled order
+      tags:
+        - order-assignments
       x-roles:
         - operator
   /api/restaurants:
@@ -1643,6 +2046,150 @@ components:
         - id
         - position
         - status
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        postalCode:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+      required:
+        - street
+        - city
+        - postalCode
+        - latitude
+        - longitude
+    OrderLine:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        menuItemId:
+          type: string
+        name:
+          type: string
+        unitPrice:
+          type: number
+        quantity:
+          type: number
+      required:
+        - id
+        - orderId
+        - menuItemId
+        - name
+        - unitPrice
+        - quantity
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string
+        customerName:
+          type: string
+        restaurantId:
+          type: string
+        status:
+          enum:
+            - placed
+            - accepted
+            - preparing
+            - ready
+            - picked_up
+            - delivered
+            - refunded
+            - rejected
+            - cancelled
+          type: string
+        rejectionReason:
+          type: string
+        deliveryAddress:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/Address"
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderLine"
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - customerId
+        - customerName
+        - restaurantId
+        - status
+        - deliveryAddress
+        - lines
+        - createdAt
+        - updatedAt
+    Restaurant:
+      type: object
+      properties:
+        id:
+          type: string
+        ownerId:
+          type: string
+        name:
+          type: string
+        status:
+          enum:
+            - open
+            - paused
+            - closed
+          type: string
+        position:
+          $ref: "#/components/schemas/Position"
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - ownerId
+        - name
+        - status
+        - position
+        - createdAt
+        - updatedAt
+    AssignmentComplete:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum:
+            - queued
+            - offered
+            - accepted
+            - stalled
+            - delivered
+        order:
+          $ref: "#/components/schemas/Order"
+        restaurant:
+          $ref: "#/components/schemas/Restaurant"
+      required:
+        - id
+        - status
+        - order
+        - restaurant
     CourierPositionUpdateRequest:
       type: object
       properties:
@@ -1682,25 +2229,6 @@ components:
           $ref: "#/components/schemas/AddressRequest"
       required:
         - address
-    Address:
-      type: object
-      properties:
-        street:
-          type: string
-        city:
-          type: string
-        postalCode:
-          type: string
-        latitude:
-          type: number
-        longitude:
-          type: number
-      required:
-        - street
-        - city
-        - postalCode
-        - latitude
-        - longitude
     CustomerResponse:
       type: object
       properties:
@@ -1838,78 +2366,6 @@ components:
       required:
         - restaurantId
         - items
-    OrderLine:
-      type: object
-      properties:
-        id:
-          type: string
-        orderId:
-          type: string
-        menuItemId:
-          type: string
-        name:
-          type: string
-        unitPrice:
-          type: number
-        quantity:
-          type: number
-      required:
-        - id
-        - orderId
-        - menuItemId
-        - name
-        - unitPrice
-        - quantity
-    Order:
-      type: object
-      properties:
-        id:
-          type: string
-        customerId:
-          type: string
-        customerName:
-          type: string
-        restaurantId:
-          type: string
-        status:
-          enum:
-            - placed
-            - accepted
-            - preparing
-            - ready
-            - picked_up
-            - delivered
-            - refunded
-            - rejected
-            - cancelled
-          type: string
-        rejectionReason:
-          type: string
-        deliveryAddress:
-          nullable: true
-          type: object
-          allOf:
-            - $ref: "#/components/schemas/Address"
-        lines:
-          type: array
-          items:
-            $ref: "#/components/schemas/OrderLine"
-        createdAt:
-          format: date-time
-          type: string
-        updatedAt:
-          format: date-time
-          type: string
-      required:
-        - id
-        - customerId
-        - customerName
-        - restaurantId
-        - status
-        - deliveryAddress
-        - lines
-        - createdAt
-        - updatedAt
     FareComponentResponse:
       type: object
       properties:
@@ -2086,6 +2542,42 @@ components:
           maxLength: 500
       required:
         - reason
+    Assignment:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        courierId:
+          type: string
+          nullable: true
+        status:
+          enum:
+            - queued
+            - offered
+            - accepted
+            - stalled
+            - delivered
+          type: string
+        declinedCourierIds:
+          type: array
+          items:
+            type: string
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - orderId
+        - courierId
+        - status
+        - declinedCourierIds
+        - createdAt
+        - updatedAt
     RestaurantCreationRequest:
       type: object
       properties:
@@ -2103,37 +2595,6 @@ components:
       required:
         - name
         - position
-    Restaurant:
-      type: object
-      properties:
-        id:
-          type: string
-        ownerId:
-          type: string
-        name:
-          type: string
-        status:
-          enum:
-            - open
-            - paused
-            - closed
-          type: string
-        position:
-          $ref: "#/components/schemas/Position"
-        createdAt:
-          format: date-time
-          type: string
-        updatedAt:
-          format: date-time
-          type: string
-      required:
-        - id
-        - ownerId
-        - name
-        - status
-        - position
-        - createdAt
-        - updatedAt
     RestaurantSearchResult:
       type: object
       properties:
