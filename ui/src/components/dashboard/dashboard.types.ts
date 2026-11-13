@@ -41,6 +41,17 @@ export type Restaurant = {
   distanceKm?: number;
 };
 
+export type CourierStatus = 'offline' | 'idle' | 'assigned' | 'carrying';
+
+// Response of GET /couriers/me.
+export type CourierProfile = {
+  account: Account;
+  status: CourierStatus;
+  position: Position | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type MenuItem = {
   id: string;
   restaurantId: string;
