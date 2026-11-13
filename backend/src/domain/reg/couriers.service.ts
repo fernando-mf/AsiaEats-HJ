@@ -21,7 +21,7 @@ export abstract class CourierRepository {
   abstract create(courier: Courier): Promise<Courier>;
   abstract getByAccountId(accountId: string): Promise<Courier>;
   abstract list(filter?: CourierFilter): Promise<Courier[]>;
-  abstract findClosestIdle(origin: Position): Promise<Courier | null>;
+  abstract findClosestIdle(origin: Position, excludeIds?: string[]): Promise<Courier | null>;
   abstract update(courier: Courier): Promise<Courier>;
 }
 
@@ -48,8 +48,8 @@ export class CouriersService implements AccountCreationHandler {
     return couriers.map(c => ({ id: c.account.id, position: c.position, status: c.status }));
   }
 
-  findClosestAvailable(origin: Position): Promise<Courier | null> {
-    return this.repository.findClosestIdle(origin);
+  findClosestAvailable(origin: Position, excludeIds: string[] = []): Promise<Courier | null> {
+    return this.repository.findClosestIdle(origin, excludeIds);
   }
 
   async assign(courierId: string): Promise<void> {
@@ -104,9 +104,10 @@ export class CouriersService implements AccountCreationHandler {
 
   async goOffline(courierId: string): Promise<void> {
     await this.updateCourierStatus(courierId, CourierStatus.Offline);
+  }
 
-    // TODO: if the courier was assigned an order, mark it stalled so only an operator can
-    // reassign it (stalled order handling task).
+  async startCarrying(courierId: string): Promise<void> {
+    await this.updateCourierStatus(courierId, CourierStatus.Carrying);
   }
 
   private async updateCourierStatus(courierId: string, targetState: CourierStatus): Promise<void> {

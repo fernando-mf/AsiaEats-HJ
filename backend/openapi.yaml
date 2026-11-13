@@ -1093,6 +1093,102 @@ paths:
         - order-assignments
       x-roles:
         - courier
+  /api/order-assignments/{id}/decline:
+    post:
+      description: "**Allowed roles:** `courier`"
+      operationId: OrderAssignmentsController_decline
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not offered to this courier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Assignment is not offered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Decline the order offered to the courier
+      tags:
+        - order-assignments
+      x-roles:
+        - courier
+  /api/order-assignments/{id}/pickup:
+    post:
+      description: "**Allowed roles:** `courier`"
+      operationId: OrderAssignmentsController_pickUp
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not assigned to this courier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Assignment is not accepted or order is not ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Confirm pickup of the order at the restaurant
+      tags:
+        - order-assignments
+      x-roles:
+        - courier
   /api/restaurants:
     post:
       description: "**Allowed roles:** `restaurant`"
@@ -2036,12 +2132,16 @@ components:
           type: string
           nullable: true
         status:
-          type: string
           enum:
             - queued
             - offered
             - accepted
             - stalled
+          type: string
+        declinedCourierIds:
+          type: array
+          items:
+            type: string
         createdAt:
           format: date-time
           type: string
@@ -2053,6 +2153,7 @@ components:
         - orderId
         - courierId
         - status
+        - declinedCourierIds
         - createdAt
         - updatedAt
     RestaurantCreationRequest:

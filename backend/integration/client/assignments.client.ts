@@ -12,6 +12,14 @@ export class AssignmentsClient {
     return this.http.request('GET', `/order-assignments${query}`);
   }
 
+  decline(id: string): Promise<Assignment> {
+    return this.http.request('POST', `/order-assignments/${id}/decline`);
+  }
+
+  pickUp(id: string): Promise<Assignment> {
+    return this.http.request('POST', `/order-assignments/${id}/pickup`);
+  }
+
   accept(id: string): Promise<Assignment> {
     return this.http.request('POST', `/order-assignments/${id}/accept`);
   }

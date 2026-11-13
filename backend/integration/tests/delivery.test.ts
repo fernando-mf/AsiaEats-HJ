@@ -48,9 +48,6 @@ describe('delivery retry', () => {
   // TODO(#121): once assignments can be listed, assert that the oldest queued order is offered first.
   it.todo('offers the oldest queued order first when only one courier is available');
 
-  // TODO(stalled-order task): once an assignment can be stalled through the API, assert it is not retried.
-  it.todo('does not retry a stalled order');
-
   // TODO(delivery completion task): once a delivery can be completed through the API, assert a queued order is offered then.
   it.todo('offers a queued order when a courier finishes a delivery');
 });
