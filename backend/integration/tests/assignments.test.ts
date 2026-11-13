@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { AssignmentStatus } from '#domain/dlv/index.js';
-import { CourierStatus } from '#domain/reg/index.js';
+import { AccountRole, CourierStatus } from '#domain/reg/index.js';
 import { Client } from '../client/client.ts';
 import {
   createCourier,
@@ -10,9 +10,61 @@ import {
   openSessionAsOperator,
   purgeDatabase,
   putCourierOnline,
+  stallAssignment,
 } from './helpers.ts';
 
 describe('order assignments', () => {
+  describe('list', () => {
+    it('rejects a caller who is not signed in', async () => {
+      await purgeDatabase();
+
+      await expect(new Client().assignments.list()).rejects.toMatchObject({ status: 401 });
+    });
+
+    it('lets the operator list every assignment, oldest first', async () => {
+      await purgeDatabase();
+      const first = await createReadyOrder('o1');
+      const second = await createReadyOrder('o2');
+      const operator = new Client();
+      await openSessionAsOperator(operator);
+
+      const list = await operator.assignments.list();
+
+      expect(list.map(a => a.orderId)).toEqual([first.orderId, second.orderId]);
+    });
+
+    it('filters by status', async () => {
+      await purgeDatabase();
+      const queued = await createReadyOrder('o1');
+      const stalled = await createReadyOrder('o2');
+      await stallAssignment(stalled.orderId);
+      const operator = new Client();
+      await openSessionAsOperator(operator);
+
+      const queuedList = await operator.assignments.list({ status: AssignmentStatus.Queued });
+      const stalledList = await operator.assignments.list({ status: AssignmentStatus.Stalled });
+      const acceptedList = await operator.assignments.list({ status: AssignmentStatus.Accepted });
+
+      expect(queuedList.map(a => a.orderId)).toEqual([queued.orderId]);
+      expect(stalledList.map(a => a.orderId)).toEqual([stalled.orderId]);
+      expect(acceptedList).toEqual([]);
+    });
+
+    it('filters by courier for the operator', async () => {
+      await purgeDatabase();
+      const { orderId } = await createReadyOrder('o1');
+      await createReadyOrder('o2');
+      const courier = await putCourierOnline('courier1');
+      const courierId = (await courier.couriers.me()).account.id;
+      const operator = new Client();
+      await openSessionAsOperator(operator);
+
+      const list = await operator.assignments.list({ courierId });
+
+      expect(list.map(a => a.orderId)).toEqual([orderId]);
+    });
+  });
+
   describe('accept', () => {
     it('rejects an assignment that does not exist', async () => {
       await purgeDatabase();

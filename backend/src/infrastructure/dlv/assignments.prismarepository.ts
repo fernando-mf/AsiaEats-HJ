@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Assignment, AssignmentRepository, AssignmentStatus } from '#domain/dlv/index.js';
+import { Assignment, type AssignmentSearchRequest, AssignmentRepository, AssignmentStatus } from '#domain/dlv/index.js';
 import { ConflictError, InternalError, NotFoundError } from '#domain/errors.js';
 import { PrismaService } from '#infrastructure/prisma.service.js';
 
@@ -55,18 +55,11 @@ export class PrismaAssignmentRepository extends AssignmentRepository {
   }
 
   async getByIdAndCourierId(id: string, courierId: string): Promise<Assignment> {
-    try {
-      const row = await this.db.client().deliveryAssignment.findUnique({ where: { id, courierId } });
-      if (!row) {
-        throw new NotFoundError('assignment');
-      }
-      return toAssignment(row);
-    } catch (err) {
-      if (err instanceof NotFoundError) {
-        throw err;
-      }
-      throw new InternalError(err as Error);
+    const row = await this.db.client().deliveryAssignment.findUnique({ where: { id, courierId } });
+    if (!row) {
+      throw new NotFoundError('assignment');
     }
+    return toAssignment(row);
   }
 
   async getActiveByCourierId(courierId: string): Promise<Assignment> {
@@ -81,24 +74,24 @@ export class PrismaAssignmentRepository extends AssignmentRepository {
   }
 
   async findByOrderId(orderId: string): Promise<Assignment | null> {
-    try {
-      const row = await this.db.client().deliveryAssignment.findUnique({ where: { orderId } });
-      return row ? toAssignment(row) : null;
-    } catch (err) {
-      throw new InternalError(err as Error);
-    }
+    const row = await this.db.client().deliveryAssignment.findUnique({ where: { orderId } });
+    return row ? toAssignment(row) : null;
   }
 
   async findQueued(): Promise<Assignment[]> {
-    try {
-      const rows = await this.db.client().deliveryAssignment.findMany({
-        where: { status: AssignmentStatus.Queued },
-        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-      });
-      return rows.map(toAssignment);
-    } catch (err) {
-      throw new InternalError(err as Error);
-    }
+    const rows = await this.db.client().deliveryAssignment.findMany({
+      where: { status: AssignmentStatus.Queued },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    });
+    return rows.map(toAssignment);
+  }
+
+  async list(filter: AssignmentSearchRequest): Promise<Assignment[]> {
+    const rows = await this.db.client().deliveryAssignment.findMany({
+      where: { status: filter.status, courierId: filter.courierId },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    });
+    return rows.map(toAssignment);
   }
 }
 

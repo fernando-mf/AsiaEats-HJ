@@ -980,6 +980,65 @@ paths:
       x-roles:
         - customer
         - operator
+  /api/order-assignments:
+    get:
+      description: |-
+        A courier only gets their own assignments, the `courierId` query value is ignored.
+
+        **Allowed roles:** `operator`, `courier`
+      operationId: OrderAssignmentsController_find
+      parameters:
+        - name: status
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - queued
+              - offered
+              - accepted
+              - stalled
+        - name: courierId
+          required: false
+          in: query
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Assignment"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `operator`, `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: List order assignments
+      tags:
+        - order-assignments
+      x-roles:
+        - operator
+        - courier
   /api/order-assignments/{id}/accept:
     post:
       description: "**Allowed roles:** `courier`"

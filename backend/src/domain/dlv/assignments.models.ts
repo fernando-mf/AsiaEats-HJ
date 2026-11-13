@@ -1,3 +1,5 @@
+import { plainToInstance } from 'class-transformer';
+import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { Event } from '#domain/events/index.js';
 import { Order, Restaurant } from '#domain/ord/index.js';
 
@@ -17,16 +19,25 @@ export class Assignment {
   updatedAt: Date;
 }
 
+export class AssignmentSearchRequest {
+  @IsOptional()
+  @IsEnum(AssignmentStatus)
+  status?: AssignmentStatus;
+
+  @IsOptional()
+  @IsUUID()
+  courierId?: string;
+
+  static initialize(raw: AssignmentSearchRequest): AssignmentSearchRequest {
+    return plainToInstance(AssignmentSearchRequest, raw);
+  }
+}
+
 export class AssignmentComplete {
   id: string;
   status: AssignmentStatus;
   order: Order;
   restaurant: Restaurant;
-}
-
-export class AssignmentOfferedEvent extends Event<Assignment> {
-  readonly entityType = 'assignment';
-  readonly eventType = 'assignment.offered';
 }
 
 export class AssignmentStatusChangedEvent extends Event<{

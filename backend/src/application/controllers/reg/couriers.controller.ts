@@ -10,7 +10,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { AssignmentComplete, DispatcherService } from '#domain/dlv/index.js';
+import { AssignmentComplete, DeliveryService } from '#domain/dlv/index.js';
 import {
   AccountRole,
   type Actor,
@@ -41,7 +41,7 @@ export class CouriersController {
 
   constructor(
     private readonly service: CouriersService,
-    private readonly dispatcher: DispatcherService,
+    private readonly delivery: DeliveryService,
     private readonly commandRunner: CommandRunner,
   ) {}
 
@@ -81,7 +81,7 @@ export class CouriersController {
   @ApiUnauthorizedResponse({ type: ErrorResponse })
   @ApiNotFoundResponse({ type: ErrorResponse, description: 'No active assignment' })
   getAssignment(@CurrentActor() actor: Actor) {
-    let command: Command<AssignmentComplete> = new GetCurrentAssignmentCommand(this.dispatcher, actor);
+    let command: Command<AssignmentComplete> = new GetCurrentAssignmentCommand(this.delivery, actor);
     command = new AuthorizedCommand(command, actor, getApiRoles(this.getAssignment));
     command = new LoggedCommand(command, this.logger, actor);
 
