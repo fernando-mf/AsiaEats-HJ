@@ -180,6 +180,7 @@ enum AssignmentStatus {
   offered
   accepted
   stalled
+  delivered
 
   @@map("assignment_status")
 }

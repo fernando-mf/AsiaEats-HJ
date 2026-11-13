@@ -8,6 +8,7 @@ export enum AssignmentStatus {
   Offered = 'offered',
   Accepted = 'accepted',
   Stalled = 'stalled',
+  Delivered = 'delivered',
 }
 
 export class Assignment {

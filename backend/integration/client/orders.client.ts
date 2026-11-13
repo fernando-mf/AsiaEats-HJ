@@ -19,4 +19,8 @@ export class OrdersClient {
   ready(id: string): Promise<Order> {
     return this.http.request('POST', `/orders/${id}/ready`);
   }
+
+  cancel(id: string): Promise<Order> {
+    return this.http.request('POST', `/orders/${id}/cancel`);
+  }
 }

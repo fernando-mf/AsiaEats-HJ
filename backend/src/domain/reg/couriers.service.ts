@@ -110,6 +110,10 @@ export class CouriersService implements AccountCreationHandler {
     await this.updateCourierStatus(courierId, CourierStatus.Carrying);
   }
 
+  async finishJob(courierId: string): Promise<void> {
+    await this.updateCourierStatus(courierId, CourierStatus.Idle);
+  }
+
   private async updateCourierStatus(courierId: string, targetState: CourierStatus): Promise<void> {
     const courier = await this.repository.getByAccountId(courierId);
     const event = new CourierStateMachine(courier).transition(targetState);

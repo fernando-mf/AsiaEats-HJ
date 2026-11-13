@@ -185,6 +185,12 @@ export class OrdersService {
     return this.transition(order, actor, machine => machine.pickUp());
   }
 
+  async deliver(actor: Actor, id: string): Promise<Order> {
+    const order = await this.repository.getById(id);
+
+    return this.transition(order, actor, machine => machine.deliver());
+  }
+
   async getPreparationQueue(actor: Actor, restaurantId: string): Promise<Order[]> {
     const restaurant = await this.restaurants.getManagedRestaurant(actor, restaurantId);
     return this.repository.listAccepted(restaurant.id);

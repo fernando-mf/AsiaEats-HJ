@@ -998,6 +998,7 @@ paths:
               - offered
               - accepted
               - stalled
+              - delivered
         - name: courierId
           required: false
           in: query
@@ -1189,6 +1190,102 @@ paths:
         - order-assignments
       x-roles:
         - courier
+  /api/order-assignments/{id}/deliver:
+    post:
+      description: "**Allowed roles:** `courier`"
+      operationId: OrderAssignmentsController_deliver
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not assigned to this courier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Courier is not carrying the order or order is not picked up
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Confirm delivery of the order to the customer
+      tags:
+        - order-assignments
+      x-roles:
+        - courier
+  /api/order-assignments/{id}/reassign:
+    post:
+      description: "**Allowed roles:** `operator`"
+      operationId: OrderAssignmentsController_reassign
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `operator`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Assignment is not stalled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Reassign a stalled order
+      tags:
+        - order-assignments
+      x-roles:
+        - operator
   /api/restaurants:
     post:
       description: "**Allowed roles:** `restaurant`"
@@ -1989,6 +2086,7 @@ components:
             - offered
             - accepted
             - stalled
+            - delivered
         order:
           $ref: "#/components/schemas/Order"
         restaurant:
@@ -2137,6 +2235,7 @@ components:
             - offered
             - accepted
             - stalled
+            - delivered
           type: string
         declinedCourierIds:
           type: array

@@ -214,4 +214,133 @@ describe('order assignments', () => {
       expect((await other.couriers.me()).status).toBe(CourierStatus.Idle);
     });
   });
+
+  describe('deliver', () => {
+    it('rejects an order that was not picked up', async () => {
+      await purgeDatabase();
+      const { orderId } = await createReadyOrder('o1');
+      const courier = await putCourierOnline('courier1');
+      const { id } = await getAssignmentByOrderId(orderId);
+      await courier.assignments.accept(id);
+
+      await expect(courier.assignments.deliver(id)).rejects.toMatchObject({ status: 409 });
+    });
+
+    it('delivers the order, frees the courier and offers the next queued order', async () => {
+      await purgeDatabase();
+      const first = await createReadyOrder('o1');
+      const courier = await putCourierOnline('courier1');
+      const { id } = await getAssignmentByOrderId(first.orderId);
+      await courier.assignments.accept(id);
+      await courier.assignments.pickUp(id);
+      const second = await createReadyOrder('o2');
+      expect((await getAssignmentByOrderId(second.orderId)).status).toBe(AssignmentStatus.Queued);
+
+      await courier.assignments.deliver(id);
+
+      const next = await getAssignmentByOrderId(second.orderId);
+      expect(next.status).toBe(AssignmentStatus.Offered);
+      expect(next.courierId).toBe((await courier.couriers.me()).account.id);
+      await expect(courier.assignments.deliver(id)).rejects.toMatchObject({ status: 409 });
+    });
+
+    it('keeps the delivered assignment as history', async () => {
+      await purgeDatabase();
+      const { orderId } = await createReadyOrder('o1');
+      const courier = await putCourierOnline('courier1');
+      const { id } = await getAssignmentByOrderId(orderId);
+      await courier.assignments.accept(id);
+      await courier.assignments.pickUp(id);
+
+      await courier.assignments.deliver(id);
+
+      const delivered = await courier.assignments.list({ status: AssignmentStatus.Delivered });
+      expect(delivered.map(a => a.orderId)).toEqual([orderId]);
+    });
+  });
+
+  describe('reassign', () => {
+    it('rejects an assignment that is not stalled', async () => {
+      await purgeDatabase();
+      const { orderId } = await createReadyOrder('o1');
+      const { id } = await getAssignmentByOrderId(orderId);
+      const operator = new Client();
+      await openSessionAsOperator(operator);
+
+      await expect(operator.assignments.reassign(id)).rejects.toMatchObject({ status: 409 });
+    });
+
+    it('offers a stalled order to an available courier', async () => {
+      await purgeDatabase();
+      const { orderId } = await createReadyOrder('o1');
+      const courier = await putCourierOnline('courier1');
+      await courier.assignments.accept((await getAssignmentByOrderId(orderId)).id);
+      await courier.couriers.goOffline();
+      const other = await putCourierOnline('courier2');
+      const operator = new Client();
+      await openSessionAsOperator(operator);
+      const { id } = await getAssignmentByOrderId(orderId);
+
+      const reassigned = await operator.assignments.reassign(id);
+
+      expect(reassigned.status).toBe(AssignmentStatus.Offered);
+      expect(reassigned.courierId).toBe((await other.couriers.me()).account.id);
+    });
+
+    it('keeps the order queued when no courier is available', async () => {
+      await purgeDatabase();
+      const { orderId } = await createReadyOrder('o1');
+      await stallAssignment(orderId);
+      const operator = new Client();
+      await openSessionAsOperator(operator);
+      const { id } = await getAssignmentByOrderId(orderId);
+
+      const reassigned = await operator.assignments.reassign(id);
+
+      expect(reassigned.status).toBe(AssignmentStatus.Queued);
+      expect(reassigned.courierId).toBeNull();
+    });
+  });
+
+  describe('order cancellation', () => {
+    it('deletes a queued assignment', async () => {
+      await purgeDatabase();
+      const { orderId } = await createReadyOrder('o1');
+      const operator = new Client();
+      await openSessionAsOperator(operator);
+
+      await operator.orders.cancel(orderId);
+
+      expect(await operator.assignments.list()).toEqual([]);
+    });
+
+    it('keeps an offered courier idle', async () => {
+      await purgeDatabase();
+      const { orderId } = await createReadyOrder('o1');
+      const courier = await putCourierOnline('courier1');
+      const operator = new Client();
+      await openSessionAsOperator(operator);
+
+      await operator.orders.cancel(orderId);
+
+      expect(await operator.assignments.list()).toEqual([]);
+      expect((await courier.couriers.me()).status).toBe(CourierStatus.Idle);
+    });
+
+    it('frees a courier who carries the order', async () => {
+      await purgeDatabase();
+      const { orderId } = await createReadyOrder('o1');
+      const courier = await putCourierOnline('courier1');
+      const { id } = await getAssignmentByOrderId(orderId);
+      await courier.assignments.accept(id);
+      await courier.assignments.pickUp(id);
+      const operator = new Client();
+      await openSessionAsOperator(operator);
+
+      await operator.orders.cancel(orderId);
+
+      expect(await operator.assignments.list()).toEqual([]);
+      expect((await courier.couriers.me()).status).toBe(CourierStatus.Idle);
+    });
+  });
 });
