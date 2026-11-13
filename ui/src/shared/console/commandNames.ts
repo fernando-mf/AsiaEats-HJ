@@ -12,6 +12,14 @@ const routes: Array<[Method, RegExp, string]> = [
   ['PUT', /^\/accounts\/me\/password$/, 'ChangePasswordCommand'],
   ['GET', /^\/customers\/me$/, 'GetCustomerCommand'],
   ['PUT', /^\/customers\/me$/, 'UpdateCustomerCommand'],
+  ['GET', /^\/couriers\/me$/, 'GetCourierCommand'],
+  ['POST', /^\/couriers\/me\/online$/, 'CourierGoOnlineCommand'],
+  ['POST', /^\/couriers\/me\/offline$/, 'CourierGoOfflineCommand'],
+  ['GET', /^\/couriers\/me\/assignment$/, 'GetCurrentAssignmentCommand'],
+  ['POST', new RegExp(`^/order-assignments/${ID}/accept$`), 'AcceptAssignmentCommand'],
+  ['POST', new RegExp(`^/order-assignments/${ID}/decline$`), 'DeclineAssignmentCommand'],
+  ['POST', new RegExp(`^/order-assignments/${ID}/pickup$`), 'PickUpAssignmentCommand'],
+  ['POST', new RegExp(`^/order-assignments/${ID}/deliver$`), 'DeliverAssignmentCommand'],
   ['GET', /^\/restaurants$/, 'FindRestaurantsCommand'],
   ['POST', /^\/restaurants$/, 'CreateRestaurantCommand'],
   ['PUT', new RegExp(`^/restaurants/${ID}$`), 'UpdateRestaurantCommand'],
@@ -33,6 +41,11 @@ const routes: Array<[Method, RegExp, string]> = [
   ['POST', /^\/env\/reset$/, 'ResetEnvCommand'],
   ['GET', /^\/events$/, 'GetEventsByEntityCommand'],
   ['GET', /^\/ledger$/, 'ListLedgerCommand'],
+  // The courier commands not listed above: the operator's courier and assignment views.
+  ['GET', /^\/couriers$/, 'FindCouriersCommand'],
+  ['PUT', /^\/couriers\/me\/position$/, 'UpdateCourierPositionCommand'],
+  ['GET', /^\/order-assignments$/, 'FindAssignmentsCommand'],
+  ['POST', new RegExp(`^/order-assignments/${ID}/reassign$`), 'ReassignAssignmentCommand'],
 ];
 
 // commandName returns the backend command name for a request, or "METHOD /path"

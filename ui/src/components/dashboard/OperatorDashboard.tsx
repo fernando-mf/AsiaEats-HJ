@@ -3,6 +3,8 @@ import { ApiError, apiErrorMessage, requestJson } from '../../shared/api/client'
 import { readDashboardSession, writeDashboardSession } from '../../shared/dashboard/dashboardSession';
 import { useScrollToTop } from '../../shared/dashboard/useScrollToTop';
 import { ConfirmDialog } from '../feedback/ConfirmDialog';
+import { CityMap } from '../operator/CityMap';
+import { OperatorDeliveryMonitor } from '../operator/OperatorDeliveryMonitor';
 import { OperatorLedger } from '../operator/OperatorLedger';
 import { OperatorOrders } from '../operator/OperatorOrders';
 import { OperatorOverview } from '../operator/OperatorOverview';
@@ -12,8 +14,10 @@ import { OperatorSidebar, type OperatorPage } from '../operator/OperatorSidebar'
 import { RestoreDialog } from '../operator/RestoreDialog';
 import type {
   Account,
+  CourierSummary,
   LedgerEntry,
   Order,
+  OrderAssignment,
   Restaurant,
   RestaurantStatus,
   RunAction,
@@ -55,6 +59,8 @@ export function OperatorDashboard({
   const [page, setPage] = useState<OperatorPage>(restoredDashboard?.operatorPage ?? 'overview');
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [couriers, setCouriers] = useState<CourierSummary[]>([]);
+  const [assignments, setAssignments] = useState<OrderAssignment[]>([]);
   const [updatedAt, setUpdatedAt] = useState<Date>();
   const [restoreOpen, setRestoreOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -75,18 +81,35 @@ export function OperatorDashboard({
   useScrollToTop(page);
 
   const fetchAll = useCallback(async () => {
-    const [allRestaurants, allOrders] = await Promise.all([
+    const [allRestaurants, allOrders, allCouriers, allAssignments] = await Promise.all([
       requestJson<Restaurant[]>('/restaurants'),
       requestJson<Order[]>('/orders'),
+      requestJson<CourierSummary[]>('/couriers'),
+      requestJson<OrderAssignment[]>('/order-assignments'),
     ]);
-    return { restaurants: allRestaurants, orders: allOrders };
+    return {
+      restaurants: allRestaurants,
+      orders: allOrders,
+      couriers: allCouriers,
+      assignments: allAssignments,
+    };
   }, []);
 
-  const apply = useCallback((result: { restaurants: Restaurant[]; orders: Order[] }) => {
-    setRestaurants(result.restaurants);
-    setOrders(result.orders);
-    setUpdatedAt(new Date());
-  }, []);
+  const apply = useCallback(
+    (result: {
+      restaurants: Restaurant[];
+      orders: Order[];
+      couriers: CourierSummary[];
+      assignments: OrderAssignment[];
+    }) => {
+      setRestaurants(result.restaurants);
+      setOrders(result.orders);
+      setCouriers(result.couriers);
+      setAssignments(result.assignments);
+      setUpdatedAt(new Date());
+    },
+    [],
+  );
 
   const load = useCallback(async () => {
     const result = await run(fetchAll);
@@ -218,6 +241,7 @@ export function OperatorDashboard({
         account={account}
         page={page}
         waitingCount={orders.filter(order => order.status === 'placed').length}
+        stalledDeliveryCount={assignments.filter(a => a.status === 'stalled').length}
         busy={busy}
         onPageChange={changePage}
         onRestore={() => setRestoreOpen(true)}
@@ -261,6 +285,20 @@ export function OperatorDashboard({
             busy={busy}
             onRefresh={() => void loadLedger()}
             onOpenOrder={openOrder}
+          />
+        ) : null}
+
+        {page === 'delivery' ? <OperatorDeliveryMonitor orders={orders} busy={busy} /> : null}
+
+        {page === 'map' ? (
+          <CityMap
+            couriers={couriers}
+            restaurants={restaurants}
+            orders={orders}
+            assignments={assignments}
+            updatedAt={updatedAt}
+            busy={busy}
+            onRefresh={() => void load()}
           />
         ) : null}
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CourierDashboard } from '../components/dashboard/CourierDashboard';
 import { CustomerDashboard } from '../components/dashboard/CustomerDashboard';
 import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import { OperatorDashboard } from '../components/dashboard/OperatorDashboard';
@@ -109,6 +110,15 @@ export function DashboardPage() {
           showToast={showToast}
           onAccountChange={setAccount}
           onLogout={logout}
+        />
+      ) : account?.role === 'courier' ? (
+        <CourierDashboard
+          account={account}
+          busy={busy}
+          run={run}
+          showToast={showToast}
+          onLogout={logout}
+          onBackgroundError={handleBackgroundError}
         />
       ) : isRestaurant ? (
         <RestaurantDashboard

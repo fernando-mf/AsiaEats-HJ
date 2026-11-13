@@ -1,0 +1,474 @@
+/* City Map: Live courier and restaurant tracking */
+
+.city-map-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.city-map-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.city-map-title h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.city-map-title p {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+
+.city-map-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Legend and Filters bar */
+.city-map-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.city-map-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 560;
+  color: var(--text-2);
+}
+
+.legend-shape {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+.legend-shape--circle {
+  border-radius: 50%;
+  background: var(--green-soft);
+  border: 2px solid var(--green-ink);
+}
+
+.legend-shape--diamond {
+  transform: rotate(45deg);
+  background: var(--amber-soft);
+  border: 2px solid var(--amber-ink);
+  width: 14px;
+  height: 14px;
+}
+
+.legend-shape--square {
+  border-radius: 4px;
+  background: var(--primary-soft);
+  border: 2px solid var(--primary-ink);
+  width: 16px;
+  height: 16px;
+}
+
+.legend-shape--restaurant {
+  border-radius: 4px;
+  color: var(--text-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.city-map-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-chip {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 560;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.filter-chip:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.filter-chip.is-active {
+  color: var(--primary-ink);
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+
+/* Map canvas wrap */
+.city-map-viewport-card {
+  position: relative;
+  overflow: hidden;
+  background: #091311;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.city-map-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  min-height: 480px;
+  user-select: none;
+}
+
+/* Background elements */
+.city-map-grid line {
+  stroke: rgba(48, 68, 63, 0.25);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.city-map-river {
+  fill: #0c1c19;
+  stroke: #162f2a;
+  stroke-width: 1.5;
+}
+
+.city-map-boundary {
+  stroke: rgba(48, 68, 63, 0.45);
+  stroke-width: 1;
+  stroke-dasharray: 6 6;
+  fill: none;
+}
+
+.city-map-neighbourhood-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  fill: rgba(125, 147, 139, 0.35);
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* Restaurant markers */
+.city-map-restaurant-marker {
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.city-map-restaurant-marker:hover {
+  transform: scale(1.15);
+}
+
+.restaurant-marker-bg {
+  fill: var(--surface-2);
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+
+.city-map-restaurant-marker.is-open .restaurant-marker-bg {
+  stroke: var(--green-ink);
+}
+
+.city-map-restaurant-marker.is-paused .restaurant-marker-bg {
+  stroke: var(--amber-ink);
+}
+
+.city-map-restaurant-marker.is-closed .restaurant-marker-bg {
+  stroke: var(--red-ink);
+}
+
+/* Courier markers */
+.city-map-courier-marker {
+  cursor: pointer;
+  transition: transform 160ms ease;
+  outline: none;
+}
+
+.city-map-courier-marker:hover,
+.city-map-courier-marker:focus-visible {
+  transform: scale(1.25);
+}
+
+.courier-pulse {
+  animation: courierPulse 2.4s infinite ease-out;
+  transform-origin: center;
+}
+
+@keyframes courierPulse {
+  0% {
+    r: 14;
+    opacity: 0.8;
+  }
+  70% {
+    r: 28;
+    opacity: 0;
+  }
+  100% {
+    r: 28;
+    opacity: 0;
+  }
+}
+
+/* Shapes */
+.courier-shape--idle {
+  fill: var(--green-soft);
+  stroke: var(--green-ink);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 2px 6px rgba(116, 211, 156, 0.35));
+}
+
+.courier-shape--assigned {
+  fill: var(--amber-soft);
+  stroke: var(--amber-ink);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 2px 6px rgba(240, 194, 106, 0.35));
+}
+
+.courier-shape--carrying {
+  fill: var(--primary-soft);
+  stroke: var(--primary-ink);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 2px 6px rgba(94, 211, 192, 0.35));
+}
+
+.courier-marker-badge {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.courier-marker-badge-bg {
+  stroke-width: 1;
+}
+
+/* Selected marker highlight */
+.city-map-courier-marker.is-selected {
+  transform: scale(1.3);
+}
+
+.city-map-courier-marker.is-selected .courier-shape--idle,
+.city-map-courier-marker.is-selected .courier-shape--assigned,
+.city-map-courier-marker.is-selected .courier-shape--carrying {
+  stroke-width: 3.5;
+  stroke: #ffffff;
+}
+
+/* Empty Map State Overlay */
+.city-map-empty-overlay {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  max-width: 340px;
+  padding: 16px 20px;
+  background: rgba(17, 26, 24, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  z-index: 10;
+  animation: fadeIn 200ms ease;
+}
+
+.city-map-empty-overlay-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.city-map-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--amber-ink);
+  flex-shrink: 0;
+}
+
+.city-map-empty-text strong {
+  display: block;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.city-map-empty-text p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+/* Detail card drawer / popup */
+.city-map-detail-card {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  width: 320px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  z-index: 20;
+}
+
+.city-map-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.city-map-detail-head strong {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.city-map-detail-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12.5px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-row-label {
+  color: var(--text-2);
+}
+
+.detail-row-value {
+  color: var(--text);
+  font-weight: 560;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Live Delivery Route Lines & Waypoints */
+.city-map-routes {
+  pointer-events: none;
+}
+
+.city-map-route-line {
+  stroke-dasharray: 6 5;
+  stroke-width: 2.2;
+  animation: routeDash 1.2s linear infinite;
+  opacity: 0.75;
+}
+
+.city-map-route-line.is-assigned {
+  stroke: var(--amber-ink);
+}
+
+.city-map-route-line.is-carrying {
+  stroke: var(--primary-ink, #2563eb);
+}
+
+.city-map-route-line.is-selected {
+  stroke-width: 3.5;
+  opacity: 1;
+}
+
+@keyframes routeDash {
+  to {
+    stroke-dashoffset: -22;
+  }
+}
+
+/* Customer Destination Pin */
+.city-map-destination-pin {
+  cursor: default;
+}
+
+.destination-pin-bg {
+  fill: var(--surface);
+  stroke: var(--primary-ink, #2563eb);
+  stroke-width: 2;
+}
+
+.destination-pin-label {
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--text-2);
+  text-anchor: middle;
+}
+
+/* Delivery inspector card section */
+.city-map-detail-delivery {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.city-map-detail-delivery-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.city-map-detail-stalled {
+  color: var(--amber-ink);
+  font-weight: 600;
+}

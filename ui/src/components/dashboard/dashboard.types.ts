@@ -41,6 +41,17 @@ export type Restaurant = {
   distanceKm?: number;
 };
 
+export type CourierStatus = 'offline' | 'idle' | 'assigned' | 'carrying';
+
+// Response of GET /couriers/me.
+export type CourierProfile = {
+  account: Account;
+  status: CourierStatus;
+  position: Position | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type MenuItem = {
   id: string;
   restaurantId: string;
@@ -123,6 +134,19 @@ export type LedgerEntry = {
   recordedAt: string;
 };
 
+// Status of the courier's active assignment. "offered" waits for the courier to accept or
+// decline; "accepted" means the courier is assigned and heading to the restaurant.
+export type CourierAssignmentStatus = 'offered' | 'accepted';
+
+// Response of GET /couriers/me/assignment: the courier's active assignment with its order
+// and the restaurant to pick it up from.
+export type CourierAssignment = {
+  id: string;
+  status: CourierAssignmentStatus;
+  order: Order;
+  restaurant: Restaurant;
+};
+
 // One entry of the event log (GET /events): a state change and who made it.
 export type StoredEvent = {
   id: string;
@@ -145,3 +169,22 @@ export type MenuItemValues = Pick<MenuItem, 'name' | 'price' | 'status'>;
 export type OrderAction = 'accept' | 'reject' | 'prepare' | 'ready';
 export type RunAction = <T>(action: () => Promise<T>) => Promise<T | undefined>;
 export type ShowToast = (message: string, variant?: ToastVariant, action?: ToastAction) => void;
+
+// A courier as the operator's city map shows it; CourierStatus is defined with CourierProfile above.
+export type CourierSummary = {
+  id: string;
+  position: Position | null;
+  status: CourierStatus;
+};
+
+export type AssignmentStatus = 'queued' | 'offered' | 'accepted' | 'stalled' | 'delivered';
+
+export type OrderAssignment = {
+  id: string;
+  orderId: string;
+  courierId: string | null;
+  status: AssignmentStatus;
+  declinedCourierIds?: string[];
+  createdAt: string;
+  updatedAt: string;
+};
