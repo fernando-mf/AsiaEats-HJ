@@ -52,7 +52,7 @@ export class CouriersService implements AccountCreationHandler {
     return this.repository.findClosestIdle(origin);
   }
 
-  async reserve(courierId: string): Promise<void> {
+  async assign(courierId: string): Promise<void> {
     const courier = await this.repository.getByAccountId(courierId);
     if (courier.status !== CourierStatus.Idle) {
       throw new InvalidCourierTransitionError(courier.status, CourierStatus.Assigned);

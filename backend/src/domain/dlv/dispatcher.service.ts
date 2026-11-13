@@ -8,6 +8,7 @@ import {
   type Order,
 } from '#domain/ord/index.js';
 import {
+  type Actor,
   CouriersService,
   CourierStatus,
   CourierStatusChangedEvent,
@@ -19,10 +20,12 @@ import {
   AssignmentStatus,
   AssignmentStatusChangedEvent,
 } from './assignments.models.js';
+import { AssignmentStateMachine } from './assignments.statemachine.js';
 
 export abstract class AssignmentRepository {
   abstract create(assignment: Assignment): Promise<Assignment>;
   abstract update(assignment: Assignment): Promise<Assignment>;
+  abstract getByIdAndCourierId(id: string, courierId: string): Promise<Assignment>;
   abstract findByOrderId(orderId: string): Promise<Assignment | null>;
   abstract findQueued(): Promise<Assignment[]>; // oldest first
 }
@@ -101,14 +104,24 @@ export class DispatcherService implements OnModuleInit {
     return this.tryOffer(assignment, order);
   }
 
+  async accept(actor: Actor, id: string): Promise<Assignment> {
+    const assignment = await this.repository.getByIdAndCourierId(id, actor.id);
+    const event = new AssignmentStateMachine(assignment, actor).accept();
+
+    await this.couriers.assign(actor.id);
+
+    const updated = await this.repository.update(assignment);
+    await this.events.publish(event);
+
+    return updated;
+  }
+
   private async tryOffer(assignment: Assignment, order: Order): Promise<Assignment> {
     const restaurant = await this.restaurants.getById(order.restaurantId);
     const courier = await this.couriers.findClosestAvailable(restaurant.position);
     if (!courier) {
       return assignment;
     }
-
-    await this.couriers.reserve(courier.account.id);
 
     return this.offer(assignment, courier.account.id);
   }

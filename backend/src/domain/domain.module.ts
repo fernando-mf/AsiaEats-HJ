@@ -30,6 +30,7 @@ import { CustomersService } from './reg/customers.service.js';
     AccountsService,
     CouriersService,
     CustomersService,
+    DispatcherService,
     EnvService,
     EventsService,
     OrdersService,

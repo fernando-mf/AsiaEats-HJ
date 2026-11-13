@@ -1,4 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg';
+import type { Assignment } from '#domain/dlv/index.js';
 import { RestaurantStatus } from '#domain/ord/index.js';
 import { AccountRole } from '#domain/reg/index.js';
 import { hashPassword } from '#domain/reg/accounts.helpers.js';
@@ -101,6 +102,18 @@ export async function createReadyOrder(name: string): Promise<{ orderId: string 
   await restaurantClient.orders.ready(order.id);
 
   return { orderId: order.id };
+}
+
+// TODO(#121, #122): assignments aren't exposed through the API yet, so tests read them straight from the database.
+// Replace with the assignments API once available.
+export async function getAssignmentByOrderId(orderId: string): Promise<Assignment> {
+  const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
+  try {
+    const row = await db.deliveryAssignment.findUniqueOrThrow({ where: { orderId } });
+    return row as Assignment;
+  } finally {
+    await db.$disconnect();
+  }
 }
 
 export async function putCourierOnline(username: string): Promise<Client> {
