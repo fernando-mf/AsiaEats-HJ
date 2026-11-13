@@ -17,6 +17,8 @@ import { LoggedCommand } from '#application/commands/decorators/logged-command.j
 import { FindAssignmentsCommand } from '#application/commands/dlv/find-assignments.command.js';
 import { DeclineAssignmentCommand } from '#application/commands/dlv/decline-assignment.command.js';
 import { PickUpAssignmentCommand } from '#application/commands/dlv/pickup-assignment.command.js';
+import { DeliverAssignmentCommand } from '#application/commands/dlv/deliver-assignment.command.js';
+import { ReassignAssignmentCommand } from '#application/commands/dlv/reassign-assignment.command.js';
 import { AcceptAssignmentCommand } from '#application/commands/dlv/accept-assignment.command.js';
 import { Command } from '#application/commands/command.js';
 import { CurrentActor } from '#application/auth/current-actor.decorator.js';
@@ -100,6 +102,41 @@ export class OrderAssignmentsController {
   pickUp(@CurrentActor() actor: Actor, @Param('id') id: string) {
     let command: Command<Assignment> = new PickUpAssignmentCommand(this.delivery, actor, id);
     command = new AuthorizedCommand(command, actor, getApiRoles(this.pickUp));
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Post(':id/deliver')
+  @HttpCode(200)
+  @ApiRoles(AccountRole.Courier)
+  @ApiOperation({ summary: 'Confirm delivery of the order to the customer' })
+  @ApiOkResponse({ type: Assignment })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse, description: 'Not assigned to this courier' })
+  @ApiConflictResponse({
+    type: ErrorResponse,
+    description: 'Courier is not carrying the order or order is not picked up',
+  })
+  deliver(@CurrentActor() actor: Actor, @Param('id') id: string) {
+    let command: Command<Assignment> = new DeliverAssignmentCommand(this.delivery, actor, id);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.deliver));
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Post(':id/reassign')
+  @HttpCode(200)
+  @ApiRoles(AccountRole.Operator)
+  @ApiOperation({ summary: 'Reassign a stalled order' })
+  @ApiOkResponse({ type: Assignment })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse })
+  @ApiConflictResponse({ type: ErrorResponse, description: 'Assignment is not stalled' })
+  reassign(@CurrentActor() actor: Actor, @Param('id') id: string) {
+    let command: Command<Assignment> = new ReassignAssignmentCommand(this.delivery, actor, id);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.reassign));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);

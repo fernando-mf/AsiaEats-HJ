@@ -3,7 +3,7 @@ import { type Courier, CourierStatus, CourierStatusChangedEvent } from './courie
 
 const ALLOWED_TRANSITIONS: Record<CourierStatus, CourierStatus[]> = {
   [CourierStatus.Offline]: [CourierStatus.Idle, CourierStatus.Assigned],
-  [CourierStatus.Idle]: [CourierStatus.Offline],
+  [CourierStatus.Idle]: [CourierStatus.Offline, CourierStatus.Assigned, CourierStatus.Carrying],
   [CourierStatus.Assigned]: [CourierStatus.Idle],
   [CourierStatus.Carrying]: [CourierStatus.Assigned],
 };
