@@ -1,6 +1,6 @@
 import { validate } from 'class-validator';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { InvalidParamsError } from '#domain/errors.js';
+import { ConflictError, InvalidParamsError, NotFoundError } from '#domain/errors.js';
 import { type Event, EventsService } from '#domain/events/index.js';
 import {
   OrdersService,
@@ -29,6 +29,8 @@ import { AssignmentStateMachine } from './assignments.statemachine.js';
 export abstract class AssignmentRepository {
   abstract create(assignment: Assignment): Promise<Assignment>;
   abstract update(assignment: Assignment): Promise<Assignment>;
+  abstract getById(id: string): Promise<Assignment>;
+  abstract delete(id: string): Promise<void>;
   abstract getByIdAndCourierId(id: string, courierId: string): Promise<Assignment>;
   abstract getActiveByCourierId(courierId: string): Promise<Assignment>; // offered or accepted
   abstract findByOrderId(orderId: string): Promise<Assignment | null>;
@@ -61,27 +63,26 @@ export class DeliveryService implements OnModuleInit {
     if (!(event instanceof CourierStatusChangedEvent)) {
       return;
     }
-    if (event.payload.newStatus !== CourierStatus.Idle) {
-      return;
+    switch (event.payload.newStatus) {
+      case CourierStatus.Idle:
+        await this.retryQueued();
+        return;
+      case CourierStatus.Offline:
+        await this.onCourierOffline(event.entityId, event.actor);
+        return;
     }
-
-    await this.retryQueued();
   }
 
   async onOrderStatusChanged(event: Event): Promise<void> {
     if (!(event instanceof OrderStatusChangedEvent)) {
       return;
     }
-    if (event.payload.newStatus !== OrderStatus.Ready) {
-      return;
+    if (event.payload.newStatus === OrderStatus.Cancelled) {
+      await this.onOrderCancelled(event.entityId);
     }
-    if (!event.actor) {
-      return;
+    if (event.payload.newStatus === OrderStatus.Ready) {
+      await this.onOrderReady(event);
     }
-
-    const order = await this.orders.getById(event.actor, event.entityId);
-    const assignment = await this.dispatch(order);
-    this.logger.log(`order ${order.id} dispatched: ${assignment.status}`);
   }
 
   //
@@ -98,6 +99,67 @@ export class DeliveryService implements OnModuleInit {
     await this.events.publish(event);
 
     return updated;
+  }
+
+  async declineAssignment(actor: Actor, id: string): Promise<Assignment> {
+    const assignment = await this.repository.getByIdAndCourierId(id, actor.id);
+
+    const event = new AssignmentStateMachine(assignment, actor).requeue();
+    assignment.declinedCourierIds = [...assignment.declinedCourierIds, actor.id];
+
+    const queued = await this.repository.update(assignment);
+    await this.events.publish(event);
+
+    const order = await this.orders.getForDispatch(queued.orderId);
+    return this.tryOffer(queued, order);
+  }
+
+  async pickUpAssignment(actor: Actor, id: string): Promise<Assignment> {
+    const assignment = await this.repository.getByIdAndCourierId(id, actor.id);
+    if (assignment.status !== AssignmentStatus.Accepted) {
+      throw new ConflictError(`assignment is not accepted: ${assignment.status}`);
+    }
+
+    await this.orders.pickUp(actor, assignment.orderId);
+    await this.couriers.startCarrying(actor.id);
+
+    return assignment;
+  }
+
+  async deliverAssignment(actor: Actor, id: string): Promise<Assignment> {
+    const assignment = await this.repository.getByIdAndCourierId(id, actor.id);
+    if (assignment.status !== AssignmentStatus.Accepted) {
+      throw new ConflictError(`assignment is not accepted: ${assignment.status}`);
+    }
+
+    const courier = await this.couriers.getById(actor.id);
+    if (courier.status !== CourierStatus.Carrying) {
+      throw new ConflictError(`courier is not carrying the order: ${courier.status}`);
+    }
+
+    await this.orders.deliver(actor, assignment.orderId);
+
+    const statusEvent = new AssignmentStateMachine(assignment, actor).deliver();
+    await this.repository.update(assignment);
+    await this.events.publish(statusEvent);
+
+    await this.couriers.finishJob(actor.id);
+
+    return assignment;
+  }
+
+  async reassignAssignment(actor: Actor, id: string): Promise<Assignment> {
+    const assignment = await this.repository.getById(id);
+    if (assignment.status !== AssignmentStatus.Stalled) {
+      throw new ConflictError(`assignment is not stalled: ${assignment.status}`);
+    }
+
+    const event = new AssignmentStateMachine(assignment, actor).requeue();
+    const queued = await this.repository.update(assignment);
+    await this.events.publish(event);
+
+    const order = await this.orders.getForDispatch(queued.orderId);
+    return this.tryOffer(queued, order);
   }
 
   async findAssignments(actor: Actor, request: AssignmentSearchRequest): Promise<Assignment[]> {
@@ -127,6 +189,56 @@ export class DeliveryService implements OnModuleInit {
   // internal helpers
   //
 
+  private async onOrderReady(event: OrderStatusChangedEvent): Promise<void> {
+    if (!event.actor) {
+      return;
+    }
+
+    const order = await this.orders.getById(event.actor, event.entityId);
+    const assignment = await this.dispatch(order);
+    this.logger.log(`order ${order.id} dispatched: ${assignment.status}`);
+  }
+
+  async onOrderCancelled(orderId: string): Promise<void> {
+    const assignment = await this.repository.findByOrderId(orderId);
+    if (!assignment) {
+      return;
+    }
+
+    await this.repository.delete(assignment.id);
+
+    if (assignment.status === AssignmentStatus.Accepted && assignment.courierId) {
+      await this.couriers.finishJob(assignment.courierId);
+    }
+  }
+
+  async onCourierOffline(courierId: string, actor: Actor | null): Promise<void> {
+    let assignment: Assignment;
+    try {
+      assignment = await this.repository.getActiveByCourierId(courierId);
+    } catch (err) {
+      if (err instanceof NotFoundError) {
+        return;
+      }
+      throw err;
+    }
+
+    const machine = new AssignmentStateMachine(assignment, actor ?? { id: courierId, role: AccountRole.Courier });
+    if (assignment.status === AssignmentStatus.Offered) {
+      const event = machine.requeue();
+      const queued = await this.repository.update(assignment);
+      await this.events.publish(event);
+
+      const order = await this.orders.getForDispatch(queued.orderId);
+      await this.tryOffer(queued, order);
+      return;
+    }
+
+    const event = machine.stall();
+    await this.repository.update(assignment);
+    await this.events.publish(event);
+  }
+
   private async dispatch(order: Order): Promise<Assignment> {
     const existing = await this.repository.findByOrderId(order.id);
     if (existing) {
@@ -140,7 +252,7 @@ export class DeliveryService implements OnModuleInit {
 
   private async tryOffer(assignment: Assignment, order: Order): Promise<Assignment> {
     const restaurant = await this.restaurants.getById(order.restaurantId);
-    const courier = await this.couriers.findClosestAvailable(restaurant.position);
+    const courier = await this.couriers.findClosestAvailable(restaurant.position, assignment.declinedCourierIds);
     if (!courier) {
       return assignment;
     }
@@ -162,6 +274,7 @@ export class DeliveryService implements OnModuleInit {
     draft.orderId = order.id;
     draft.courierId = null;
     draft.status = AssignmentStatus.Queued;
+    draft.declinedCourierIds = [];
     draft.createdAt = now;
     draft.updatedAt = now;
 
@@ -177,10 +290,9 @@ export class DeliveryService implements OnModuleInit {
       try {
         const order = await this.orders.getForDispatch(assignment.orderId);
         const result = await this.tryOffer(assignment, order);
-        if (result.status === AssignmentStatus.Queued) {
-          return;
+        if (result.status !== AssignmentStatus.Queued) {
+          this.logger.log(`order ${order.id} dispatched on retry: ${result.status}`);
         }
-        this.logger.log(`order ${order.id} dispatched on retry: ${result.status}`);
       } catch (err) {
         if (err instanceof InvalidCourierTransitionError) {
           return;

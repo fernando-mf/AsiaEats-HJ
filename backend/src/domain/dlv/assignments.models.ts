@@ -8,6 +8,7 @@ export enum AssignmentStatus {
   Offered = 'offered',
   Accepted = 'accepted',
   Stalled = 'stalled',
+  Delivered = 'delivered',
 }
 
 export class Assignment {
@@ -15,6 +16,7 @@ export class Assignment {
   orderId: string;
   courierId: string | null;
   status: AssignmentStatus;
+  declinedCourierIds: string[];
   createdAt: Date;
   updatedAt: Date;
 }

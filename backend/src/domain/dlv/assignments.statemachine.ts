@@ -3,10 +3,11 @@ import { InvalidAssignmentTransitionError } from './assignments.errors.js';
 import { type Assignment, AssignmentStatus, AssignmentStatusChangedEvent } from './assignments.models.js';
 
 const ALLOWED_TRANSITIONS: Record<AssignmentStatus, AssignmentStatus[]> = {
-  [AssignmentStatus.Queued]: [],
+  [AssignmentStatus.Queued]: [AssignmentStatus.Offered, AssignmentStatus.Stalled],
   [AssignmentStatus.Offered]: [AssignmentStatus.Queued],
   [AssignmentStatus.Accepted]: [AssignmentStatus.Offered],
-  [AssignmentStatus.Stalled]: [],
+  [AssignmentStatus.Stalled]: [AssignmentStatus.Accepted],
+  [AssignmentStatus.Delivered]: [AssignmentStatus.Accepted],
 };
 
 export class AssignmentStateMachine {
@@ -17,6 +18,20 @@ export class AssignmentStateMachine {
 
   public accept(): AssignmentStatusChangedEvent {
     return this.transition(AssignmentStatus.Accepted);
+  }
+
+  public requeue(): AssignmentStatusChangedEvent {
+    const e = this.transition(AssignmentStatus.Queued);
+    this.assignment.courierId = null;
+    return e;
+  }
+
+  public stall(): AssignmentStatusChangedEvent {
+    return this.transition(AssignmentStatus.Stalled);
+  }
+
+  public deliver(): AssignmentStatusChangedEvent {
+    return this.transition(AssignmentStatus.Delivered);
   }
 
   private transition(to: AssignmentStatus): AssignmentStatusChangedEvent {
