@@ -125,6 +125,15 @@ export function apiErrorMessage(error: unknown): string {
           ? `Cannot move this order from ${readableState(from)} to ${readableState(to)}.`
           : 'That command is not valid for the current order state.';
       }
+      case 'invalid_courier_transition': {
+        const from = detail(error, 'from');
+        const to = detail(error, 'to');
+        if (from === 'carrying' && to === 'offline')
+          return 'You cannot go off duty while carrying an order. Deliver it first.';
+        return from && to
+          ? `Cannot change your courier status from ${readableState(from)} to ${readableState(to)}.`
+          : 'That duty change is not allowed for your current courier status.';
+      }
       case 'invalid_params': {
         const messages = fieldMessages(error);
         return messages.length
