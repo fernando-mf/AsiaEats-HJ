@@ -62,6 +62,18 @@ export class PrismaAssignmentRepository extends AssignmentRepository {
       throw new InternalError(err as Error);
     }
   }
+
+  async findQueued(): Promise<Assignment[]> {
+    try {
+      const rows = await this.db.client().deliveryAssignment.findMany({
+        where: { status: AssignmentStatus.Queued },
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      });
+      return rows.map(toAssignment);
+    } catch (err) {
+      throw new InternalError(err as Error);
+    }
+  }
 }
 
 function toAssignment(row: {
