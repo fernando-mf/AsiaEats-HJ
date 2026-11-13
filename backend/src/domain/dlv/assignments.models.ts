@@ -1,4 +1,5 @@
 import { Event } from '#domain/events/index.js';
+import { Order, Restaurant } from '#domain/ord/index.js';
 
 export enum AssignmentStatus {
   Queued = 'queued',
@@ -14,6 +15,13 @@ export class Assignment {
   status: AssignmentStatus;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export class AssignmentComplete {
+  id: string;
+  status: AssignmentStatus;
+  order: Order;
+  restaurant: Restaurant;
 }
 
 export class AssignmentOfferedEvent extends Event<Assignment> {
