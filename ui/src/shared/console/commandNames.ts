@@ -31,6 +31,18 @@ const routes: Array<[Method, RegExp, string]> = [
   ['POST', new RegExp(`^/orders/${ID}/cancel$`), 'CancelOrderCommand'],
   ['POST', /^\/env\/reset$/, 'ResetEnvCommand'],
   ['GET', /^\/events$/, 'GetEventsByEntityCommand'],
+  ['GET', /^\/couriers$/, 'FindCouriersCommand'],
+  ['GET', /^\/couriers\/me$/, 'GetCourierCommand'],
+  ['PUT', /^\/couriers\/me\/position$/, 'UpdateCourierPositionCommand'],
+  ['POST', /^\/couriers\/me\/online$/, 'CourierGoOnlineCommand'],
+  ['POST', /^\/couriers\/me\/offline$/, 'CourierGoOfflineCommand'],
+  ['GET', /^\/order-assignments$/, 'FindAssignmentsCommand'],
+  ['POST', new RegExp(`^/order-assignments/${ID}/accept$`), 'AcceptAssignmentCommand'],
+  ['POST', new RegExp(`^/order-assignments/${ID}/decline$`), 'DeclineAssignmentCommand'],
+  ['POST', new RegExp(`^/order-assignments/${ID}/pickup$`), 'PickupAssignmentCommand'],
+  ['POST', new RegExp(`^/order-assignments/${ID}/deliver$`), 'DeliverAssignmentCommand'],
+  ['POST', new RegExp(`^/order-assignments/${ID}/reassign$`), 'ReassignAssignmentCommand'],
+  ['GET', /^\/couriers\/me\/assignment$/, 'GetCurrentAssignmentCommand'],
 ];
 
 // commandName returns the backend command name for a request, or "METHOD /path"

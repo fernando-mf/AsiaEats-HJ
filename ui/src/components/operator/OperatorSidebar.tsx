@@ -2,18 +2,19 @@ import type { ReactNode } from 'react';
 import { BrandMark } from '../brand/BrandMark';
 import type { Account } from '../dashboard/dashboard.types';
 import { initials } from '../dashboard/dashboard.utils';
-import { IconGrid, IconReceipt, IconRestore, IconSignOut } from '../icons/Icons';
+import { IconBag, IconGrid, IconMap, IconReceipt, IconRestore, IconSignOut } from '../icons/Icons';
 // The operator portal shares the restaurant portal's sidebar layout and styles.
 import '../restaurant/restaurant-shell.css';
 import './operator.css';
 
-export type OperatorPage = 'overview' | 'orders';
+export type OperatorPage = 'overview' | 'orders' | 'delivery' | 'map';
 
 type OperatorSidebarProps = {
   account: Account;
   page: OperatorPage;
   // Orders still waiting for a restaurant to accept or reject them.
   waitingCount: number;
+  stalledDeliveryCount?: number;
   busy: string | null;
   onPageChange: (page: OperatorPage) => void;
   onRestore: () => void;
@@ -23,6 +24,8 @@ type OperatorSidebarProps = {
 const links: Array<{ page: OperatorPage; label: string; icon: ReactNode }> = [
   { page: 'overview', label: 'Overview', icon: <IconGrid size={17} /> },
   { page: 'orders', label: 'Orders', icon: <IconReceipt size={17} /> },
+  { page: 'delivery', label: 'Delivery', icon: <IconBag size={17} /> },
+  { page: 'map', label: 'City Map', icon: <IconMap size={17} /> },
 ];
 
 // OperatorSidebar is the operator console's navigation: its pages, the demo controls that
@@ -31,6 +34,7 @@ export function OperatorSidebar({
   account,
   page,
   waitingCount,
+  stalledDeliveryCount = 0,
   busy,
   onPageChange,
   onRestore,
@@ -59,6 +63,11 @@ export function OperatorSidebar({
             {link.page === 'orders' && waitingCount > 0 ? (
               <span className="sidebar-badge mono" aria-label={`${waitingCount} waiting`}>
                 {waitingCount}
+              </span>
+            ) : null}
+            {link.page === 'delivery' && (stalledDeliveryCount ?? 0) > 0 ? (
+              <span className="sidebar-badge mono is-warning" aria-label={`${stalledDeliveryCount} stalled`}>
+                {stalledDeliveryCount}
               </span>
             ) : null}
           </button>
