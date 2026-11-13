@@ -63,6 +63,7 @@ const ENTITY_LABELS: Record<string, string> = {
   account: 'Account',
   customer: 'Customer profile',
   'menu item': 'Menu item',
+  assignment: 'Delivery offer',
 };
 
 function detail(error: ApiError, key: string): string | undefined {
@@ -134,6 +135,8 @@ export function apiErrorMessage(error: unknown): string {
           ? `Cannot change your courier status from ${readableState(from)} to ${readableState(to)}.`
           : 'That duty change is not allowed for your current courier status.';
       }
+      case 'invalid_assignment_transition':
+        return 'This delivery offer can no longer be answered. It may have been withdrawn.';
       case 'invalid_params': {
         const messages = fieldMessages(error);
         return messages.length
@@ -155,7 +158,9 @@ export function apiErrorMessage(error: unknown): string {
 // Only the command name, status and error are logged: never tokens or request bodies.
 export async function requestJson<TResult = unknown>(
   path: string,
-  options: { method?: Method; body?: unknown } = {},
+  // notFoundExpected marks a 404 not_found as a normal answer (e.g. "nothing assigned yet"): it
+  // is still thrown so the caller can handle it, but the console records it as a read, not an error.
+  options: { method?: Method; body?: unknown; notFoundExpected?: boolean } = {},
 ): Promise<TResult> {
   const method = options.method ?? 'GET';
   const command = commandName(method, path);
@@ -196,6 +201,10 @@ export async function requestJson<TResult = unknown>(
 
   if (!response.ok) {
     const error = new ApiError(response.status, isErrorPayload(payload) ? payload : undefined);
+    if (options.notFoundExpected && error.code === 'not_found') {
+      logSuccess(command, `Nothing found (HTTP ${response.status})`, read);
+      throw error;
+    }
     logError(command, apiErrorMessage(error), error.code ?? `http_${response.status}`, read);
     throw error;
   }
