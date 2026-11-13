@@ -18,6 +18,8 @@ const routes: Array<[Method, RegExp, string]> = [
   ['GET', /^\/couriers\/me\/assignment$/, 'GetCurrentAssignmentCommand'],
   ['POST', new RegExp(`^/order-assignments/${ID}/accept$`), 'AcceptAssignmentCommand'],
   ['POST', new RegExp(`^/order-assignments/${ID}/decline$`), 'DeclineAssignmentCommand'],
+  ['POST', new RegExp(`^/order-assignments/${ID}/pickup$`), 'PickUpAssignmentCommand'],
+  ['POST', new RegExp(`^/order-assignments/${ID}/deliver$`), 'DeliverAssignmentCommand'],
   ['GET', /^\/restaurants$/, 'FindRestaurantsCommand'],
   ['POST', /^\/restaurants$/, 'CreateRestaurantCommand'],
   ['PUT', new RegExp(`^/restaurants/${ID}$`), 'UpdateRestaurantCommand'],
