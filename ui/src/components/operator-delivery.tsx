@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { apiErrorMessage, requestJson } from '../../shared/api/client';
-import type { Order } from '../dashboard/dashboard.types';
-import { orderNumber, timeInStatus, useNow } from '../restaurant/orderTime';
+import { apiErrorMessage, requestJson } from '../shared/api/client';
+import type { Order } from './dashboard/dashboard.types';
+import { orderNumber, timeInStatus, useNow } from './restaurant/orderTime';
 import './operator-delivery.css';
 
 type AssignmentStatus = 'queued' | 'offered' | 'accepted' | 'stalled' | 'delivered';
