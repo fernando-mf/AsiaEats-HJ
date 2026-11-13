@@ -342,5 +342,23 @@ describe('order assignments', () => {
       expect(await operator.assignments.list()).toEqual([]);
       expect((await courier.couriers.me()).status).toBe(CourierStatus.Idle);
     });
+
+    it('offers a queued order to the courier who was freed', async () => {
+      await purgeDatabase();
+      const first = await createReadyOrder('o1');
+      const second = await createReadyOrder('o2');
+      const courier = await putCourierOnline('courier1');
+      const { id } = await getAssignmentByOrderId(first.orderId);
+      await courier.assignments.accept(id);
+      await courier.assignments.pickUp(id);
+      const operator = new Client();
+      await openSessionAsOperator(operator);
+
+      await operator.orders.cancel(first.orderId);
+
+      const next = await getAssignmentByOrderId(second.orderId);
+      expect(next.status).toBe(AssignmentStatus.Offered);
+      expect(next.courierId).toBe((await courier.couriers.me()).account.id);
+    });
   });
 });
