@@ -69,6 +69,17 @@ export class PrismaAssignmentRepository extends AssignmentRepository {
     }
   }
 
+  async getActiveByCourierId(courierId: string): Promise<Assignment> {
+    const row = await this.db.client().deliveryAssignment.findFirst({
+      where: { courierId, status: { in: [AssignmentStatus.Offered, AssignmentStatus.Accepted] } },
+      orderBy: { updatedAt: 'desc' },
+    });
+    if (!row) {
+      throw new NotFoundError('assignment');
+    }
+    return toAssignment(row);
+  }
+
   async findByOrderId(orderId: string): Promise<Assignment | null> {
     try {
       const row = await this.db.client().deliveryAssignment.findUnique({ where: { orderId } });

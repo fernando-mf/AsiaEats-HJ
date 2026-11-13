@@ -19,6 +19,7 @@ import {
   AssignmentOfferedEvent,
   AssignmentStatus,
   AssignmentStatusChangedEvent,
+  type AssignmentComplete,
 } from './assignments.models.js';
 import { AssignmentStateMachine } from './assignments.statemachine.js';
 
@@ -26,6 +27,7 @@ export abstract class AssignmentRepository {
   abstract create(assignment: Assignment): Promise<Assignment>;
   abstract update(assignment: Assignment): Promise<Assignment>;
   abstract getByIdAndCourierId(id: string, courierId: string): Promise<Assignment>;
+  abstract getActiveByCourierId(courierId: string): Promise<Assignment>; // offered or accepted
   abstract findByOrderId(orderId: string): Promise<Assignment | null>;
   abstract findQueued(): Promise<Assignment[]>; // oldest first
 }
@@ -114,6 +116,19 @@ export class DispatcherService implements OnModuleInit {
     await this.events.publish(event);
 
     return updated;
+  }
+
+  async getCurrent(actor: Actor): Promise<AssignmentComplete> {
+    const assignment = await this.repository.getActiveByCourierId(actor.id);
+    const order = await this.orders.getForDispatch(assignment.orderId);
+    const restaurant = await this.restaurants.getById(order.restaurantId);
+
+    return {
+      id: assignment.id,
+      status: assignment.status,
+      order,
+      restaurant,
+    };
   }
 
   private async tryOffer(assignment: Assignment, order: Order): Promise<Assignment> {

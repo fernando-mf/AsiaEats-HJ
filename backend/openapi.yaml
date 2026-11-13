@@ -284,6 +284,43 @@ paths:
         - couriers
       x-roles:
         - operator
+  /api/couriers/me/assignment:
+    get:
+      description: "**Allowed roles:** `courier`"
+      operationId: CouriersController_getAssignment
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignmentComplete"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `courier`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: No active assignment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Get the courier current assignment
+      tags:
+        - couriers
+      x-roles:
+        - courier
   /api/couriers/me/position:
     put:
       description: "**Allowed roles:** `courier`"
@@ -1664,6 +1701,148 @@ components:
         - id
         - position
         - status
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        postalCode:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+      required:
+        - street
+        - city
+        - postalCode
+        - latitude
+        - longitude
+    OrderLine:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        menuItemId:
+          type: string
+        name:
+          type: string
+        unitPrice:
+          type: number
+        quantity:
+          type: number
+      required:
+        - id
+        - orderId
+        - menuItemId
+        - name
+        - unitPrice
+        - quantity
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string
+        customerName:
+          type: string
+        restaurantId:
+          type: string
+        status:
+          enum:
+            - placed
+            - accepted
+            - preparing
+            - ready
+            - picked_up
+            - delivered
+            - rejected
+            - cancelled
+          type: string
+        rejectionReason:
+          type: string
+        deliveryAddress:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/Address"
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderLine"
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - customerId
+        - customerName
+        - restaurantId
+        - status
+        - deliveryAddress
+        - lines
+        - createdAt
+        - updatedAt
+    Restaurant:
+      type: object
+      properties:
+        id:
+          type: string
+        ownerId:
+          type: string
+        name:
+          type: string
+        status:
+          enum:
+            - open
+            - paused
+            - closed
+          type: string
+        position:
+          $ref: "#/components/schemas/Position"
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - ownerId
+        - name
+        - status
+        - position
+        - createdAt
+        - updatedAt
+    AssignmentComplete:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum:
+            - queued
+            - offered
+            - accepted
+            - stalled
+        order:
+          $ref: "#/components/schemas/Order"
+        restaurant:
+          $ref: "#/components/schemas/Restaurant"
+      required:
+        - id
+        - status
+        - order
+        - restaurant
     CourierPositionUpdateRequest:
       type: object
       properties:
@@ -1703,25 +1882,6 @@ components:
           $ref: "#/components/schemas/AddressRequest"
       required:
         - address
-    Address:
-      type: object
-      properties:
-        street:
-          type: string
-        city:
-          type: string
-        postalCode:
-          type: string
-        latitude:
-          type: number
-        longitude:
-          type: number
-      required:
-        - street
-        - city
-        - postalCode
-        - latitude
-        - longitude
     CustomerResponse:
       type: object
       properties:
@@ -1797,77 +1957,6 @@ components:
       required:
         - restaurantId
         - items
-    OrderLine:
-      type: object
-      properties:
-        id:
-          type: string
-        orderId:
-          type: string
-        menuItemId:
-          type: string
-        name:
-          type: string
-        unitPrice:
-          type: number
-        quantity:
-          type: number
-      required:
-        - id
-        - orderId
-        - menuItemId
-        - name
-        - unitPrice
-        - quantity
-    Order:
-      type: object
-      properties:
-        id:
-          type: string
-        customerId:
-          type: string
-        customerName:
-          type: string
-        restaurantId:
-          type: string
-        status:
-          enum:
-            - placed
-            - accepted
-            - preparing
-            - ready
-            - picked_up
-            - delivered
-            - rejected
-            - cancelled
-          type: string
-        rejectionReason:
-          type: string
-        deliveryAddress:
-          nullable: true
-          type: object
-          allOf:
-            - $ref: "#/components/schemas/Address"
-        lines:
-          type: array
-          items:
-            $ref: "#/components/schemas/OrderLine"
-        createdAt:
-          format: date-time
-          type: string
-        updatedAt:
-          format: date-time
-          type: string
-      required:
-        - id
-        - customerId
-        - customerName
-        - restaurantId
-        - status
-        - deliveryAddress
-        - lines
-        - createdAt
-        - updatedAt
     OrderRejectionRequest:
       type: object
       properties:
@@ -1924,37 +2013,6 @@ components:
       required:
         - name
         - position
-    Restaurant:
-      type: object
-      properties:
-        id:
-          type: string
-        ownerId:
-          type: string
-        name:
-          type: string
-        status:
-          enum:
-            - open
-            - paused
-            - closed
-          type: string
-        position:
-          $ref: "#/components/schemas/Position"
-        createdAt:
-          format: date-time
-          type: string
-        updatedAt:
-          format: date-time
-          type: string
-      required:
-        - id
-        - ownerId
-        - name
-        - status
-        - position
-        - createdAt
-        - updatedAt
     RestaurantSearchResult:
       type: object
       properties:
