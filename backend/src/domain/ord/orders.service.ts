@@ -12,6 +12,7 @@ import {
   OrderRejectionRequest,
   OrderSearchRequest,
   OrderStatus,
+  type OrderStatusChangedEvent,
 } from './orders.models.js';
 import { OrderStateMachine } from './orders.statemachine.js';
 import { MenuItemStatus, RestaurantStatus } from './restaurants.models.js';
@@ -147,13 +148,7 @@ export class OrdersService {
   async accept(actor: Actor, id: string): Promise<Order> {
     const order = await this.repository.getById(id, { restaurantOwnerId: actor.id });
 
-    const event = new OrderStateMachine(actor, order).accept();
-    order.updatedAt = new Date();
-
-    const updated = await this.repository.updateStatus(order, event.payload.previousStatus);
-    await this.events.publish(event);
-
-    return updated;
+    return this.transition(order, actor, machine => machine.accept());
   }
 
   async reject(actor: Actor, id: string, request: OrderRejectionRequest): Promise<Order> {
@@ -164,13 +159,7 @@ export class OrdersService {
 
     const order = await this.repository.getById(id, { restaurantOwnerId: actor.id });
 
-    const event = new OrderStateMachine(actor, order).reject(request.reason);
-    order.updatedAt = new Date();
-
-    const updated = await this.repository.updateStatus(order, event.payload.previousStatus);
-    await this.events.publish(event);
-
-    return updated;
+    return this.transition(order, actor, machine => machine.reject(request.reason));
   }
 
   async prepare(actor: Actor, id: string): Promise<Order> {
@@ -181,25 +170,19 @@ export class OrdersService {
       throw new ConflictError('order is not next in the preparation queue');
     }
 
-    const event = new OrderStateMachine(actor, order).prepare();
-    order.updatedAt = new Date();
-
-    const updated = await this.repository.updateStatus(order, event.payload.previousStatus);
-    await this.events.publish(event);
-
-    return updated;
+    return this.transition(order, actor, machine => machine.prepare());
   }
 
   async ready(actor: Actor, id: string): Promise<Order> {
     const order = await this.repository.getById(id, { restaurantOwnerId: actor.id });
 
-    const event = new OrderStateMachine(actor, order).ready();
-    order.updatedAt = new Date();
+    return this.transition(order, actor, machine => machine.ready());
+  }
 
-    const updated = await this.repository.updateStatus(order, event.payload.previousStatus);
-    await this.events.publish(event);
+  async pickUp(actor: Actor, id: string): Promise<Order> {
+    const order = await this.repository.getById(id);
 
-    return updated;
+    return this.transition(order, actor, machine => machine.pickUp());
   }
 
   async getPreparationQueue(actor: Actor, restaurantId: string): Promise<Order[]> {
@@ -210,7 +193,15 @@ export class OrdersService {
   async cancel(actor: Actor, id: string): Promise<Order> {
     const order = await this.getById(actor, id);
 
-    const event = new OrderStateMachine(actor, order).cancel();
+    return this.transition(order, actor, machine => machine.cancel());
+  }
+
+  private async transition(
+    order: Order,
+    actor: Actor,
+    apply: (machine: OrderStateMachine) => OrderStatusChangedEvent,
+  ): Promise<Order> {
+    const event = apply(new OrderStateMachine(actor, order));
     order.updatedAt = new Date();
 
     const updated = await this.repository.updateStatus(order, event.payload.previousStatus);

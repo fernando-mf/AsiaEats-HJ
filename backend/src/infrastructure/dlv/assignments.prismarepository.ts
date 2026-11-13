@@ -16,6 +16,7 @@ export class PrismaAssignmentRepository extends AssignmentRepository {
           orderId: assignment.orderId,
           courierId: assignment.courierId,
           status: assignment.status,
+          declinedCourierIds: assignment.declinedCourierIds ?? [],
           createdAt: assignment.createdAt,
           updatedAt: assignment.updatedAt,
         },
@@ -39,6 +40,7 @@ export class PrismaAssignmentRepository extends AssignmentRepository {
         data: {
           courierId: assignment.courierId,
           status: assignment.status,
+          declinedCourierIds: assignment.declinedCourierIds,
           updatedAt: assignment.updatedAt,
         },
       });
@@ -100,6 +102,7 @@ function toAssignment(row: {
   orderId: string;
   courierId: string | null;
   status: string;
+  declinedCourierIds: string[] | null;
   createdAt: Date;
   updatedAt: Date;
 }): Assignment {
@@ -108,6 +111,7 @@ function toAssignment(row: {
   assignment.orderId = row.orderId;
   assignment.courierId = row.courierId;
   assignment.status = row.status as AssignmentStatus;
+  assignment.declinedCourierIds = row.declinedCourierIds ?? [];
   assignment.createdAt = row.createdAt;
   assignment.updatedAt = row.updatedAt;
   return assignment;

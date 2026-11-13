@@ -15,6 +15,7 @@ export class Assignment {
   orderId: string;
   courierId: string | null;
   status: AssignmentStatus;
+  declinedCourierIds: string[];
   createdAt: Date;
   updatedAt: Date;
 }

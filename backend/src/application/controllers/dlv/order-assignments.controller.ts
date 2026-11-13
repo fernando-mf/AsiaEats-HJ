@@ -15,6 +15,8 @@ import { CommandRunner } from '#application/commands/command-runner.js';
 import { AuthorizedCommand } from '#application/commands/decorators/authorized-command.js';
 import { LoggedCommand } from '#application/commands/decorators/logged-command.js';
 import { FindAssignmentsCommand } from '#application/commands/dlv/find-assignments.command.js';
+import { DeclineAssignmentCommand } from '#application/commands/dlv/decline-assignment.command.js';
+import { PickUpAssignmentCommand } from '#application/commands/dlv/pickup-assignment.command.js';
 import { AcceptAssignmentCommand } from '#application/commands/dlv/accept-assignment.command.js';
 import { Command } from '#application/commands/command.js';
 import { CurrentActor } from '#application/auth/current-actor.decorator.js';
@@ -66,6 +68,38 @@ export class OrderAssignmentsController {
   accept(@CurrentActor() actor: Actor, @Param('id') id: string) {
     let command: Command<Assignment> = new AcceptAssignmentCommand(this.delivery, actor, id);
     command = new AuthorizedCommand(command, actor, getApiRoles(this.accept));
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Post(':id/decline')
+  @HttpCode(200)
+  @ApiRoles(AccountRole.Courier)
+  @ApiOperation({ summary: 'Decline the order offered to the courier' })
+  @ApiOkResponse({ type: Assignment })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse, description: 'Not offered to this courier' })
+  @ApiConflictResponse({ type: ErrorResponse, description: 'Assignment is not offered' })
+  decline(@CurrentActor() actor: Actor, @Param('id') id: string) {
+    let command: Command<Assignment> = new DeclineAssignmentCommand(this.delivery, actor, id);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.decline));
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Post(':id/pickup')
+  @HttpCode(200)
+  @ApiRoles(AccountRole.Courier)
+  @ApiOperation({ summary: 'Confirm pickup of the order at the restaurant' })
+  @ApiOkResponse({ type: Assignment })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse, description: 'Not assigned to this courier' })
+  @ApiConflictResponse({ type: ErrorResponse, description: 'Assignment is not accepted or order is not ready' })
+  pickUp(@CurrentActor() actor: Actor, @Param('id') id: string) {
+    let command: Command<Assignment> = new PickUpAssignmentCommand(this.delivery, actor, id);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.pickUp));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);

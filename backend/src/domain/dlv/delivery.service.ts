@@ -1,6 +1,6 @@
 import { validate } from 'class-validator';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { InvalidParamsError } from '#domain/errors.js';
+import { ConflictError, InvalidParamsError, NotFoundError } from '#domain/errors.js';
 import { type Event, EventsService } from '#domain/events/index.js';
 import {
   OrdersService,
@@ -61,11 +61,14 @@ export class DeliveryService implements OnModuleInit {
     if (!(event instanceof CourierStatusChangedEvent)) {
       return;
     }
-    if (event.payload.newStatus !== CourierStatus.Idle) {
-      return;
+    switch (event.payload.newStatus) {
+      case CourierStatus.Idle:
+        await this.retryQueued();
+        return;
+      case CourierStatus.Offline:
+        await this.onCourierOffline(event.entityId, event.actor);
+        return;
     }
-
-    await this.retryQueued();
   }
 
   async onOrderStatusChanged(event: Event): Promise<void> {
@@ -100,6 +103,31 @@ export class DeliveryService implements OnModuleInit {
     return updated;
   }
 
+  async declineAssignment(actor: Actor, id: string): Promise<Assignment> {
+    const assignment = await this.repository.getByIdAndCourierId(id, actor.id);
+
+    const event = new AssignmentStateMachine(assignment, actor).requeue();
+    assignment.declinedCourierIds = [...assignment.declinedCourierIds, actor.id];
+
+    const queued = await this.repository.update(assignment);
+    await this.events.publish(event);
+
+    const order = await this.orders.getForDispatch(queued.orderId);
+    return this.tryOffer(queued, order);
+  }
+
+  async pickUpAssignment(actor: Actor, id: string): Promise<Assignment> {
+    const assignment = await this.repository.getByIdAndCourierId(id, actor.id);
+    if (assignment.status !== AssignmentStatus.Accepted) {
+      throw new ConflictError(`assignment is not accepted: ${assignment.status}`);
+    }
+
+    await this.orders.pickUp(actor, assignment.orderId);
+    await this.couriers.startCarrying(actor.id);
+
+    return assignment;
+  }
+
   async findAssignments(actor: Actor, request: AssignmentSearchRequest): Promise<Assignment[]> {
     const errors = await validate(request);
     if (errors.length > 0) {
@@ -127,6 +155,33 @@ export class DeliveryService implements OnModuleInit {
   // internal helpers
   //
 
+  async onCourierOffline(courierId: string, actor: Actor | null): Promise<void> {
+    let assignment: Assignment;
+    try {
+      assignment = await this.repository.getActiveByCourierId(courierId);
+    } catch (err) {
+      if (err instanceof NotFoundError) {
+        return;
+      }
+      throw err;
+    }
+
+    const machine = new AssignmentStateMachine(assignment, actor ?? { id: courierId, role: AccountRole.Courier });
+    if (assignment.status === AssignmentStatus.Offered) {
+      const event = machine.requeue();
+      const queued = await this.repository.update(assignment);
+      await this.events.publish(event);
+
+      const order = await this.orders.getForDispatch(queued.orderId);
+      await this.tryOffer(queued, order);
+      return;
+    }
+
+    const event = machine.stall();
+    await this.repository.update(assignment);
+    await this.events.publish(event);
+  }
+
   private async dispatch(order: Order): Promise<Assignment> {
     const existing = await this.repository.findByOrderId(order.id);
     if (existing) {
@@ -140,7 +195,7 @@ export class DeliveryService implements OnModuleInit {
 
   private async tryOffer(assignment: Assignment, order: Order): Promise<Assignment> {
     const restaurant = await this.restaurants.getById(order.restaurantId);
-    const courier = await this.couriers.findClosestAvailable(restaurant.position);
+    const courier = await this.couriers.findClosestAvailable(restaurant.position, assignment.declinedCourierIds);
     if (!courier) {
       return assignment;
     }
@@ -162,6 +217,7 @@ export class DeliveryService implements OnModuleInit {
     draft.orderId = order.id;
     draft.courierId = null;
     draft.status = AssignmentStatus.Queued;
+    draft.declinedCourierIds = [];
     draft.createdAt = now;
     draft.updatedAt = now;
 
@@ -177,10 +233,9 @@ export class DeliveryService implements OnModuleInit {
       try {
         const order = await this.orders.getForDispatch(assignment.orderId);
         const result = await this.tryOffer(assignment, order);
-        if (result.status === AssignmentStatus.Queued) {
-          return;
+        if (result.status !== AssignmentStatus.Queued) {
+          this.logger.log(`order ${order.id} dispatched on retry: ${result.status}`);
         }
-        this.logger.log(`order ${order.id} dispatched on retry: ${result.status}`);
       } catch (err) {
         if (err instanceof InvalidCourierTransitionError) {
           return;

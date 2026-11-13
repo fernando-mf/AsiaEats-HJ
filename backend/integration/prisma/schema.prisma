@@ -190,6 +190,8 @@ model DeliveryAssignment {
   orderId   String           @unique @map("order_id") @db.Uuid
   courierId String?          @map("courier_id") @db.Uuid
   status    AssignmentStatus
+  // Couriers who declined this order, excluded when it is offered again.
+  declinedCourierIds String[] @default([]) @map("declined_courier_ids") @db.Uuid
   createdAt DateTime         @map("created_at")
   updatedAt DateTime         @map("updated_at")
 
