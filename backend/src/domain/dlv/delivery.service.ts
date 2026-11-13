@@ -1,4 +1,6 @@
+import { validate } from 'class-validator';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { InvalidParamsError } from '#domain/errors.js';
 import { type Event, EventsService } from '#domain/events/index.js';
 import {
   OrdersService,
@@ -9,6 +11,7 @@ import {
 } from '#domain/ord/index.js';
 import {
   type Actor,
+  AccountRole,
   CouriersService,
   CourierStatus,
   CourierStatusChangedEvent,
@@ -16,7 +19,7 @@ import {
 } from '#domain/reg/index.js';
 import {
   Assignment,
-  AssignmentOfferedEvent,
+  type AssignmentSearchRequest,
   AssignmentStatus,
   AssignmentStatusChangedEvent,
   type AssignmentComplete,
@@ -30,11 +33,12 @@ export abstract class AssignmentRepository {
   abstract getActiveByCourierId(courierId: string): Promise<Assignment>; // offered or accepted
   abstract findByOrderId(orderId: string): Promise<Assignment | null>;
   abstract findQueued(): Promise<Assignment[]>; // oldest first
+  abstract list(filter: AssignmentSearchRequest): Promise<Assignment[]>; // oldest first
 }
 
 @Injectable()
-export class DispatcherService implements OnModuleInit {
-  private readonly logger = new Logger(DispatcherService.name);
+export class DeliveryService implements OnModuleInit {
+  private readonly logger = new Logger(DeliveryService.name);
 
   constructor(
     private readonly repository: AssignmentRepository,
@@ -49,6 +53,10 @@ export class DispatcherService implements OnModuleInit {
     this.events.subscribe('courier.status_changed', event => this.onCourierStatusChanged(event));
   }
 
+  //
+  // event handlers
+  //
+
   async onCourierStatusChanged(event: Event): Promise<void> {
     if (!(event instanceof CourierStatusChangedEvent)) {
       return;
@@ -58,25 +66,6 @@ export class DispatcherService implements OnModuleInit {
     }
 
     await this.retryQueued();
-  }
-
-  async retryQueued(): Promise<void> {
-    const queued = await this.repository.findQueued();
-    for (const assignment of queued) {
-      try {
-        const order = await this.orders.getForDispatch(assignment.orderId);
-        const result = await this.tryOffer(assignment, order);
-        if (result.status === AssignmentStatus.Queued) {
-          return;
-        }
-        this.logger.log(`order ${order.id} dispatched on retry: ${result.status}`);
-      } catch (err) {
-        if (err instanceof InvalidCourierTransitionError) {
-          return;
-        }
-        this.logger.error(`retry of assignment ${assignment.id} failed: ${err}`);
-      }
-    }
   }
 
   async onOrderStatusChanged(event: Event): Promise<void> {
@@ -95,18 +84,11 @@ export class DispatcherService implements OnModuleInit {
     this.logger.log(`order ${order.id} dispatched: ${assignment.status}`);
   }
 
-  async dispatch(order: Order): Promise<Assignment> {
-    const existing = await this.repository.findByOrderId(order.id);
-    if (existing) {
-      return existing;
-    }
+  //
+  // assignment methods
+  //
 
-    const assignment = await this.queue(order);
-
-    return this.tryOffer(assignment, order);
-  }
-
-  async accept(actor: Actor, id: string): Promise<Assignment> {
+  async acceptAssignment(actor: Actor, id: string): Promise<Assignment> {
     const assignment = await this.repository.getByIdAndCourierId(id, actor.id);
     const event = new AssignmentStateMachine(assignment, actor).accept();
 
@@ -118,8 +100,18 @@ export class DispatcherService implements OnModuleInit {
     return updated;
   }
 
-  async getCurrent(actor: Actor): Promise<AssignmentComplete> {
-    const assignment = await this.repository.getActiveByCourierId(actor.id);
+  async findAssignments(actor: Actor, request: AssignmentSearchRequest): Promise<Assignment[]> {
+    const errors = await validate(request);
+    if (errors.length > 0) {
+      throw InvalidParamsError.fromClassValidator(errors);
+    }
+
+    const courierId = actor.role === AccountRole.Courier ? actor.id : request.courierId;
+    return this.repository.list({ status: request.status, courierId });
+  }
+
+  async getAssignmentByCourierId(courierId: string): Promise<AssignmentComplete> {
+    const assignment = await this.repository.getActiveByCourierId(courierId);
     const order = await this.orders.getForDispatch(assignment.orderId);
     const restaurant = await this.restaurants.getById(order.restaurantId);
 
@@ -131,6 +123,21 @@ export class DispatcherService implements OnModuleInit {
     };
   }
 
+  //
+  // internal helpers
+  //
+
+  private async dispatch(order: Order): Promise<Assignment> {
+    const existing = await this.repository.findByOrderId(order.id);
+    if (existing) {
+      return existing;
+    }
+
+    const assignment = await this.queue(order);
+
+    return this.tryOffer(assignment, order);
+  }
+
   private async tryOffer(assignment: Assignment, order: Order): Promise<Assignment> {
     const restaurant = await this.restaurants.getById(order.restaurantId);
     const courier = await this.couriers.findClosestAvailable(restaurant.position);
@@ -138,7 +145,15 @@ export class DispatcherService implements OnModuleInit {
       return assignment;
     }
 
-    return this.offer(assignment, courier.account.id);
+    const previousStatus = assignment.status;
+    assignment.courierId = courier.account.id;
+    assignment.status = AssignmentStatus.Offered;
+    assignment.updatedAt = new Date();
+
+    const updatedAssignment = await this.repository.update(assignment);
+    await this.publishStatusChanged(updatedAssignment, previousStatus);
+
+    return updatedAssignment;
   }
 
   private async queue(order: Order): Promise<Assignment> {
@@ -156,17 +171,23 @@ export class DispatcherService implements OnModuleInit {
     return assignment;
   }
 
-  private async offer(queued: Assignment, courierId: string): Promise<Assignment> {
-    const previousStatus = queued.status;
-    queued.courierId = courierId;
-    queued.status = AssignmentStatus.Offered;
-    queued.updatedAt = new Date();
-
-    const assignment = await this.repository.update(queued);
-    await this.events.publish(new AssignmentOfferedEvent({ entityId: assignment.id, payload: assignment }));
-    await this.publishStatusChanged(assignment, previousStatus);
-
-    return assignment;
+  private async retryQueued(): Promise<void> {
+    const queued = await this.repository.findQueued();
+    for (const assignment of queued) {
+      try {
+        const order = await this.orders.getForDispatch(assignment.orderId);
+        const result = await this.tryOffer(assignment, order);
+        if (result.status === AssignmentStatus.Queued) {
+          return;
+        }
+        this.logger.log(`order ${order.id} dispatched on retry: ${result.status}`);
+      } catch (err) {
+        if (err instanceof InvalidCourierTransitionError) {
+          return;
+        }
+        this.logger.error(`retry of assignment ${assignment.id} failed: ${err}`);
+      }
+    }
   }
 
   private publishStatusChanged(assignment: Assignment, previousStatus: AssignmentStatus | null): Promise<void> {

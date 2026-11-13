@@ -1,4 +1,4 @@
-import { Controller, HttpCode, Logger, Param, Post } from '@nestjs/common';
+import { Controller, Get, HttpCode, Logger, Param, Post, Query } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -9,11 +9,12 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { Assignment, DispatcherService } from '#domain/dlv/index.js';
+import { Assignment, AssignmentSearchRequest, DeliveryService } from '#domain/dlv/index.js';
 import { AccountRole, type Actor } from '#domain/reg/index.js';
 import { CommandRunner } from '#application/commands/command-runner.js';
 import { AuthorizedCommand } from '#application/commands/decorators/authorized-command.js';
 import { LoggedCommand } from '#application/commands/decorators/logged-command.js';
+import { FindAssignmentsCommand } from '#application/commands/dlv/find-assignments.command.js';
 import { AcceptAssignmentCommand } from '#application/commands/dlv/accept-assignment.command.js';
 import { Command } from '#application/commands/command.js';
 import { CurrentActor } from '#application/auth/current-actor.decorator.js';
@@ -27,9 +28,28 @@ export class OrderAssignmentsController {
   private readonly logger = new Logger(OrderAssignmentsController.name);
 
   constructor(
-    private readonly dispatcher: DispatcherService,
+    private readonly delivery: DeliveryService,
     private readonly commandRunner: CommandRunner,
   ) {}
+
+  @Get()
+  @ApiRoles(AccountRole.Operator, AccountRole.Courier)
+  @ApiOperation({
+    summary: 'List order assignments',
+    description: 'A courier only gets their own assignments, the `courierId` query value is ignored.',
+  })
+  @ApiOkResponse({ type: [Assignment] })
+  @ApiBadRequestResponse({ type: ErrorResponse })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  find(@CurrentActor() actor: Actor, @Query() query: AssignmentSearchRequest) {
+    const request = AssignmentSearchRequest.initialize(query);
+
+    let command: Command<Assignment[]> = new FindAssignmentsCommand(this.delivery, actor, request);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.find));
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
 
   @Post(':id/accept')
   @HttpCode(200)
@@ -44,7 +64,7 @@ export class OrderAssignmentsController {
     description: 'Assignment is not offered, order is not ready, or the courier already holds an order',
   })
   accept(@CurrentActor() actor: Actor, @Param('id') id: string) {
-    let command: Command<Assignment> = new AcceptAssignmentCommand(this.dispatcher, actor, id);
+    let command: Command<Assignment> = new AcceptAssignmentCommand(this.delivery, actor, id);
     command = new AuthorizedCommand(command, actor, getApiRoles(this.accept));
     command = new LoggedCommand(command, this.logger, actor);
 

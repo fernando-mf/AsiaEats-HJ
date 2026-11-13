@@ -104,13 +104,23 @@ export async function createReadyOrder(name: string): Promise<{ orderId: string 
   return { orderId: order.id };
 }
 
-// TODO(#121, #122): assignments aren't exposed through the API yet, so tests read them straight from the database.
-// Replace with the assignments API once available.
+// TODO(#122): the courier's current assignment isn't exposed through the API yet, so tests read it straight
+// from the database. Replace with the assignments API once available.
 export async function getAssignmentByOrderId(orderId: string): Promise<Assignment> {
   const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
   try {
     const row = await db.deliveryAssignment.findUniqueOrThrow({ where: { orderId } });
     return row as Assignment;
+  } finally {
+    await db.$disconnect();
+  }
+}
+
+// TODO: Nothing stalls assignments through the API yet, so tests mark one stalled directly.
+export async function stallAssignment(orderId: string): Promise<void> {
+  const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
+  try {
+    await db.deliveryAssignment.update({ where: { orderId }, data: { status: 'stalled', courierId: null } });
   } finally {
     await db.$disconnect();
   }

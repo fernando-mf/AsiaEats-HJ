@@ -1,4 +1,4 @@
-import type { AssignmentComplete, DispatcherService } from '#domain/dlv/index.js';
+import type { AssignmentComplete, DeliveryService } from '#domain/dlv/index.js';
 import type { Actor } from '#domain/reg/index.js';
 import type { Command } from '#application/commands/command.js';
 
@@ -7,11 +7,11 @@ export class GetCurrentAssignmentCommand implements Command<AssignmentComplete> 
   readonly readOnly = true;
 
   constructor(
-    private readonly dispatcher: DispatcherService,
+    private readonly delivery: DeliveryService,
     private readonly actor: Actor,
   ) {}
 
   async execute(): Promise<AssignmentComplete> {
-    return this.dispatcher.getCurrent(this.actor);
+    return this.delivery.getAssignmentByCourierId(this.actor.id);
   }
 }

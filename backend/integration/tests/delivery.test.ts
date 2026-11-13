@@ -7,7 +7,7 @@ async function statusOf(courier: Awaited<ReturnType<typeof putCourierOnline>>) {
   return (await courier.couriers.me()).status;
 }
 
-describe('dispatcher retry', () => {
+describe('delivery retry', () => {
   it('offers a queued order when a courier goes online', async () => {
     await purgeDatabase();
     const { orderId } = await createReadyOrder('o1');
