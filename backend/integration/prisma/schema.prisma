@@ -67,7 +67,8 @@ model Courier {
   createdAt DateTime      @map("created_at")
   updatedAt DateTime      @map("updated_at")
 
-  account Account @relation(fields: [accountId], references: [id])
+  account     Account              @relation(fields: [accountId], references: [id])
+  assignments DeliveryAssignment[]
 
   @@map("couriers")
 }
@@ -152,6 +153,7 @@ model Order {
   customer   Account     @relation(fields: [customerId], references: [id])
   restaurant Restaurant  @relation(fields: [restaurantId], references: [id])
   lines      OrderLine[]
+  assignment DeliveryAssignment?
 
   @@index([customerId])
   @@index([restaurantId])
@@ -173,6 +175,31 @@ model OrderLine {
 }
 
 // EventLog is append-only. Rows are inserted by the event publisher and never updated or deleted.
+enum AssignmentStatus {
+  queued
+  offered
+  accepted
+  stalled
+
+  @@map("assignment_status")
+}
+
+// A ready order offered to a courier. courier_id is null while the order is queued.
+model DeliveryAssignment {
+  id        String           @id @default(uuid(7)) @db.Uuid
+  orderId   String           @unique @map("order_id") @db.Uuid
+  courierId String?          @map("courier_id") @db.Uuid
+  status    AssignmentStatus
+  createdAt DateTime         @map("created_at")
+  updatedAt DateTime         @map("updated_at")
+
+  order   Order    @relation(fields: [orderId], references: [id])
+  courier Courier? @relation(fields: [courierId], references: [accountId])
+
+  @@index([courierId])
+  @@map("delivery_assignments")
+}
+
 model EventLog {
   id         String       @id @db.Uuid
   entityType String       @map("entity_type")

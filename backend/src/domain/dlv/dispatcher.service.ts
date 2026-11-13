@@ -1,0 +1,116 @@
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { type Event, EventsService } from '#domain/events/index.js';
+import {
+  OrdersService,
+  OrderStatus,
+  OrderStatusChangedEvent,
+  RestaurantsService,
+  type Order,
+} from '#domain/ord/index.js';
+import { CouriersService } from '#domain/reg/index.js';
+import {
+  Assignment,
+  AssignmentOfferedEvent,
+  AssignmentStatus,
+  AssignmentStatusChangedEvent,
+} from './assignments.models.js';
+
+export abstract class AssignmentRepository {
+  abstract create(assignment: Assignment): Promise<Assignment>;
+  abstract update(assignment: Assignment): Promise<Assignment>;
+  abstract findByOrderId(orderId: string): Promise<Assignment | null>;
+}
+
+@Injectable()
+export class DispatcherService implements OnModuleInit {
+  private readonly logger = new Logger(DispatcherService.name);
+
+  constructor(
+    private readonly repository: AssignmentRepository,
+    private readonly orders: OrdersService,
+    private readonly restaurants: RestaurantsService,
+    private readonly couriers: CouriersService,
+    private readonly events: EventsService,
+  ) {}
+
+  onModuleInit(): void {
+    this.events.subscribe('order.status_changed', event => this.onOrderStatusChanged(event));
+  }
+
+  async onOrderStatusChanged(event: Event): Promise<void> {
+    if (!(event instanceof OrderStatusChangedEvent)) {
+      return;
+    }
+    if (event.payload.newStatus !== OrderStatus.Ready) {
+      return;
+    }
+    if (!event.actor) {
+      return;
+    }
+
+    const order = await this.orders.getById(event.actor, event.entityId);
+    const assignment = await this.dispatch(order);
+    this.logger.log(`order ${order.id} dispatched: ${assignment.status}`);
+  }
+
+  async dispatch(order: Order): Promise<Assignment> {
+    const existing = await this.repository.findByOrderId(order.id);
+    if (existing) {
+      return existing;
+    }
+
+    const assignment = await this.queue(order);
+
+    const restaurant = await this.restaurants.getById(order.restaurantId);
+    const courier = await this.couriers.findClosestAvailable(restaurant.position);
+    if (!courier) {
+      return assignment;
+    }
+
+    await this.couriers.reserve(courier.account.id);
+
+    return this.offer(assignment, courier.account.id);
+  }
+
+  private async queue(order: Order): Promise<Assignment> {
+    const now = new Date();
+    const draft = new Assignment();
+    draft.orderId = order.id;
+    draft.courierId = null;
+    draft.status = AssignmentStatus.Queued;
+    draft.createdAt = now;
+    draft.updatedAt = now;
+
+    const assignment = await this.repository.create(draft);
+    await this.publishStatusChanged(assignment, null);
+
+    return assignment;
+  }
+
+  private async offer(queued: Assignment, courierId: string): Promise<Assignment> {
+    const previousStatus = queued.status;
+    queued.courierId = courierId;
+    queued.status = AssignmentStatus.Offered;
+    queued.updatedAt = new Date();
+
+    const assignment = await this.repository.update(queued);
+    await this.events.publish(new AssignmentOfferedEvent({ entityId: assignment.id, payload: assignment }));
+    await this.publishStatusChanged(assignment, previousStatus);
+
+    return assignment;
+  }
+
+  private publishStatusChanged(assignment: Assignment, previousStatus: AssignmentStatus | null): Promise<void> {
+    return this.events.publish(
+      new AssignmentStatusChangedEvent({
+        entityId: assignment.id,
+        payload: {
+          previousStatus,
+          newStatus: assignment.status,
+          orderId: assignment.orderId,
+          courierId: assignment.courierId,
+        },
+      }),
+    );
+  }
+}

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DispatcherService } from './dlv/dispatcher.service.js';
 import { EnvService } from './env/env.service.js';
 import { EventsService } from './events/events.service.js';
 import { OrdersService } from './ord/orders.service.js';
@@ -14,6 +15,7 @@ import { CustomersService } from './reg/customers.service.js';
     CouriersService,
     CustomersService,
     DefaultAccountCreationHandler,
+    DispatcherService,
     EnvService,
     EventsService,
     OrdersService,

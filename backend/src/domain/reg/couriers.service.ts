@@ -4,6 +4,7 @@ import { EventsService } from '#domain/events/index.js';
 import { InvalidParamsError } from '#domain/errors.js';
 import { type Account, AccountRole, type Actor } from './accounts.models.js';
 import type { AccountCreationHandler } from './accounts.handlers.js';
+import { InvalidCourierTransitionError } from './couriers.errors.js';
 import { CourierStateMachine } from './couriers.statemachine.js';
 import {
   Courier,
@@ -49,6 +50,15 @@ export class CouriersService implements AccountCreationHandler {
 
   findClosestAvailable(origin: Position): Promise<Courier | null> {
     return this.repository.findClosestIdle(origin);
+  }
+
+  async reserve(courierId: string): Promise<void> {
+    const courier = await this.repository.getByAccountId(courierId);
+    if (courier.status !== CourierStatus.Idle) {
+      throw new InvalidCourierTransitionError(courier.status, CourierStatus.Assigned);
+    }
+
+    await this.updateCourierStatus(courierId, CourierStatus.Assigned);
   }
 
   // handleAccountCreation creates a default Courier entry linked to the given Account.
