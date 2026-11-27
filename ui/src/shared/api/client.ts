@@ -1,3 +1,4 @@
+
 import { commandName } from '../console/commandNames';
 import { logError, logSuccess } from '../console/outputConsole';
 
@@ -92,65 +93,92 @@ function fieldMessages(error: ApiError): string[] {
   );
 }
 
+// Each API error code has its own handler.
+const API_ERROR_MESSAGES: Record<string, (error: ApiError) => string> = {
+  forbidden: () =>
+    'Your account role is not allowed to perform that command.',
+
+  unauthenticated: () =>
+    'Your session is missing or expired. Please sign in again.',
+
+  not_found: (error) => {
+    const entityLabel = ENTITY_LABELS[detail(error, 'entityType') ?? ''];
+    return entityLabel
+      ? `${entityLabel} not found.`
+      : 'The requested resource was not found.';
+  },
+
+  duplicate_entity: (error) => {
+    const entityLabel = ENTITY_LABELS[detail(error, 'entityType') ?? ''];
+    return entityLabel
+      ? `${entityLabel} already exists.`
+      : 'That record already exists.';
+  },
+
+  restaurant_not_open: (error) => {
+    const status = detail(error, 'restaurantStatus');
+    return status
+      ? `Restaurant is ${readableState(status)} and is not accepting orders.`
+      : 'Restaurant is not accepting orders.';
+  },
+
+  menu_item_sold_out: () =>
+    'An item in your order is sold out.',
+
+  menu_item_not_in_menu: () =>
+    "An item is not on this restaurant's menu.",
+
+  conflict: (error) => {
+    const reason = detail(error, 'reason');
+    return reason
+      ? sentence(reason)
+      : 'That command is not valid for the current order state.';
+  },
+
+  invalid_order_transition: (error) => {
+    const from = detail(error, 'from');
+    const to = detail(error, 'to');
+
+    return from && to
+      ? `Cannot move this order from ${readableState(from)} to ${readableState(to)}.`
+      : 'That command is not valid for the current order state.';
+  },
+
+  invalid_courier_transition: (error) => {
+    const from = detail(error, 'from');
+    const to = detail(error, 'to');
+
+    if (from === 'carrying' && to === 'offline') {
+      return 'You cannot go off duty while carrying an order. Deliver it first.';
+    }
+
+    return from && to
+      ? `Cannot change your courier status from ${readableState(from)} to ${readableState(to)}.`
+      : 'That duty change is not allowed for your current courier status.';
+  },
+
+  invalid_assignment_transition: () =>
+    'This delivery offer can no longer be answered. It may have been withdrawn.',
+
+  invalid_params: (error) => {
+    const messages = fieldMessages(error);
+
+    return messages.length
+      ? `Some of the submitted data is invalid: ${messages.slice(0, 3).join('; ')}.`
+      : 'Some of the submitted data is invalid.';
+  },
+
+  internal: () =>
+    'Something went wrong on the server. Please try again.',
+};
+
 export function apiErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    const entityLabel = ENTITY_LABELS[detail(error, 'entityType') ?? ''];
-
-    switch (error.code) {
-      case 'forbidden':
-        return 'Your account role is not allowed to perform that command.';
-      case 'unauthenticated':
-        return 'Your session is missing or expired. Please sign in again.';
-      case 'not_found':
-        return entityLabel ? `${entityLabel} not found.` : 'The requested resource was not found.';
-      case 'duplicate_entity':
-        return entityLabel ? `${entityLabel} already exists.` : 'That record already exists.';
-      case 'restaurant_not_open': {
-        const status = detail(error, 'restaurantStatus');
-        return status
-          ? `Restaurant is ${readableState(status)} and is not accepting orders.`
-          : 'Restaurant is not accepting orders.';
-      }
-      case 'menu_item_sold_out':
-        return 'An item in your order is sold out.';
-      case 'menu_item_not_in_menu':
-        return "An item is not on this restaurant's menu.";
-      case 'conflict': {
-        const reason = detail(error, 'reason');
-        return reason ? sentence(reason) : 'That command is not valid for the current order state.';
-      }
-      case 'invalid_order_transition': {
-        const from = detail(error, 'from');
-        const to = detail(error, 'to');
-        return from && to
-          ? `Cannot move this order from ${readableState(from)} to ${readableState(to)}.`
-          : 'That command is not valid for the current order state.';
-      }
-      case 'invalid_courier_transition': {
-        const from = detail(error, 'from');
-        const to = detail(error, 'to');
-        if (from === 'carrying' && to === 'offline')
-          return 'You cannot go off duty while carrying an order. Deliver it first.';
-        return from && to
-          ? `Cannot change your courier status from ${readableState(from)} to ${readableState(to)}.`
-          : 'That duty change is not allowed for your current courier status.';
-      }
-      case 'invalid_assignment_transition':
-        return 'This delivery offer can no longer be answered. It may have been withdrawn.';
-      case 'invalid_params': {
-        const messages = fieldMessages(error);
-        return messages.length
-          ? `Some of the submitted data is invalid: ${messages.slice(0, 3).join('; ')}.`
-          : 'Some of the submitted data is invalid.';
-      }
-      case 'internal':
-        return 'Something went wrong on the server. Please try again.';
-      default:
-        return error.message;
-    }
+    return API_ERROR_MESSAGES[error.code ?? '']?.(error) ?? error.message;
   }
 
   if (error instanceof Error) return error.message;
+
   return 'An unexpected error occurred.';
 }
 
