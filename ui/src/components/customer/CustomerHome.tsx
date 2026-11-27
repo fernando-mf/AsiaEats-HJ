@@ -1,10 +1,18 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { DishArt } from '../food/DishArt';
 import { dishKind } from '../food/dishKind';
 import { IconArrowRight, IconPlus, IconSearch } from '../icons/Icons';
 import type { MenuItem, Restaurant } from '../dashboard/dashboard.types';
 import { formatDistance, formatMoney } from '../dashboard/dashboard.utils';
 import { AddressPrompt } from './AddressPrompt';
+import {
+  getMatchingDishes,
+  getOrderableDishes,
+  getQuickPicks,
+  getSpotlightRestaurant,
+  getVisibleRestaurants,
+  type Dish,
+} from './customerHomeUtils';
 import './home.css';
 
 type CustomerHomeProps = {
@@ -15,17 +23,8 @@ type CustomerHomeProps = {
   onRefresh: () => void;
   onOpenRestaurant: (restaurantId: string) => void;
   onAddDish: (item: MenuItem) => void;
-  // Set only when the customer has no delivery address; shows a prompt to add one.
   onAddAddress?: () => void;
 };
-
-type Dish = {
-  item: MenuItem;
-  restaurant: Restaurant;
-};
-
-const NEARBY_KM = 3;
-const QUICK_PICKS = 5;
 
 function RestaurantCard({
   restaurant,
@@ -133,32 +132,18 @@ export function CustomerHome({
   const [nearbyOnly, setNearbyOnly] = useState(false);
 
   const search = query.trim().toLowerCase();
-  const matches = (text: string) => text.toLowerCase().includes(search);
 
-  // Orderable dishes: available items of open restaurants, nearest restaurant first.
-  const dishes: Dish[] = restaurants
-    .filter(restaurant => restaurant.status === 'open')
-    .flatMap(restaurant =>
-      (menus[restaurant.id] ?? []).filter(item => item.status === 'available').map(item => ({ item, restaurant })),
-    );
+  const dishes = getOrderableDishes(restaurants, menus);
   const pick = dishes[0];
-  // Spotlight an open restaurant with dishes, preferably not the one already in Tonight's pick.
-  const spotlightCandidates = restaurants.filter(
-    restaurant =>
-      restaurant.status === 'open' && (menus[restaurant.id] ?? []).some(item => item.status === 'available'),
-  );
-  const spotlight =
-    spotlightCandidates.find(restaurant => restaurant.id !== pick?.restaurant.id) ?? spotlightCandidates[0];
-  const quickPicks = [...new Set(dishes.map(dish => dish.item.name))].slice(0, QUICK_PICKS);
-  const matchingDishes = search
-    ? dishes.filter(dish => matches(dish.item.name) || matches(dish.restaurant.name))
-    : dishes;
-
-  const visibleRestaurants = restaurants.filter(
-    restaurant =>
-      (!search || matches(restaurant.name) || (menus[restaurant.id] ?? []).some(item => matches(item.name))) &&
-      (!openOnly || restaurant.status === 'open') &&
-      (!nearbyOnly || (restaurant.distanceKm ?? Infinity) <= NEARBY_KM),
+  const spotlight = getSpotlightRestaurant(restaurants, menus, pick);
+  const quickPicks = getQuickPicks(dishes);
+  const matchingDishes = getMatchingDishes(dishes, search);
+  const visibleRestaurants = getVisibleRestaurants(
+    restaurants,
+    menus,
+    search,
+    openOnly,
+    nearbyOnly,
   );
 
   return (
@@ -277,7 +262,7 @@ export function CustomerHome({
               aria-pressed={nearbyOnly}
               onClick={() => setNearbyOnly(value => !value)}
             >
-              Within {NEARBY_KM} km
+              Within 3 km
             </button>
           ) : null}
         </div>
