@@ -600,6 +600,27 @@
 }
 
 @media (max-width: 640px) {
+  /* Stack the two rating fields and keep the five bowls on one row. */
+  .rating-form,
+  .rating-accepted {
+    margin-left: 14px;
+  }
+
+  .rating-form-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ramen-rating-options {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .ramen-rating-button {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 47px;
+  }
+
   .order-live-head {
     flex-wrap: wrap;
   }
