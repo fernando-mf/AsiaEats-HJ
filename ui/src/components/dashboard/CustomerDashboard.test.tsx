@@ -750,6 +750,19 @@ describe('CustomerDashboard order rating', () => {
     expect(requestJsonMock).not.toHaveBeenCalledWith('/orders/order-12345/rating', expect.anything());
   });
 
+  it('clears only the error of the field once a score is chosen', async () => {
+    seedSession('orders');
+    ordersWith('delivered');
+    renderDashboard();
+    await screen.findByRole('form', { name: 'Rate this order' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit rating' }));
+    expect(await screen.findAllByText('Choose a rating from 1 to 5.')).toHaveLength(2);
+
+    chooseScore('Courier', '3');
+    expect(screen.getAllByText('Choose a rating from 1 to 5.')).toHaveLength(1);
+  });
+
   it('keeps the form when the backend refuses the rating', async () => {
     seedSession('orders');
     ordersWith('delivered');

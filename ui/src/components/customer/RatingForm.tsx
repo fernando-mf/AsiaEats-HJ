@@ -110,7 +110,10 @@ export function RatingForm({ orderId, busy, onSubmit }: RatingFormProps) {
           value={scores[name]}
           disabled={busy !== null}
           describedBy={error ? errorId : undefined}
-          onChange={value => setScores(current => ({ ...current, [name]: value }))}
+          onChange={value => {
+            setScores(current => ({ ...current, [name]: value }));
+            setErrors(current => ({ ...current, [name]: undefined }));
+          }}
         />
         {error ? (
           <p className="field-error" id={errorId}>
