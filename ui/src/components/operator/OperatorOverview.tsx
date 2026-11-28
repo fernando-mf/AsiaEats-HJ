@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { neighbourhoodShortName } from '../../shared/locations/montrealNeighbourhoods';
 import type { Order, Restaurant, RestaurantStatus } from '../dashboard/dashboard.types';
-import { chargedTotal, formatMoney, isUncharged } from '../dashboard/dashboard.utils';
+import { chargedTotal, formatMoney, formatRating, isUncharged } from '../dashboard/dashboard.utils';
 import { IconAlert, IconClock, IconPause, IconPlay, IconReceipt, IconStore } from '../icons/Icons';
 import { isSameDay, orderNumber, timeInStatus, useNow } from '../restaurant/orderTime';
 // The page header and stat cards share the restaurant overview's styles.
@@ -166,6 +166,7 @@ export function OperatorOverview({
                     <th scope="col">Name</th>
                     <th scope="col">Area</th>
                     <th scope="col">Status</th>
+                    <th scope="col">Rating</th>
                     <th scope="col" className="is-number">
                       Active
                     </th>
@@ -193,6 +194,7 @@ export function OperatorOverview({
                             {restaurant.status}
                           </span>
                         </td>
+                        <td className="operator-muted">{formatRating(restaurant.averageRating)}</td>
                         <td className="is-number mono">{ofRestaurant.length}</td>
                         <td className="is-number mono">{countBy(ofRestaurant, 'accepted')}</td>
                         <td className="is-action">

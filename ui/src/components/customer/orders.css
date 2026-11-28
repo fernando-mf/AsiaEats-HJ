@@ -645,3 +645,28 @@
     padding-left: 14px;
   }
 }
+
+.rating-form {
+  display: grid;
+  gap: 12px;
+  margin: 4px 14px 14px 74px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.rating-form-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rating-form .secondary-button {
+  justify-self: start;
+}
+
+.rating-accepted {
+  margin: 4px 14px 14px 74px;
+  color: var(--text-2);
+  font-size: 14px;
+}

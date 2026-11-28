@@ -5,6 +5,7 @@ import { IconCheck, IconChevronRight, IconClock, IconPin, IconSearch } from '../
 import type { BillingDetails, FareComponentKind, Order, Restaurant } from '../dashboard/dashboard.types';
 import { chargedTotal, formatMoney, isUncharged, orderTotal } from '../dashboard/dashboard.utils';
 import { orderNumber } from '../restaurant/orderTime';
+import { RatingForm, type RatingValues } from './RatingForm';
 import './orders.css';
 
 type OrdersPageProps = {
@@ -15,6 +16,9 @@ type OrdersPageProps = {
   onFindRestaurants: () => void;
   onOpenRestaurant: (restaurantId: string) => void;
   onCancelOrder: (order: Order) => void;
+  // Orders rated in this session: they show a confirmation instead of the form.
+  ratedOrderIds: ReadonlySet<string>;
+  onRateOrder: (orderId: string, values: RatingValues) => Promise<boolean>;
 };
 
 type CancelProps = {
@@ -260,7 +264,15 @@ function OrderReceipt({ order, billing }: { order: Order; billing: BillingDetail
   );
 }
 
-function PastOrderRow({ order, restaurantName }: { order: Order; restaurantName: string }) {
+type RatingProps = Pick<OrdersPageProps, 'busy' | 'ratedOrderIds' | 'onRateOrder'>;
+
+function PastOrderRow({
+  order,
+  restaurantName,
+  busy,
+  ratedOrderIds,
+  onRateOrder,
+}: RatingProps & { order: Order; restaurantName: string }) {
   const [open, setOpen] = useState(false);
   const billing = order.billing ?? null;
   const uncharged = isUncharged(order);
@@ -289,8 +301,26 @@ function PastOrderRow({ order, restaurantName }: { order: Order; restaurantName:
     </>
   );
 
+  // Delivered orders of the customer can be rated, once (R-RVW-01). The backend refuses a second
+  // rating, which also covers orders rated before this page was loaded.
+  const rating =
+    order.status !== 'delivered' ? null : ratedOrderIds.has(order.id) ? (
+      <p className="rating-accepted" role="status">
+        Thanks, your rating was accepted.
+      </p>
+    ) : (
+      <RatingForm orderId={order.id} busy={busy} onSubmit={onRateOrder} />
+    );
+
   // Only delivered orders have billing details to open.
-  if (!billing) return <div className="past-order">{cells}</div>;
+  if (!billing) {
+    return (
+      <div className="past-order-item">
+        <div className="past-order">{cells}</div>
+        {rating}
+      </div>
+    );
+  }
 
   return (
     <div className={`past-order-item${open ? ' is-open' : ''}`}>
@@ -304,6 +334,7 @@ function PastOrderRow({ order, restaurantName }: { order: Order; restaurantName:
         {cells}
       </button>
       {open ? <OrderReceipt order={order} billing={billing} /> : null}
+      {rating}
     </div>
   );
 }
@@ -316,6 +347,8 @@ export function OrdersPage({
   onFindRestaurants,
   onOpenRestaurant,
   onCancelOrder,
+  ratedOrderIds,
+  onRateOrder,
 }: OrdersPageProps) {
   const [filter, setFilter] = useState<PastFilter>('all');
   // Taken once on mount: used to pick out this month's orders.
@@ -398,7 +431,14 @@ export function OrdersPage({
           </div>
           {visiblePast.length ? (
             visiblePast.map(order => (
-              <PastOrderRow key={order.id} order={order} restaurantName={restaurantName(order.restaurantId)} />
+              <PastOrderRow
+                key={order.id}
+                order={order}
+                restaurantName={restaurantName(order.restaurantId)}
+                busy={busy}
+                ratedOrderIds={ratedOrderIds}
+                onRateOrder={onRateOrder}
+              />
             ))
           ) : (
             <p className="past-orders-empty">

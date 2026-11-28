@@ -3,6 +3,7 @@ import { PasswordSection, PersonalInfoForm } from '../account/AccountForms';
 import { DishArt } from '../food/DishArt';
 import { dishKind } from '../food/dishKind';
 import { IconPin } from '../icons/Icons';
+import { formatRating } from '../dashboard/dashboard.utils';
 import type { Account, MenuItem, Position, Restaurant, RestaurantStatus } from '../dashboard/dashboard.types';
 import { RestaurantDetailsForm } from './RestaurantDetailsForm';
 import '../account/profile.css';
@@ -89,6 +90,9 @@ export function RestaurantProfile({
             <div className="profile-card-head">
               <h2 id="restaurant-details-title">Restaurant details</h2>
               <p>What customers see when they browse restaurants.</p>
+              <p className="restaurant-rating">
+                Average rating: <strong>{formatRating(restaurant.averageRating)}</strong>
+              </p>
             </div>
             <RestaurantDetailsForm key={detailsKey} restaurant={restaurant} busy={busy} onSave={onSaveDetails} />
           </section>

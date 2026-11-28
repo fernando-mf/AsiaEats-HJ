@@ -11,6 +11,7 @@ import { useAccountActions } from '../account/useAccountActions';
 import { CartView } from '../customer/CartView';
 import { CustomerProfile } from '../customer/CustomerProfile';
 import { OrdersPage } from '../customer/OrdersPage';
+import type { RatingValues } from '../customer/RatingForm';
 import { CustomerHome } from '../customer/CustomerHome';
 import { RestaurantMenu } from '../customer/RestaurantMenu';
 import { ConfirmDialog } from '../feedback/ConfirmDialog';
@@ -56,6 +57,8 @@ export function CustomerDashboard({
   // Every restaurant's menu, keyed by restaurant id, for the home page's dish search and rows.
   const [menus, setMenus] = useState<Record<string, MenuItem[]>>({});
   const [orders, setOrders] = useState<Order[]>([]);
+  // Orders rated in this session: their rating form is replaced by a confirmation.
+  const [ratedOrderIds, setRatedOrderIds] = useState<ReadonlySet<string>>(new Set());
   // undefined while loading, null when the customer has not set an address.
   const [address, setAddress] = useState<Address | null | undefined>(undefined);
   const [customerPage, setCustomerPage] = useState<CustomerPage>(restoredDashboard?.customerPage ?? 'restaurants');
@@ -234,6 +237,19 @@ export function CustomerDashboard({
     }
   }
 
+  // Resolves to true once the rating is accepted. A refusal (e.g. the order is already rated) is
+  // shown as an error toast by run().
+  async function rateOrder(orderId: string, values: RatingValues): Promise<boolean> {
+    const result = await run(() => requestJson(`/orders/${orderId}/rating`, { method: 'POST', body: values }));
+    if (!result) return false;
+
+    setRatedOrderIds(current => new Set(current).add(orderId));
+    showToast('Rating submitted. Thank you!');
+    // The restaurant's average rating changed.
+    await loadRestaurants();
+    return true;
+  }
+
   async function placeOrder() {
     if (!selectedRestaurant || !cartLines.length) return;
     const result = await run(() =>
@@ -365,6 +381,8 @@ export function CustomerDashboard({
             onFindRestaurants={() => setCustomerPage('restaurants')}
             onOpenRestaurant={selectRestaurant}
             onCancelOrder={setCancelTarget}
+            ratedOrderIds={ratedOrderIds}
+            onRateOrder={rateOrder}
           />
         ) : null}
 

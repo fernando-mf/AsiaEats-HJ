@@ -37,6 +37,8 @@ export type Restaurant = {
   name: string;
   status: RestaurantStatus;
   position: Position;
+  // Mean of the restaurant ratings from 1 to 5 (R-RVW-02); null while it has none.
+  averageRating?: number | null;
   // Present when restaurants are searched from a position (the customer's address).
   distanceKm?: number;
 };
