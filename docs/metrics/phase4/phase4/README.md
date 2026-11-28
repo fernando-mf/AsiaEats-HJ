@@ -1,17 +1,18 @@
 # Phase 4 Metrics
 
-- Git tag: none yet. Measured from origin/main at commit 35415d0fb4d9e261656abece00a2cd9d300eadb1 because the phase4 tag does not exist yet; re-run when tagged.
+- Git tag: phase4
+- Commit: 66b0871130f9abc11ed1b964e806d0208468ef44
 - Tool: Lizard
 - Version: 1.26.1
 - Excluded directories: node_modules, dist, coverage
 
-The commit is the merge of PR #204 (UI rating form and average rating), which follows the merged backend RVW work (PR #202), so all RVW code is present.
+The tag includes the backend RVW work and the UI rating form and average rating, so all RVW code is present.
 
 ## Command
 
 python -m lizard -x "*/node_modules/*" -x "*/dist/*" -x "*/coverage/*" .
 
-Run from the root of a clean checkout of the commit, with `lizard==1.26.1` installed in a virtual environment.
+Run from the root of a clean checkout of the tag, with `lizard==1.26.1` installed in a virtual environment.
 
 Differences from the `phase3` output (the measurement itself is the same):
 
@@ -21,8 +22,8 @@ Differences from the `phase3` output (the measurement itself is the same):
 ## Results
 
 - Files analyzed: 251
-- Total NLOC: 17,316
-- Functions analyzed: 1,855
+- Total NLOC: 17,353
+- Functions analyzed: 1,859
 - Average cyclomatic complexity: 1.7
 - Functions with warnings: 8
 
@@ -51,7 +52,7 @@ All appear in `lizard-report.txt`.
 | `backend/src/domain/rvw/index.ts` | none (re-exports) | 0 | 0 | 2 | 0 |
 | `backend/src/application/commands/rvw/rate-order.command.ts` (`RateOrderCommand`) | `execute` | 3 | 1 | 15 | 2 |
 | `backend/src/infrastructure/rvw/ratings.prismarepository.ts` (`PrismaRatingRepository`) | `create` | 20 | 3 | 53 | 4 |
-| `ui/src/components/customer/RatingForm.tsx` (`RatingForm`) | `RatingForm` | 16 | 1 | 68 | 6 |
+| `ui/src/components/customer/RatingForm.tsx` (`RatingForm`, `RatingSelector`, `RamenBowl`) | `RatingForm` | 16 | 1 | 99 | 9 |
 
 `RatingRepository` is an abstract class with no function bodies, so Lizard lists no function for it. Its lines are part of the `ratings.service.ts` file NLOC.
 

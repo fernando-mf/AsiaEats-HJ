@@ -342,51 +342,52 @@
        8      1     54      0      67 (anonymous)@614-680@./ui/src/components/dashboard/CustomerDashboard.test.tsx
        1      1      9      0       1 (anonymous)@686-686@./ui/src/components/dashboard/CustomerDashboard.test.tsx
        3      1     16      1       3 ordersWith@685-687@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       4      1     55      2       4 chooseScores@689-692@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       6      1     37      0       6 (anonymous)@694-699@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       7      1     50      0       7 (anonymous)@701-707@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      1      2      0       1 (anonymous)@712-712@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      2     14      1       1 (anonymous)@716-716@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       3      1     21      0       3 restaurantLoads@715-717@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      1     12      0       1 (anonymous)@730-730@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      19      1    157      0      23 (anonymous)@709-731@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      10      1    103      0      12 (anonymous)@733-744@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       3      1      9      0       3 (anonymous)@749-751@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       4      1     22      0       5 (anonymous)@758-762@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      14      1    108      0      21 (anonymous)@746-766@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      10      1     76      0      86 (anonymous)@682-767@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       6      1     92      0       6 fillAddressForm@770-775@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      1      7      0       1 (anonymous)@796-796@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      1     10      0       1 (anonymous)@804-804@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      17      1    152      0      21 (anonymous)@785-805@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      1      7      0       1 (anonymous)@817-817@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      10      1     82      0      13 (anonymous)@807-819@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      1     10      0       1 (anonymous)@828-828@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       8      1     69      0      10 (anonymous)@821-830@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      1     10      0       1 (anonymous)@845-845@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      13      1    132      0      16 (anonymous)@832-847@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       3      1      9      0       3 (anonymous)@850-852@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      1     21      0       2 (anonymous)@861-862@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      1      2      0       1 (anonymous)@864-864@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      16      1    141      0      21 (anonymous)@849-869@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      15      1     93      0     102 (anonymous)@769-870@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      1      4      0       1 (anonymous)@875-875@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      1      7      1       1 (anonymous)@885-885@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       4      1     19      0       4 (anonymous)@883-886@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      12      1    123      0      19 (anonymous)@873-891@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       4      2     19      0       5 (anonymous)@898-902@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      1     10      0       1 (anonymous)@905-905@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       1      1      7      1       1 (anonymous)@909-909@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       4      1     19      0       4 (anonymous)@907-910@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      12      1    111      0      22 (anonymous)@893-914@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       4      1     24      0      44 (anonymous)@872-915@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      10      1     47      0      12 (anonymous)@918-929@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      11      1    143      0      14 (anonymous)@931-944@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      10      1     98      0      13 (anonymous)@946-958@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-      10      1    107      0      11 (anonymous)@960-970@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       8      1     70      0      10 (anonymous)@972-981@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       6      1     42      0       8 (anonymous)@983-990@./ui/src/components/dashboard/CustomerDashboard.test.tsx
-       8      1     68      0      75 (anonymous)@917-991@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       5      1     44      2       5 chooseScore@689-693@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       4      1     25      2       4 chooseScores@695-698@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       6      1     37      0       6 (anonymous)@700-705@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       7      1     50      0       7 (anonymous)@707-713@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      1      2      0       1 (anonymous)@718-718@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      2     14      1       1 (anonymous)@722-722@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       3      1     21      0       3 restaurantLoads@721-723@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      1     12      0       1 (anonymous)@736-736@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      19      1    157      0      23 (anonymous)@715-737@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      11      1    112      0      13 (anonymous)@739-751@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       3      1      9      0       3 (anonymous)@756-758@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       4      1     22      0       5 (anonymous)@765-769@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      14      1    108      0      21 (anonymous)@753-773@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      11      1     79      0      93 (anonymous)@682-774@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       6      1     92      0       6 fillAddressForm@777-782@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      1      7      0       1 (anonymous)@803-803@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      1     10      0       1 (anonymous)@811-811@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      17      1    152      0      21 (anonymous)@792-812@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      1      7      0       1 (anonymous)@824-824@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      10      1     82      0      13 (anonymous)@814-826@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      1     10      0       1 (anonymous)@835-835@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       8      1     69      0      10 (anonymous)@828-837@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      1     10      0       1 (anonymous)@852-852@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      13      1    132      0      16 (anonymous)@839-854@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       3      1      9      0       3 (anonymous)@857-859@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      1     21      0       2 (anonymous)@868-869@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      1      2      0       1 (anonymous)@871-871@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      16      1    141      0      21 (anonymous)@856-876@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      15      1     93      0     102 (anonymous)@776-877@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      1      4      0       1 (anonymous)@882-882@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      1      7      1       1 (anonymous)@892-892@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       4      1     19      0       4 (anonymous)@890-893@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      12      1    123      0      19 (anonymous)@880-898@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       4      2     19      0       5 (anonymous)@905-909@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      1     10      0       1 (anonymous)@912-912@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       1      1      7      1       1 (anonymous)@916-916@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       4      1     19      0       4 (anonymous)@914-917@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      12      1    111      0      22 (anonymous)@900-921@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       4      1     24      0      44 (anonymous)@879-922@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      10      1     47      0      12 (anonymous)@925-936@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      11      1    143      0      14 (anonymous)@938-951@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      10      1     98      0      13 (anonymous)@953-965@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+      10      1    107      0      11 (anonymous)@967-977@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       8      1     70      0      10 (anonymous)@979-988@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       6      1     42      0       8 (anonymous)@990-997@./ui/src/components/dashboard/CustomerDashboard.test.tsx
+       8      1     68      0      75 (anonymous)@924-998@./ui/src/components/dashboard/CustomerDashboard.test.tsx
        3      1      8      0       3 (anonymous)@78-80@./ui/src/components/dashboard/OperatorDashboard.tsx
       14      1     82      0      14 (anonymous)@83-96@./ui/src/components/dashboard/OperatorDashboard.tsx
        7      1     38      1       7 (anonymous)@104-110@./ui/src/components/dashboard/OperatorDashboard.tsx
@@ -908,12 +909,15 @@
        1      1      5      0       1 (anonymous)@480-480@./ui/src/components/customer/OrdersPage.tsx
       10      2     54      1      12 (anonymous)@479-490@./ui/src/components/customer/OrdersPage.tsx
       95      9    470      1     156 OrdersPage@342-497@./ui/src/components/customer/OrdersPage.tsx
-      15      4    138      1      16 handleSubmit@28-43@./ui/src/components/customer/RatingForm.tsx
-       1      1     17      1       1 (anonymous)@56-56@./ui/src/components/customer/RatingForm.tsx
-       1      1      6      1       1 (anonymous)@56-56@./ui/src/components/customer/RatingForm.tsx
-       5      1     14      1       5 (anonymous)@59-63@./ui/src/components/customer/RatingForm.tsx
-      21      3     92      2      28 field@45-72@./ui/src/components/customer/RatingForm.tsx
-      16      1    106      1      63 RatingForm@24-86@./ui/src/components/customer/RatingForm.tsx
+      10      1     15      0      22 RamenBowl@23-44@./ui/src/components/customer/RatingForm.tsx
+       1      1      8      0       1 (anonymous)@68-68@./ui/src/components/customer/RatingForm.tsx
+      14      2     44      1      17 (anonymous)@58-74@./ui/src/components/customer/RatingForm.tsx
+       7      1     39      1      23 RatingSelector@55-77@./ui/src/components/customer/RatingForm.tsx
+      15      4    138      1      16 handleSubmit@85-100@./ui/src/components/customer/RatingForm.tsx
+       1      1     13      1       1 (anonymous)@113-113@./ui/src/components/customer/RatingForm.tsx
+       1      1      6      1       1 (anonymous)@113-113@./ui/src/components/customer/RatingForm.tsx
+      19      3     77      2      21 field@102-122@./ui/src/components/customer/RatingForm.tsx
+      16      1    106      1      56 RatingForm@81-136@./ui/src/components/customer/RatingForm.tsx
       13      1     35      1      16 AddressPrompt@10-25@./ui/src/components/customer/AddressPrompt.tsx
        3      1     30      2       3 byAvailability@28-30@./ui/src/components/customer/RestaurantMenu.tsx
       35      5    145      1      42 DishTile@32-73@./ui/src/components/customer/RestaurantMenu.tsx
@@ -1885,7 +1889,7 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
      65       8.9     2.7       44.0         7     ./ui/src/components/feedback/OutputConsole.tsx
      51      15.0     3.7       58.3         3     ./ui/src/components/feedback/ToastRegion.tsx
     145       0.0     0.0        0.0         0     ./ui/src/components/dashboard/dashboard.types.ts
-    791       5.9     1.1       49.5       145     ./ui/src/components/dashboard/CustomerDashboard.test.tsx
+    797       5.9     1.1       49.3       146     ./ui/src/components/dashboard/CustomerDashboard.test.tsx
     282       5.9     1.8       35.5        49     ./ui/src/components/dashboard/OperatorDashboard.tsx
     162       6.1     2.1       33.9        25     ./ui/src/components/dashboard/CourierDashboard.tsx
     113      10.5     3.3       43.2        10     ./ui/src/components/dashboard/DashboardHeader.tsx
@@ -1914,7 +1918,7 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
      58       3.9     1.9       25.7        16     ./ui/src/components/customer/customerHomeUtils.ts
     152      33.5     5.0      127.2         4     ./ui/src/components/customer/CartView.tsx
     389       9.3     2.1       52.4        40     ./ui/src/components/customer/OrdersPage.tsx
-     68       9.8     1.8       62.2         6     ./ui/src/components/customer/RatingForm.tsx
+     99       9.3     1.7       49.6         9     ./ui/src/components/customer/RatingForm.tsx
      18      13.0     1.0       35.0         1     ./ui/src/components/customer/AddressPrompt.tsx
     224      16.2     2.8       71.0        13     ./ui/src/components/customer/RestaurantMenu.tsx
     116       7.8     1.3       52.8         9     ./ui/src/components/customer/CustomerHome.test.tsx
@@ -2128,4 +2132,4 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
 ==========================================================================================
 Total nloc   Avg.NLOC  AvgCCN  Avg.token   Fun Cnt  Warning cnt   Fun Rt   nloc Rt
 ------------------------------------------------------------------------------------------
-     17316       7.5     1.7       49.6     1855            8      0.00    0.06
+     17353       7.5     1.7       49.5     1859            8      0.00    0.06
