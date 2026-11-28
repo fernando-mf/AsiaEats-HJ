@@ -665,6 +665,77 @@
   justify-self: start;
 }
 
+.rating-label {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ramen-rating-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+
+.ramen-rating-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 47px;
+  height: 45px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.ramen-rating-button:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+
+.ramen-rating-button:focus-visible {
+  outline: 2px solid var(--primary-ink);
+  outline-offset: 3px;
+}
+
+.ramen-rating-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.ramen-rating-button.selected {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary-ink);
+}
+
+.ramen-rating-button svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ramen-number {
+  position: absolute;
+  top: 58%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
 .rating-accepted {
   margin: 4px 14px 14px 74px;
   color: var(--text-2);

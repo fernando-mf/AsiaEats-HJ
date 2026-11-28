@@ -686,9 +686,15 @@ describe('CustomerDashboard order rating', () => {
     routes['GET /orders?customerId=c1'] = () => [makeOrder({ status })];
   }
 
+  function chooseScore(group: string, score: string) {
+    fireEvent.click(
+      within(screen.getByRole('group', { name: group })).getByRole('button', { name: `${score} out of 5` }),
+    );
+  }
+
   function chooseScores(restaurant: string, courier: string) {
-    fireEvent.change(screen.getByLabelText('Restaurant (1 to 5)'), { target: { value: restaurant } });
-    fireEvent.change(screen.getByLabelText('Courier (1 to 5)'), { target: { value: courier } });
+    chooseScore('Restaurant', restaurant);
+    chooseScore('Courier', courier);
   }
 
   it('offers the rating form on delivered orders only', async () => {
@@ -736,7 +742,8 @@ describe('CustomerDashboard order rating', () => {
     renderDashboard();
     await screen.findByRole('form', { name: 'Rate this order' });
 
-    fireEvent.change(screen.getByLabelText('Courier (1 to 5)'), { target: { value: '3' } });
+    chooseScore('Courier', '3');
+    expect(screen.getByRole('button', { name: '3 out of 5', pressed: true })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Submit rating' }));
 
     expect(await screen.findByText('Choose a rating from 1 to 5.')).toBeTruthy();
