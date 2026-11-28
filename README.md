@@ -15,21 +15,25 @@ architecture, enforced business rules and repeatable demonstrations.
 - Saib Merabet
 - Neil Bryan Moukam-Tchuangou
 
-## Phase II scope
+## Phase IV scope
 
-Phase II implements two modules end to end, plus the part of the dashboard (DASH) that drives them:
+The app implements the four core modules end to end, plus the dashboard (DASH) that drives them, and one optional
+module:
 
 - **REG** (registration, login and profiles): accounts with exactly one role (customer, restaurant, courier,
-  operator), an authenticated session for every command except registration and login, including browsing a menu,
-  and seeded accounts loaded from a configuration file.
-- **ORD** (order and restaurant core): restaurants (`open`, `paused`, `closed`), menu items (`available`,
-  `sold_out`) and the order lifecycle (`placed → accepted → preparing → ready`, with `rejected` and `cancelled` as
-  terminal branches), a preparation queue per restaurant in arrival order, a permission check on every command, and an
-  event with its own id recorded for every state change.
-- **DASH**: customer, restaurant and operator consoles, and an output console that logs every command and every error.
+  operator), an authenticated session for every command except registration and login, and seeded accounts loaded
+  from a configuration file.
+- **ORD** (order and restaurant core): restaurants, menus, the order lifecycle, a preparation queue per restaurant, a
+  permission check on every command, and an event recorded for every state change.
+- **DLV** (delivery): courier duty, offers to the closest idle courier, pickup, delivery and reassignment.
+- **PRC** (pricing and billing): fares computed from configured values, and a ledger entry for every final order.
+- **RVW** (ratings and reviews, optional module): a customer rates the restaurant and the courier of a delivered
+  order, from 1 to 5 each, once per order, and the operator sees each restaurant's average rating.
+- **DASH**: customer, restaurant, courier and operator consoles, the city map, and an output console that logs every
+  command and every error.
 
-Courier delivery (DLV), pricing and billing (PRC), and the city map come in later phases. Couriers can sign in, but
-their console is a placeholder for now.
+Phase IV also refactored three hotspots of the UI before adding RVW (see [Characterisation tests](#characterisation-tests)
+and [Metrics](#metrics)).
 
 ## Platform requirements
 
@@ -107,7 +111,7 @@ menu, customer address and courier position. Every seeded account uses the passw
 | `jade-garden`   | restaurant | Jade Garden (open)                                             |
 | `lotus-house`   | restaurant | Lotus House (closed), so orders to it are refused              |
 | `operator1`     | operator   | Platform overview, all orders with their event history         |
-| `courier`       | courier    | Sign in only; delivery comes in a later phase                  |
+| `courier`       | courier    | Duty toggle, delivery offers, pickup and delivery              |
 
 To start a demo from this state again, sign in as `operator1` and press **Restore initial state**. It runs the same
 reset as `pnpm seed` and needs `ENV_MANAGER_ENABLED=true`. Editing `seed.json` changes the next restore; no rebuild is
@@ -140,17 +144,57 @@ the total is exact. For example:
 pnpm build        # generates the Prisma client and compiles to dist/
 pnpm start        # runs the compiled API
 pnpm test         # unit tests (Vitest)
+pnpm test:e2e     # integration tests against a real database (needs Docker)
 
 # UI (from ui/)
-pnpm build        # type-checks and builds to dist/
+pnpm build             # type-checks and builds to dist/
 pnpm typecheck
 pnpm lint
+pnpm exec vitest run   # UI tests, including the characterisation tests
 
 # Whole repository (from the root)
 pnpm format:check
 ```
 
 The API documentation is in [`backend/openapi.yaml`](./backend/openapi.yaml).
+
+## Characterisation tests
+
+Before each Phase IV refactoring, we wrote tests that pin down the current behaviour of the code being changed. They
+pass on the commit before the refactoring and on the commit after it.
+
+| Refactoring | Code refactored                                      | Tests                                                     |
+| ----------- | ---------------------------------------------------- | --------------------------------------------------------- |
+| R1          | `apiErrorMessage` in `ui/src/shared/api/client.ts`   | `ui/src/shared/api/client.test.ts`                        |
+| R2          | `ui/src/components/customer/CustomerHome.tsx`        | `ui/src/components/customer/CustomerHome.test.tsx`        |
+| R3          | `ui/src/components/dashboard/CustomerDashboard.tsx`  | `ui/src/components/dashboard/CustomerDashboard.test.tsx`  |
+
+To run them, after `pnpm install` at the root:
+
+```sh
+cd ui
+pnpm exec vitest run                                   # all UI tests
+pnpm exec vitest run src/shared/api/client.test.ts     # only one file
+```
+
+To check that a refactoring kept the behaviour, check out the commit before it, run its tests, then check out the
+commit after it and run them again. Both runs must pass.
+
+## Metrics
+
+[`docs/metrics`](./docs/metrics) holds the raw output of every measurement, one folder per tag:
+
+| Folder                           | Tag                 | What it measures                         |
+| -------------------------------- | ------------------- | ---------------------------------------- |
+| `docs/metrics/phase3`            | `phase3`            | the baseline, before any Phase IV change |
+| `docs/metrics/phase4-refactored` | `phase4-refactored` | after the three refactorings             |
+| `docs/metrics/phase4`            | `phase4`            | after RVW was added                      |
+
+Every measurement uses the same tool and configuration, Lizard 1.26.1, run from the repository root:
+
+```sh
+py -m lizard -x "*/node_modules/*" -x "*/dist/*" -x "*/coverage/*" .
+```
 
 ## Deployment
 
@@ -167,7 +211,7 @@ database. After a schema change, apply the migrations to that database with `pnp
 
 ## Repository layout
 
-The code is split by layer, and inside the backend layers by module (REG, ORD):
+The code is split by layer, and inside the backend layers by module (REG, ORD, DLV, PRC, RVW):
 
 ```text
 ui/                         UI layer (DASH): React and Vite
@@ -177,14 +221,17 @@ ui/                         UI layer (DASH): React and Vite
 
 backend/                    NestJS API
   src/application/          application layer: HTTP controllers, commands and their decorators, session guard
-    commands/reg, commands/ord
-    controllers/reg, controllers/ord
+    commands/reg, commands/ord, commands/dlv, commands/prc, commands/rvw
+    controllers/reg, controllers/ord, controllers/dlv, controllers/prc
   src/domain/               domain layer: services, business rules, the order state machine, ports
     reg/                    accounts, roles, customer profiles
     ord/                    restaurants, menus, orders, preparation queue
+    dlv/                    courier assignments and delivery
+    prc/                    pricing, billing and the ledger
+    rvw/                    ratings of delivered orders
     env/                    reset and seed of the initial state
   src/infrastructure/       infrastructure layer: Prisma repositories, transactions, the seed file reader
-    reg/, ord/, env/, events/
+    reg/, ord/, dlv/, prc/, rvw/, env/, events/
   config/seed.json          the initial demo state
   integration/              Prisma schema and migrations, the seed script, Docker Compose for PostgreSQL
   docs/                     design notes (layered design, validation, errors)
