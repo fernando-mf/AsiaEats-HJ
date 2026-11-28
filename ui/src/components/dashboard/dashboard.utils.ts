@@ -4,6 +4,11 @@ export function formatMoney(value: number) {
   return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(value);
 }
 
+// A restaurant's average rating to one decimal (R-RVW-02), e.g. 4.3 / 5.
+export function formatRating(average: number | null | undefined) {
+  return average == null ? 'No ratings yet' : `${average.toFixed(1)} / 5`;
+}
+
 // Straight-line distance for labels, e.g. 1.4 km, 12 km.
 export function formatDistance(km: number) {
   return `${km < 10 ? km.toFixed(1) : Math.round(km)} km`;

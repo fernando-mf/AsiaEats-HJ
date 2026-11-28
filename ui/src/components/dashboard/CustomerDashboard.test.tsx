@@ -679,6 +679,93 @@ describe('CustomerDashboard cancelling an order', () => {
   });
 });
 
+describe('CustomerDashboard order rating', () => {
+  const rated = { id: 'rt1', orderId: 'order-12345' };
+
+  function ordersWith(status: string) {
+    routes['GET /orders?customerId=c1'] = () => [makeOrder({ status })];
+  }
+
+  function chooseScores(restaurant: string, courier: string) {
+    fireEvent.change(screen.getByLabelText('Restaurant (1 to 5)'), { target: { value: restaurant } });
+    fireEvent.change(screen.getByLabelText('Courier (1 to 5)'), { target: { value: courier } });
+  }
+
+  it('offers the rating form on delivered orders only', async () => {
+    seedSession('orders');
+    ordersWith('delivered');
+    renderDashboard();
+    expect(await screen.findByRole('form', { name: 'Rate this order' })).toBeTruthy();
+  });
+
+  it('does not offer the rating form on other past orders', async () => {
+    seedSession('orders');
+    ordersWith('cancelled');
+    renderDashboard();
+    await screen.findByText('Lucky Dumpling', { selector: '.past-order-main strong' });
+    expect(screen.queryByRole('form', { name: 'Rate this order' })).toBeNull();
+  });
+
+  it('posts both ratings, confirms, and reloads the restaurants', async () => {
+    seedSession('orders');
+    ordersWith('delivered');
+    routes['POST /orders/order-12345/rating'] = () => rated;
+    renderDashboard();
+    await screen.findByRole('form', { name: 'Rate this order' });
+    const restaurantLoads = () =>
+      requestJsonMock.mock.calls.filter(([path]) => String(path).startsWith('/restaurants?') || path === '/restaurants')
+        .length;
+    const before = restaurantLoads();
+
+    chooseScores('5', '4');
+    fireEvent.click(screen.getByRole('button', { name: 'Submit rating' }));
+
+    expect(await screen.findByText('Thanks, your rating was accepted.')).toBeTruthy();
+    expect(requestJsonMock).toHaveBeenCalledWith('/orders/order-12345/rating', {
+      method: 'POST',
+      body: { restaurantRating: 5, courierRating: 4 },
+    });
+    expect(showToast).toHaveBeenCalledWith('Rating submitted. Thank you!');
+    expect(screen.queryByRole('form', { name: 'Rate this order' })).toBeNull();
+    await waitFor(() => expect(restaurantLoads()).toBeGreaterThan(before));
+  });
+
+  it('asks for both ratings before posting', async () => {
+    seedSession('orders');
+    ordersWith('delivered');
+    renderDashboard();
+    await screen.findByRole('form', { name: 'Rate this order' });
+
+    fireEvent.change(screen.getByLabelText('Courier (1 to 5)'), { target: { value: '3' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit rating' }));
+
+    expect(await screen.findByText('Choose a rating from 1 to 5.')).toBeTruthy();
+    expect(requestJsonMock).not.toHaveBeenCalledWith('/orders/order-12345/rating', expect.anything());
+  });
+
+  it('keeps the form when the backend refuses the rating', async () => {
+    seedSession('orders');
+    ordersWith('delivered');
+    routes['POST /orders/order-12345/rating'] = () => {
+      throw new Error('this order has already been rated');
+    };
+    renderDashboard();
+    await screen.findByRole('form', { name: 'Rate this order' });
+
+    chooseScores('2', '2');
+    fireEvent.click(screen.getByRole('button', { name: 'Submit rating' }));
+
+    await waitFor(() =>
+      expect(requestJsonMock).toHaveBeenCalledWith(
+        '/orders/order-12345/rating',
+        expect.objectContaining({ method: 'POST' }),
+      ),
+    );
+    expect(screen.getByRole('form', { name: 'Rate this order' })).toBeTruthy();
+    expect(screen.queryByText('Thanks, your rating was accepted.')).toBeNull();
+  });
+});
+
 describe('CustomerDashboard address flow', () => {
   function fillAddressForm() {
     fireEvent.change(screen.getByLabelText('Street address'), { target: { value: '1 Test St' } });
