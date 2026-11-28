@@ -27,6 +27,7 @@ import { FindOrdersCommand } from '#application/commands/ord/find-orders.command
 import { GetOrderCommand } from '#application/commands/ord/get-order.command.js';
 import { MarkOrderReadyCommand } from '#application/commands/ord/mark-order-ready.command.js';
 import { PlaceOrderCommand } from '#application/commands/ord/place-order.command.js';
+import { RateOrderCommand } from '#application/commands/rvw/rate-order.command.js';
 import { RefundOrderCommand } from '#application/commands/ord/refund-order.command.js';
 import { RejectOrderCommand } from '#application/commands/ord/reject-order.command.js';
 import { StartPreparingCommand } from '#application/commands/ord/start-preparing.command.js';
@@ -34,6 +35,7 @@ import { Command } from '#application/commands/command.js';
 import { CurrentActor } from '#application/auth/current-actor.decorator.js';
 import { ApiRoles, getApiRoles } from '#application/controllers/api-roles.decorator.js';
 import { ErrorResponse, OrderResponse } from '#application/controllers/responses.dto.js';
+import { Rating, RatingRequest, RatingsService } from '#domain/rvw/index.js';
 import { BillingService } from '#domain/prc/index.js';
 import type { OrderWithBilling } from '#application/commands/ord/order-billing.js';
 
@@ -46,6 +48,7 @@ export class OrdersController {
   constructor(
     private readonly service: OrdersService,
     private readonly billing: BillingService,
+    private readonly ratings: RatingsService,
     private readonly commandRunner: CommandRunner,
   ) {}
 
@@ -195,6 +198,28 @@ export class OrdersController {
   refund(@CurrentActor() actor: Actor, @Param('id') id: string) {
     let command: Command<OrderWithBilling> = new RefundOrderCommand(this.service, this.billing, actor, id);
     command = new AuthorizedCommand(command, actor, getApiRoles(this.refund));
+    command = new LoggedCommand(command, this.logger, actor);
+
+    return this.commandRunner.execute(command);
+  }
+
+  @Post(':id/rating')
+  @ApiRoles(AccountRole.Customer)
+  @ApiOperation({
+    summary: 'Rate order',
+    description:
+      'Rates the restaurant and the courier of a delivered order, from 1 to 5 each. Only the customer who placed the order can rate it, and only once.',
+  })
+  @ApiCreatedResponse({ type: Rating })
+  @ApiBadRequestResponse({ type: ErrorResponse })
+  @ApiUnauthorizedResponse({ type: ErrorResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse })
+  @ApiConflictResponse({ type: ErrorResponse })
+  rate(@CurrentActor() actor: Actor, @Param('id') id: string, @Body() body: RatingRequest) {
+    const request = RatingRequest.initialize(body);
+
+    let command: Command<Rating> = new RateOrderCommand(this.ratings, actor, id, request);
+    command = new AuthorizedCommand(command, actor, getApiRoles(this.rate));
     command = new LoggedCommand(command, this.logger, actor);
 
     return this.commandRunner.execute(command);

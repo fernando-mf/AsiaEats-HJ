@@ -63,7 +63,9 @@ export async function purgeDatabase(): Promise<void> {
 
 const RESTAURANT_POSITION = { latitude: 45.5, longitude: -73.56 };
 
-export async function createReadyOrder(name: string): Promise<{ orderId: string }> {
+export async function createPlacedOrder(
+  name: string,
+): Promise<{ orderId: string; restaurantClient: Client; customerClient: Client }> {
   const password = 'password123';
 
   const restaurantClient = new Client();
@@ -97,11 +99,17 @@ export async function createReadyOrder(name: string): Promise<{ orderId: string 
     items: [{ menuItemId: item.id, quantity: 1 }],
   });
 
-  await restaurantClient.orders.accept(order.id);
-  await restaurantClient.orders.prepare(order.id);
-  await restaurantClient.orders.ready(order.id);
+  return { orderId: order.id, restaurantClient, customerClient };
+}
 
-  return { orderId: order.id };
+export async function createReadyOrder(name: string): Promise<{ orderId: string }> {
+  const { orderId, restaurantClient } = await createPlacedOrder(name);
+
+  await restaurantClient.orders.accept(orderId);
+  await restaurantClient.orders.prepare(orderId);
+  await restaurantClient.orders.ready(orderId);
+
+  return { orderId };
 }
 
 // TODO(#122): the courier's current assignment isn't exposed through the API yet, so tests read it straight
@@ -132,4 +140,15 @@ export async function putCourierOnline(username: string): Promise<Client> {
   await client.couriers.updatePosition({ position: RESTAURANT_POSITION });
   await client.couriers.goOnline();
   return client;
+}
+
+// The ratings stored for an order. Ratings can't be read through the API yet, so tests read them
+// straight from the database.
+export async function getRatingsByOrderId(orderId: string) {
+  const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
+  try {
+    return await db.rating.findMany({ where: { orderId } });
+  } finally {
+    await db.$disconnect();
+  }
 }
