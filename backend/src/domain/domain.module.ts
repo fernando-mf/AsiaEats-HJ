@@ -7,6 +7,7 @@ import { RestaurantsService } from './ord/restaurants.service.js';
 import { BillingService } from './prc/billing.service.js';
 import { LedgerService } from './prc/ledger.service.js';
 import { PricingService } from './prc/pricing.service.js';
+import { RatingsService } from './rvw/ratings.service.js';
 import { ACCOUNT_CREATION_HANDLERS, DefaultAccountCreationHandler } from './reg/accounts.handlers.js';
 import { AccountsService } from './reg/accounts.service.js';
 import { CouriersService } from './reg/couriers.service.js';
@@ -25,6 +26,7 @@ import { CustomersService } from './reg/customers.service.js';
     LedgerService,
     OrdersService,
     PricingService,
+    RatingsService,
     RestaurantsService,
     {
       provide: ACCOUNT_CREATION_HANDLERS,
@@ -43,6 +45,7 @@ import { CustomersService } from './reg/customers.service.js';
     LedgerService,
     OrdersService,
     PricingService,
+    RatingsService,
     RestaurantsService,
   ],
 })

@@ -1073,6 +1073,69 @@ paths:
         - orders
       x-roles:
         - operator
+  /api/orders/{id}/rating:
+    post:
+      description: |-
+        Rates the restaurant and the courier of a delivered order, from 1 to 5 each (R-RVW-01). Only the customer who placed the order can rate it, and only once.
+
+        **Allowed roles:** `customer`
+      operationId: OrdersController_rate
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RatingRequest"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rating"
+        "400":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Requires one of the roles: `customer`"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - bearer: []
+      summary: Rate order
+      tags:
+        - orders
+      x-roles:
+        - customer
   /api/order-assignments:
     get:
       description: |-
@@ -2542,6 +2605,46 @@ components:
           maxLength: 500
       required:
         - reason
+    RatingRequest:
+      type: object
+      properties:
+        restaurantRating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        courierRating:
+          type: integer
+          minimum: 1
+          maximum: 5
+      required:
+        - restaurantRating
+        - courierRating
+    Rating:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        restaurantId:
+          type: string
+        courierId:
+          type: string
+        restaurantRating:
+          type: number
+        courierRating:
+          type: number
+        createdAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - orderId
+        - restaurantId
+        - courierId
+        - restaurantRating
+        - courierRating
+        - createdAt
     Assignment:
       type: object
       properties:
@@ -2620,6 +2723,9 @@ components:
           type: string
         distanceKm:
           type: number
+        averageRating:
+          nullable: true
+          type: number
       required:
         - id
         - ownerId
@@ -2628,6 +2734,7 @@ components:
         - position
         - createdAt
         - updatedAt
+        - averageRating
     RestaurantUpdateRequest:
       type: object
       properties:

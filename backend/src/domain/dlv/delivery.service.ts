@@ -172,6 +172,10 @@ export class DeliveryService implements OnModuleInit {
     return this.repository.list({ status: request.status, courierId });
   }
 
+  findAssignmentByOrderId(orderId: string): Promise<Assignment | null> {
+    return this.repository.findByOrderId(orderId);
+  }
+
   async getAssignmentByCourierId(courierId: string): Promise<AssignmentComplete> {
     const assignment = await this.repository.getActiveByCourierId(courierId);
     const order = await this.orders.getForDispatch(assignment.orderId);

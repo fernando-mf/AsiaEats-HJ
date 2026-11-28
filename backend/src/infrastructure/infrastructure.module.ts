@@ -5,6 +5,7 @@ import { EventRepository } from '#domain/events/index.js';
 import { AccountRepository, CourierRepository, CustomerProfileRepository } from '#domain/reg/index.js';
 import { OrderRepository, RestaurantRepository } from '#domain/ord/index.js';
 import { LedgerRepository, PricingSource } from '#domain/prc/index.js';
+import { RatingRepository } from '#domain/rvw/index.js';
 import { TransactionRunner } from '#domain/transactions.js';
 import { PrismaService } from './prisma.service.js';
 import { PrismaTransactionRunner } from './prisma.transactions.js';
@@ -17,6 +18,7 @@ import { PrismaCourierRepository } from './reg/couriers.prismarepository.js';
 import { PrismaCustomerProfileRepository } from './reg/customers.prismarepository.js';
 import { PrismaOrderRepository } from './ord/orders.prismarepository.js';
 import { PrismaRestaurantRepository } from './ord/restaurants.prismarepository.js';
+import { PrismaRatingRepository } from './rvw/ratings.prismarepository.js';
 import { PrismaLedgerRepository } from './prc/ledger.prismarepository.js';
 import { FilePricingSource } from './prc/pricing.filesource.js';
 
@@ -33,6 +35,7 @@ import { FilePricingSource } from './prc/pricing.filesource.js';
     { provide: OrderRepository, useClass: PrismaOrderRepository },
     { provide: LedgerRepository, useClass: PrismaLedgerRepository },
     { provide: PricingSource, useClass: FilePricingSource },
+    { provide: RatingRepository, useClass: PrismaRatingRepository },
     { provide: RestaurantRepository, useClass: PrismaRestaurantRepository },
     { provide: SeedSource, useClass: FileSeedSource },
     { provide: TransactionRunner, useClass: PrismaTransactionRunner },
@@ -47,6 +50,7 @@ import { FilePricingSource } from './prc/pricing.filesource.js';
     LedgerRepository,
     OrderRepository,
     PricingSource,
+    RatingRepository,
     RestaurantRepository,
     SeedSource,
     TransactionRunner,
