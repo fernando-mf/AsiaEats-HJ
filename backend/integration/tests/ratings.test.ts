@@ -13,8 +13,10 @@ import {
 
 const scores = { restaurantRating: 5, courierRating: 4 };
 
-async function createOrderIn(name: string, status: OrderStatus) {
-  const { orderId, customerClient: customer, restaurantClient: restaurant } = await createPlacedOrder(name);
+type PlacedOrder = Awaited<ReturnType<typeof createPlacedOrder>>;
+
+async function advanceTo(name: string, placed: PlacedOrder, status: OrderStatus, courier?: Client) {
+  const { orderId, customerClient: customer, restaurantClient: restaurant } = placed;
   const order = { orderId, customer, restaurant, courierId: null as string | null };
 
   if (status === OrderStatus.Placed) return order;
@@ -34,7 +36,7 @@ async function createOrderIn(name: string, status: OrderStatus) {
   await restaurant.orders.ready(orderId);
   if (status === OrderStatus.Ready) return order;
 
-  const courier = await putCourierOnline(`${name}-courier`);
+  courier ??= await putCourierOnline(`${name}-courier`);
   const assignment = await getAssignmentByOrderId(orderId);
   await courier.assignments.accept(assignment.id);
   await courier.assignments.pickUp(assignment.id);
@@ -47,6 +49,10 @@ async function createOrderIn(name: string, status: OrderStatus) {
   await openSessionAsOperator(operator);
   await operator.orders.refund(orderId);
   return order;
+}
+
+async function createOrderIn(name: string, status: OrderStatus) {
+  return advanceTo(name, await createPlacedOrder(name), status);
 }
 
 describe('order rating', () => {
@@ -158,5 +164,59 @@ describe('order rating', () => {
         expect(await getRatingsByOrderId(orderId)).toEqual([]);
       },
     );
+  });
+});
+
+describe('restaurant average rating', () => {
+  async function ratingOf(client: Client, orderId: string) {
+    const { restaurantId } = await client.orders.get(orderId);
+    const restaurants = await client.restaurants.find();
+    return restaurants.find(restaurant => restaurant.id === restaurantId)!.averageRating;
+  }
+
+  it('is null while the restaurant has no rating', async () => {
+    await purgeDatabase();
+    const { orderId, customer } = await createOrderIn('o1', OrderStatus.Delivered);
+
+    expect(await ratingOf(customer, orderId)).toBeNull();
+  });
+
+  it('reflects a rating on the next read', async () => {
+    await purgeDatabase();
+    const { orderId, customer } = await createOrderIn('o1', OrderStatus.Delivered);
+
+    await customer.orders.rate(orderId, { restaurantRating: 4, courierRating: 1 });
+
+    expect(await ratingOf(customer, orderId)).toBe(4);
+  });
+
+  it('averages the restaurant ratings of its orders and ignores courier ratings', async () => {
+    await purgeDatabase();
+    const placed = await createPlacedOrder('o1');
+    const courier = await putCourierOnline('courier1');
+    const first = await advanceTo('o1', placed, OrderStatus.Delivered, courier);
+    const { restaurantId, lines } = await first.customer.orders.get(first.orderId);
+    const second = await first.customer.orders.place({
+      restaurantId,
+      items: [{ menuItemId: lines[0].menuItemId, quantity: 1 }],
+    });
+    await advanceTo('o1', { ...placed, orderId: second.id }, OrderStatus.Delivered, courier);
+
+    await first.customer.orders.rate(first.orderId, { restaurantRating: 5, courierRating: 1 });
+    await first.customer.orders.rate(second.id, { restaurantRating: 2, courierRating: 1 });
+
+    expect(await ratingOf(first.customer, first.orderId)).toBe(3.5);
+  });
+
+  it('does not change when a rating is refused', async () => {
+    await purgeDatabase();
+    const { orderId, customer } = await createOrderIn('o1', OrderStatus.Delivered);
+    await customer.orders.rate(orderId, { restaurantRating: 4, courierRating: 4 });
+
+    await expect(customer.orders.rate(orderId, { restaurantRating: 1, courierRating: 1 })).rejects.toMatchObject({
+      status: 409,
+    });
+
+    expect(await ratingOf(customer, orderId)).toBe(4);
   });
 });

@@ -9,6 +9,10 @@ export class OrdersClient {
     return this.http.request('POST', '/orders', request);
   }
 
+  get(id: string): Promise<Order> {
+    return this.http.request('GET', `/orders/${id}`);
+  }
+
   accept(id: string): Promise<Order> {
     return this.http.request('POST', `/orders/${id}/accept`);
   }

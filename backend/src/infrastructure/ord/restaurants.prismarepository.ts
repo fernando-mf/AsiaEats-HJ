@@ -169,9 +169,11 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
 
   async list(filter: RestaurantFilter = {}): Promise<RestaurantSearchResult[]> {
     try {
+      const averages = await this.averageRatings();
+
       if (!filter.position) {
         const rows = await this.db.client().restaurant.findMany({ orderBy: [{ createdAt: 'asc' }] });
-        return rows.map(toRestaurantModel);
+        return rows.map(row => ({ ...toRestaurantModel(row), averageRating: averages.get(row.id) ?? null }));
       }
 
       const { latitude, longitude } = filter.position;
@@ -188,10 +190,21 @@ export class PrismaRestaurantRepository extends RestaurantRepository {
         ${where}
         ORDER BY distance_km ASC, created_at ASC`;
 
-      return rows.map(toRestaurantDistanceModel);
+      return rows.map(row => ({ ...toRestaurantDistanceModel(row), averageRating: averages.get(row.id) ?? null }));
     } catch (err) {
       throw new InternalError(err as Error);
     }
+  }
+
+  private async averageRatings(): Promise<Map<string, number>> {
+    const groups = await this.db.client().rating.groupBy({
+      by: ['restaurantId'],
+      _avg: { restaurantRating: true },
+    });
+
+    return new Map(
+      groups.map(group => [group.restaurantId, Math.round((group._avg.restaurantRating ?? 0) * 100) / 100]),
+    );
   }
 
   async getByOwnerId(ownerId: string): Promise<Restaurant> {
@@ -246,7 +259,7 @@ type RestaurantDistanceRow = {
   distance_km: number;
 };
 
-function toRestaurantDistanceModel(row: RestaurantDistanceRow): RestaurantSearchResult {
+function toRestaurantDistanceModel(row: RestaurantDistanceRow): Omit<RestaurantSearchResult, 'averageRating'> {
   return {
     id: row.id,
     ownerId: row.owner_id,

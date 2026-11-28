@@ -84,6 +84,7 @@ export class Restaurant {
 
 export class RestaurantSearchResult extends Restaurant {
   distanceKm?: number;
+  averageRating: number | null;
 }
 
 export type RestaurantFilter = {

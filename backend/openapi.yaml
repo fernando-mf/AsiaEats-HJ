@@ -2723,6 +2723,9 @@ components:
           type: string
         distanceKm:
           type: number
+        averageRating:
+          nullable: true
+          type: number
       required:
         - id
         - ownerId
@@ -2731,6 +2734,7 @@ components:
         - position
         - createdAt
         - updatedAt
+        - averageRating
     RestaurantUpdateRequest:
       type: object
       properties:
